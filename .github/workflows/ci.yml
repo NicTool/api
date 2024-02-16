@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  CI: true
+  DB_USER: root
+  DB_PASS: root
+
+jobs:
+  lint:
+    uses: NicTool/.github/.github/workflows/lint.yml@main
+
+  coverage:
+    uses: NicTool/.github/.github/workflows/coverage.yml@main
+    secrets: inherit
+
+  test:
+    needs: [ lint, get-lts ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+      fail-fast: false
+    steps:
+      - name: Start MySQL
+        run: |
+          sudo service mysql start
+          mysql -e 'CREATE DATABASE nictool;' -u${{ env.DB_USER }} -p${{ env.DB_PASS }}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm install
+      - run: npm test
+
+  get-lts:
+    runs-on: ubuntu-latest
+    steps:
+      - id: get
+        uses: msimerson/node-lts-versions@v1
+    outputs:
+      lts: ${{ steps.get.outputs.lts }}
+      active: ${{ steps.get.outputs.active }}

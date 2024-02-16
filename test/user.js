@@ -127,7 +127,6 @@ describe('user', function () {
       )
       assert.equal(r, false)
     })
-
   })
 
   describe('authenticate', () => {
