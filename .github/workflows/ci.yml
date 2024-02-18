@@ -74,10 +74,14 @@ jobs:
     steps:
       - name: Start MySQL
         run: |
+          which mysql || echo "missing"
+          which mysqladmin || echo "missing"
           brew install mysql
           brew tap homebrew/services
           brew services start mysql
-          mysqladmin --user=root password 'root'
+          which mysql
+          which mysqladmin
+          # mysqladmin --user=root --host=localhost password 'root'
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         name: Node ${{ matrix.node-version }} on ${{ matrix.os }}

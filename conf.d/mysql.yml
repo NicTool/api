@@ -18,6 +18,10 @@ test:
   user: root
   password: root
 
+cov:
+  user: root
+  password: root
+
 development:
   password: StaySafeOutThere
   # socketPath: /opt/local/var/run/mysql82/mysqld.sock

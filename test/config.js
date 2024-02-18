@@ -7,12 +7,17 @@ describe('config', function () {
   describe('get', function () {
     it(`loads mysql test config`, async function () {
       const cfg = await config.get('mysql', 'test')
-      assert.deepEqual(cfg, mysqlCfg)
+      assert.deepEqual(cfg, mysqlTestCfg)
     })
 
     it(`loads mysql test config syncronously`, function () {
       const cfg = config.getSync('mysql', 'test')
-      assert.deepEqual(cfg, mysqlCfg)
+      assert.deepEqual(cfg, mysqlTestCfg)
+    })
+
+    it(`loads mysql cov config`, async function () {
+      const cfg = await config.get('mysql', 'cov')
+      assert.deepEqual(cfg, mysqlTestCfg)
     })
 
     it(`loads session test config`, async function () {
@@ -27,7 +32,7 @@ describe('config', function () {
   })
 })
 
-const mysqlCfg = {
+const mysqlTestCfg = {
   host: '127.0.0.1',
   port: 3306,
   user: 'root',
