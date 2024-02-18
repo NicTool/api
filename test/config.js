@@ -28,10 +28,10 @@ describe('config', function () {
 })
 
 const mysqlCfg = {
-  host: '127.0.0.1',
+  host: 'localhost',
   port: 3306,
-  user: 'nictool',
-  password: 'NicToolTesting',
+  user: 'root',
+  password: 'root',
   database: 'nictool',
   timezone: '+00:00',
   dateStrings: ['DATETIME', 'TIMESTAMP'],

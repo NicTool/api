@@ -1,3 +1,4 @@
+const util = require('../lib/util')
 const group = require('../lib/group')
 // const session = require('../lib/session')
 const user = require('../lib/user')

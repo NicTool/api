@@ -3,8 +3,6 @@ const { describe, it } = require('node:test')
 
 const mysql = require('../lib/mysql')
 
-process.env.NODE_ENV = 'test'
-
 describe('mysql', () => {
   it('connects', async () => {
     this.dbh = await mysql.connect()
