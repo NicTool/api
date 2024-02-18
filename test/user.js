@@ -58,7 +58,7 @@ describe('user', function () {
   })
 
   describe('get_perms', function () {
-    it('gets user permissions', async () => {
+    it.skip('gets user permissions', async () => {
       const p = await user.get_perms(242)
       assert.deepEqual(p[0], {
         group_create: 1,

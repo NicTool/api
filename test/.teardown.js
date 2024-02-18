@@ -10,7 +10,7 @@ const teardown = async () => {
   await destroyTestGroup()
   await user._mysql.disconnect()
   await group._mysql.disconnect()
-  process.exit(1)
+  process.exit()
 }
 
 teardown()

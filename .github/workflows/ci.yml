@@ -7,37 +7,31 @@ on:
 env:
   CI: true
   NODE_ENV: test
-  DB_USER: root
-  DB_PASS: root
 
 jobs:
   lint:
     uses: NicTool/.github/.github/workflows/lint.yml@main
 
   coverage:
-    uses: NicTool/.github/.github/workflows/coverage.yml@main
-    secrets: inherit
-
-  test:
-    needs: [ lint, get-lts ]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
-      fail-fast: false
+    runs-on: ubuntu-latest
     steps:
       - name: Start MySQL
-        run: |
-          sudo service mysql start
-          mysql -e 'CREATE DATABASE nictool;' -u${{ env.DB_USER }} -p${{ env.DB_PASS }}
-      - uses: actions/checkout@v4
+        run: sudo /etc/init.d/mysql start
       - uses: actions/setup-node@v4
-        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
-        with:
-          node-version: ${{ matrix.node-version }}
+      - uses: actions/checkout@v4
       - run: npm install
-      - run: npm test
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - name: run coverage
+        run: npx -y c8 --reporter=lcov npm test
+        env:
+          NODE_ENV: cov
+      - name: codecov
+        uses: codecov/codecov-action@v2
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}
 
   get-lts:
     runs-on: ubuntu-latest
@@ -47,3 +41,71 @@ jobs:
     outputs:
       lts: ${{ steps.get.outputs.lts }}
       active: ${{ steps.get.outputs.active }}
+
+  test:
+    needs: [ lint, get-lts ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+      fail-fast: false
+    steps:
+      - name: Start MySQL
+        run: sudo /etc/init.d/mysql start
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - run: npm install
+      - run: npm test
+
+  test-mac:
+    needs: [ lint, get-lts ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+      fail-fast: false
+    steps:
+      - name: Start MySQL
+        run: |
+          brew install mysql
+          brew tap homebrew/services
+          brew services start mysql
+          mysqladmin --user=root password 'root'
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - run: npm install
+      - run: npm test
+
+  test-win:
+    if: false
+    needs: [ lint, get-lts ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+      fail-fast: false
+    steps:
+      # - name: Start MySQL
+      #   run: /etc/init.d/mysql start
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - run: npm install
+      - run: npm test

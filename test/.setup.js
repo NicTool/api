@@ -1,7 +1,7 @@
-const util = require('../lib/util')
 const group = require('../lib/group')
-// const session = require('../lib/session')
 const user = require('../lib/user')
+// const session = require('../lib/session')
+
 const userCase = require('./fixtures/user.json')
 const groupCase = require('./fixtures/group.json')
 
@@ -11,7 +11,7 @@ const setup = async () => {
   // await createTestSession()
   await user._mysql.disconnect()
   await group._mysql.disconnect()
-  process.exit(1)
+  process.exit()
 }
 
 setup()

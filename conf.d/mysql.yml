@@ -1,6 +1,6 @@
 
 default:
-  host: localhost
+  host: 127.0.0.1
   port: 3306
   user: nictool
   database: nictool
@@ -20,4 +20,4 @@ test:
 
 development:
   password: StaySafeOutThere
-  socketPath: /opt/local/var/run/mysql57/mysqld.sock
+  # socketPath: /opt/local/var/run/mysql82/mysqld.sock
