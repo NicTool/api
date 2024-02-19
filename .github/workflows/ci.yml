@@ -72,7 +72,7 @@ jobs:
         node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
-      - name: Start MySQL
+      - name: Install & Start MySQL
         run: |
           brew install mysql
           brew tap homebrew/services
