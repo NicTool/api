@@ -65,10 +65,9 @@ jobs:
 
   test-mac:
     needs: [ lint, get-lts ]
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
     strategy:
       matrix:
-        os: [macos-latest]
         node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
@@ -90,12 +89,12 @@ jobs:
   test-win:
     # if: false
     needs: [ lint, get-lts ]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     strategy:
       matrix:
-        os: [windows-latest]
         node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
+      experimental: true
     steps:
       - name: Install MySQL
         run: |
