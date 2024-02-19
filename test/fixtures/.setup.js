@@ -1,9 +1,9 @@
-const group = require('../lib/group')
-const user = require('../lib/user')
-// const session = require('../lib/session')
+const group = require('../../lib/group')
+const user = require('../../lib/user')
+// const session = require('../../lib/session')
 
-const userCase = require('./fixtures/user.json')
-const groupCase = require('./fixtures/group.json')
+const userCase = require('./user.json')
+const groupCase = require('./group.json')
 
 const setup = async () => {
   await createTestGroup()

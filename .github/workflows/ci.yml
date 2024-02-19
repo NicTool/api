@@ -93,8 +93,8 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        experimental: [true]
       fail-fast: false
-      experimental: true
     steps:
       - name: Install MySQL
         run: |
