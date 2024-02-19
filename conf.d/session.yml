@@ -1,21 +1,30 @@
+
 default:
-  secret: nictoolisthebestdnsmanager
-  name: sessionId
-  saveUninitialized: false
-  resave: false
   cookie:
-    httpOnly: false
-    sameSite: Strict  # Strict, Lax, None
+    # https://hapi.dev/module/cookie/api/?v=12.0.1
+    name: sid-nictool
+    password: af1b926a5e21f535c4f5b6c42941c4cf
+    # ttl:
+    # domain:
     path: /
-    maxAge: 86400000 # 24 hours, in milliseconds
+    # clearInvalid: false
+    isSameSite: Strict
+    isSecure: true
+    isHttpOnly: true
+  keepAlive: false
+  # redirectTo:
 
 production:
   cookie:
-    secure: true
+    # Change to your own secret password. hint: openssl rand -hex 16
+    # password:
 
 test:
-  secret: nictoolisthebestdnsmanager
+  cookie:
+    isSecure: false
+    password: ^NicTool.Is,The#Best_Dns-Manager$
 
 development:
-  secret: nictoolisthebestdnsmanager
-
+  cookie:
+    isSecure: false
+    password: ^NicTool.Is,The#Best_Dns-Manager$

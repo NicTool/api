@@ -6,6 +6,9 @@ const path = require('node:path')
 const qs = require('qs')
 // const validate = require('@nictool/nt-validate')
 
+const util = require('../lib/util')
+util.setEnv()
+const config = require('../lib/config')
 const user = require('../lib/user')
 // const session = require('../lib/session')
 const UserRoutes = require('./user')
@@ -29,17 +32,10 @@ const setup = async () => {
   await server.register(require('@hapi/basic'))
   await server.register(require('@hapi/cookie'))
   await server.register(require('@hapi/inert'))
+  const sessionCfg = await config.get('session')
 
   server.auth.strategy('session', 'cookie', {
-    cookie: {
-      name: 'sid-nictool',
-
-      // Change to your own secret password. hint: openssl rand -hex 16
-      password: 'af1b926a5e21f535c4f5b6c42941c4cf',
-
-      // For working via HTTP in localhost
-      isSecure: false,
-    },
+    cookie: sessionCfg.cookie,
 
     redirectTo: '/login',
 
