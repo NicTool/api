@@ -20,6 +20,13 @@ describe('config', function () {
       assert.deepEqual(cfg, mysqlTestCfg)
     })
 
+    it(`loads mysql cov config (from cache)`, async function () {
+      process.env.NODE_DEBUG = 1
+      const cfg = await config.get('mysql', 'cov')
+      assert.deepEqual(cfg, mysqlTestCfg)
+      process.env.NODE_DEBUG = ''
+    })
+
     it(`loads session test config`, async function () {
       const cfg = await config.get('session', 'test')
       assert.deepEqual(cfg, sessCfg)
@@ -28,6 +35,11 @@ describe('config', function () {
     it(`loads session test config syncronously`, function () {
       const cfg = config.getSync('session', 'test')
       assert.deepEqual(cfg, sessCfg)
+    })
+
+    it(`loads http test config syncronously`, function () {
+      const cfg = config.getSync('http', 'test')
+      assert.deepEqual(cfg, httpCfg)
     })
   })
 })
@@ -50,7 +62,12 @@ const sessCfg = {
     isSecure: false,
     name: 'sid-nictool',
     password: '^NicTool.Is,The#Best_Dns-Manager$',
-    path: '/'
+    path: '/',
   },
-  keepAlive: false
+  keepAlive: false,
+}
+
+const httpCfg = {
+  host: 'localhost',
+  port: 3000,
 }

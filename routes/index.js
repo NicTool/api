@@ -1,24 +1,26 @@
 'use strict'
 
-const hapi = require('@hapi/hapi')
-// const hoek = require('@hapi/hoek')
 const path = require('node:path')
+
+const hapi = require('@hapi/hapi')
 const qs = require('qs')
+// const hoek = require('@hapi/hoek')
 // const validate = require('@nictool/nt-validate')
 
 const util = require('../lib/util')
 util.setEnv()
 const config = require('../lib/config')
 const user = require('../lib/user')
-// const session = require('../lib/session')
 const UserRoutes = require('./user')
 
 let server
 
 const setup = async () => {
+  const httpCfg = await config.get('http')
+
   server = hapi.server({
-    port: 3000,
-    host: 'localhost',
+    port: httpCfg.port,
+    host: httpCfg.host,
     query: {
       parser: (query) => qs.parse(query),
     },

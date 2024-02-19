@@ -9,6 +9,14 @@ describe('mysql', () => {
     assert.ok(this.dbh.connection.connectionId)
   })
 
+  if (process.env.NODE_ENV === 'cov') {
+    it('is noisy when debug=true', async () => {
+      mysql.debug(true)
+      await mysql.execute(`SHOW DATABASES`)
+      await mysql.select(`SELECT * FROM nt_group`)
+    })
+  }
+
   it('disconnects', async () => {
     assert.ok(this.dbh.connection.connectionId)
     await mysql.disconnect(this.dbh)

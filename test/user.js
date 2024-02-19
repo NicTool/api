@@ -28,7 +28,7 @@ after(async () => {
 
 describe('user', function () {
   describe('read', function () {
-    it('finds existing user by nt_user_id', async function () {
+    it('finds existing user by nt_user_id', async () => {
       const u = await user.read({ nt_user_id: 4096 })
       // console.log(u)
       assert.deepEqual(u[0], {
@@ -42,7 +42,7 @@ describe('user', function () {
       })
     })
 
-    it('finds existing user by username', async function () {
+    it('finds existing user by username', async () => {
       const u = await user.read({ username: 'unit-test' })
       // console.log(u)
       assert.deepEqual(u[0], {
@@ -54,6 +54,15 @@ describe('user', function () {
         last_name: 'Test',
         deleted: 0,
       })
+    })
+
+    it('deletes a user', async () => {
+      await user.delete({ nt_user_id: 4096 })
+      let u = await user.read({ nt_user_id: 4096 })
+      assert.equal(u[0].deleted, 1)
+      await user.delete({ nt_user_id: 4096 }, 0) // restore
+      u = await user.read({ nt_user_id: 4096 })
+      assert.equal(u[0].deleted, 0)
     })
   })
 
