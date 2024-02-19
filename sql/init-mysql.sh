@@ -1,6 +1,19 @@
 #!/bin/sh
 
-export MYSQL_PWD=root
+# configure MySQL in the GitHub runners
+case "$(uname -s)" in
+    Linux*)
+		export MYSQL_PWD=root
+	;;
+    Darwin*)
+		mysqladmin --user=root --password='' --protocol=tcp password 'root'
+		export MYSQL_PWD="root"
+	;;
+    CYGWIN*|MINGW*|MINGW32*|MSYS*)
+		export MYSQL_PWD=""
+	;;
+esac
+
 # AUTH="--defaults-extra-file=./sql/my-gha.cnf"
 
 # mysql --user=root -e 'DROP DATABASE IF EXISTS nictool;' || exit 1
