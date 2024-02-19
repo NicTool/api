@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  CI: true
+  NODE_ENV: test
+
+jobs:
+  lint:
+    uses: NicTool/.github/.github/workflows/lint.yml@main
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start MySQL
+        run: sudo /etc/init.d/mysql start
+      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - run: npm install
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - name: run coverage
+        run: npx -y c8 --reporter=lcov npm test
+        env:
+          NODE_ENV: cov
+      - name: codecov
+        uses: codecov/codecov-action@v2
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}
+
+  get-lts:
+    runs-on: ubuntu-latest
+    steps:
+      - id: get
+        uses: msimerson/node-lts-versions@v1
+    outputs:
+      lts: ${{ steps.get.outputs.lts }}
+      active: ${{ steps.get.outputs.active }}
+
+  test:
+    needs: [ lint, get-lts ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+      fail-fast: false
+    steps:
+      - name: Start MySQL
+        run: sudo /etc/init.d/mysql start
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - run: npm install
+      - run: npm test
+
+  test-mac:
+    needs: [ lint, get-lts ]
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+      fail-fast: false
+    steps:
+      - name: Install & Start MySQL
+        run: |
+          brew install mysql
+          brew tap homebrew/services
+          brew services start mysql
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - run: npm install
+      - run: npm test
+
+  test-win:
+    # if: false
+    needs: [ lint, get-lts ]
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        experimental: [true]
+      fail-fast: false
+    steps:
+      - name: Install MySQL
+        run: |
+          choco install mysql
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - run: npm install
+      - run: npm test

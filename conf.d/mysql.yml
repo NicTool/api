@@ -1,0 +1,27 @@
+
+default:
+  host: 127.0.0.1
+  port: 3306
+  user: nictool
+  database: nictool
+  timezone: +00:00
+  dateStrings:
+    - DATETIME
+    - TIMESTAMP
+  decimalNumbers: true
+
+production:
+  host: mysql
+  password: "********"
+
+test:
+  user: root
+  password: root
+
+cov:
+  user: root
+  password: root
+
+development:
+  password: StaySafeOutThere
+  # socketPath: /opt/local/var/run/mysql82/mysqld.sock
