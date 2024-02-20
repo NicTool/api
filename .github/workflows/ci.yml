@@ -51,15 +51,12 @@ jobs:
         node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
-      - name: Start MySQL
-        run: sudo /etc/init.d/mysql start
+      - name: sudo /etc/init.d/mysql start
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Initialize MySQL
-        run: sh sql/init-mysql.sh
+      - run: sh sql/init-mysql.sh
       - run: npm install
       - run: npm test
 
@@ -81,8 +78,7 @@ jobs:
         name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Initialize MySQL
-        run: sh sql/init-mysql.sh
+      - run: sh sql/init-mysql.sh
       - run: npm install
       - run: npm test
 
@@ -101,10 +97,9 @@ jobs:
           choco install mysql
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+        name: Node ${{ matrix.node-version }}
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Initialize MySQL
-        run: sh sql/init-mysql.sh
+      - run: sh sql/init-mysql.sh
       - run: npm install
       - run: npm test
