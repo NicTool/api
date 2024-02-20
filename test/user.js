@@ -11,14 +11,6 @@ before(async () => {
     nt_user_id: userCase.nt_user_id,
     nt_user_session: 12345,
   })
-
-  let users = await user.read({ nt_user_id: userCase.nt_user_id })
-  if (users.length === 1) return
-
-  const instance = JSON.parse(JSON.stringify(userCase))
-  instance.password = 'Wh@tA-Decent#P6ssw0rd'
-
-  await user.create(instance)
 })
 
 after(async () => {
@@ -139,9 +131,21 @@ describe('user', function () {
   })
 
   describe('authenticate', () => {
-    it.todo('rejects invalid user', () => {})
+    it('rejects invalid user', async () => {
+      const u = await user.authenticate({
+        username: 'fake-test@example.com',
+        password: 'evilCrackerJack',
+      })
+      assert.equal(u, undefined)
+    })
 
-    it.todo('rejects invalid pass', () => {})
+    it('rejects invalid pass', async () => {
+      const u = await user.authenticate({
+        username: 'unit-test@example.com',
+        password: 'evilCrackerJack',
+      })
+      assert.equal(u, undefined)
+    })
 
     it('accepts a valid username & password', async () => {
       const u = await user.authenticate({
