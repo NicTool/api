@@ -36,6 +36,6 @@ async function createTestUser() {
 async function createTestSession() {
   this.sessionId = await session.create({
     nt_user_id: userCase.nt_user_id,
-    nt_user_session: 12345,
+    nt_user_session: '3.0.0',
   })
 }

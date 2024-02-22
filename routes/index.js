@@ -32,7 +32,6 @@ const setup = async () => {
     },
   })
 
-  await server.register(require('@hapi/basic'))
   await server.register(require('@hapi/cookie'))
   await server.register(require('@hapi/inert'))
   const sessionCfg = await Config.get('session')
@@ -65,7 +64,7 @@ const setup = async () => {
     method: '*',
     path: '/{any*}',
     handler: function (request, h) {
-      return h.response('404 Error! Page Not Found!').code(404)
+      return h.response({ msg: '404 Error! Page Not Found!' }).code(404)
     },
   })
 

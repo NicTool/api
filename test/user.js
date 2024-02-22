@@ -158,7 +158,7 @@ describe('session', function () {
     it('creates a login session', async () => {
       sessionId = await session.create({
         nt_user_id: userCase.nt_user_id,
-        nt_user_session: 12345,
+        nt_user_session: '3.0.0',
       })
       assert.ok(sessionId)
     })
@@ -172,7 +172,7 @@ describe('session', function () {
     })
 
     it('finds a session by session', async () => {
-      const s = await session.get({ nt_user_session: 12345 })
+      const s = await session.get({ nt_user_session: '3.0.0' })
       assert.ok(s.nt_user_session_id)
     })
   })

@@ -14,10 +14,10 @@ module.exports = (server) => {
       handler: async (request, h) => {
         // console.log(request.auth)
         if (request.auth.isAuthenticated) {
-          return h.response('You ARE logged in!').code(200)
+          return h.response({ msg: 'You ARE logged in!' }).code(200)
         }
 
-        return h.response('You are NOT logged in!').code(401)
+        return h.response({ msg: 'You are NOT logged in!' }).code(401)
       },
     },
     {
@@ -35,7 +35,7 @@ module.exports = (server) => {
 
         const sessId = await Session.create({
           nt_user_id: account.nt_user_id,
-          nt_user_session: '12345',
+          nt_user_session: '3.0.0',
         })
 
         request.cookieAuth.set({
@@ -51,9 +51,9 @@ module.exports = (server) => {
       handler: (request, h) => {
         if (request.auth.isAuthenticated) {
           request.cookieAuth.clear()
-          return h.response('You are logged out').code(200)
+          return h.response({ msg: 'You are logged out' }).code(200)
         }
-        return h.response('You are NOT logged in!').code(401)
+        return h.response({ msg: 'You are NOT logged in!' }).code(401)
       },
     },
   ])
