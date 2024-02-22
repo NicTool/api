@@ -12,29 +12,86 @@ after(async () => {
   await this.server.stop()
 })
 
-describe('routes', () => {
-  describe('GET /login', () => {
-    it('responds with 200', async () => {
-      const res = await this.server.inject({
-        method: 'GET',
-        url: '/login',
-      })
-      assert.deepEqual(res.statusCode, 200)
-    })
-  })
+const parseCookie = (c) => {
+  return c.split(';')[0]
+}
 
-  describe('POST /login', () => {
-    it('responds with 302', async () => {
+describe('routes', () => {
+  const routes = [{ GET: '/' }, { GET: '/user' }, { DELETE: '/session' }]
+
+  for (const r of routes) {
+    const key = Object.keys(r)[0]
+    const val = Object.values(r)[0]
+    describe(`${key} ${val}`, () => {
+      it('no session responds with 401', async () => {
+        const res = await this.server.inject({
+          method: key,
+          url: val,
+        })
+        assert.deepEqual(res.statusCode, 401)
+      })
+    })
+  }
+
+  describe('POST /session', () => {
+    it('valid auth sets a cookie', async () => {
       const res = await this.server.inject({
         method: 'POST',
-        url: '/login',
+        url: '/session',
         payload: {
           username: `${userCase.username}@example.com`,
           password: 'Wh@tA-Decent#P6ssw0rd',
         },
       })
-      // console.log(res.result)
-      assert.deepEqual(res.statusCode, 302)
+      assert.ok(res.headers['set-cookie'][0])
+      // console.log(res.headers['set-cookie'][0])
+      this.sessionCookie = parseCookie(res.headers['set-cookie'][0])
+      // console.log(this.sessionCookie)
     })
+  })
+
+  describe('with valid session, can retrieve URIs that require auth', () => {
+    before(async () => {
+      const res = await this.server.inject({
+        method: 'POST',
+        url: '/session',
+        payload: {
+          username: `${userCase.username}@example.com`,
+          password: 'Wh@tA-Decent#P6ssw0rd',
+        },
+      })
+      assert.ok(res.headers['set-cookie'][0])
+      this.sessionCookie = parseCookie(res.headers['set-cookie'][0])
+    })
+
+    after(async () => {
+      const res = await this.server.inject({
+        method: 'DELETE',
+        url: '/session',
+        headers: {
+          Cookie: this.sessionCookie,
+        },
+      })
+      console.log(res.result)
+    })
+
+    const routes = [{ GET: '/' }, { GET: '/user' }, { DELETE: '/session' }]
+
+    for (const r of routes) {
+      const key = Object.keys(r)[0]
+      const val = Object.values(r)[0]
+      it(`${key} ${val}`, async () => {
+        const res = await this.server.inject({
+          method: key,
+          url: val,
+          headers: {
+            Cookie: this.sessionCookie,
+          },
+        })
+        assert.equal(res.request.auth.isAuthenticated, true)
+        assert.equal(res.statusCode, 200)
+        // console.log(res.result)
+      })
+    }
   })
 })

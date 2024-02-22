@@ -1,25 +1,10 @@
 const assert = require('node:assert/strict')
-const { describe, it, before, after } = require('node:test')
+const { describe, it, after } = require('node:test')
 
 const session = require('../lib/session')
 const user = require('../lib/user')
 
 const userCase = require('./fixtures/user.json')
-
-before(async () => {
-  this.sessionId = await session.create({
-    nt_user_id: userCase.nt_user_id,
-    nt_user_session: 12345,
-  })
-
-  let users = await user.read({ nt_user_id: userCase.nt_user_id })
-  if (users.length === 1) return
-
-  const instance = JSON.parse(JSON.stringify(userCase))
-  instance.password = 'Wh@tA-Decent#P6ssw0rd'
-
-  await user.create(instance)
-})
 
 after(async () => {
   // user._mysql.disconnect()
@@ -27,9 +12,9 @@ after(async () => {
 })
 
 describe('user', function () {
-  describe('read', function () {
+  describe('get', function () {
     it('finds existing user by nt_user_id', async () => {
-      const u = await user.read({ nt_user_id: 4096 })
+      const u = await user.get({ nt_user_id: 4096 })
       // console.log(u)
       assert.deepEqual(u[0], {
         nt_group_id: 4096,
@@ -43,7 +28,7 @@ describe('user', function () {
     })
 
     it('finds existing user by username', async () => {
-      const u = await user.read({ username: 'unit-test' })
+      const u = await user.get({ username: 'unit-test' })
       // console.log(u)
       assert.deepEqual(u[0], {
         nt_group_id: 4096,
@@ -58,10 +43,10 @@ describe('user', function () {
 
     it('deletes a user', async () => {
       await user.delete({ nt_user_id: 4096 })
-      let u = await user.read({ nt_user_id: 4096 })
+      let u = await user.get({ nt_user_id: 4096 })
       assert.equal(u[0].deleted, 1)
       await user.delete({ nt_user_id: 4096 }, 0) // restore
-      u = await user.read({ nt_user_id: 4096 })
+      u = await user.get({ nt_user_id: 4096 })
       assert.equal(u[0].deleted, 0)
     })
   })
@@ -139,9 +124,21 @@ describe('user', function () {
   })
 
   describe('authenticate', () => {
-    it.todo('rejects invalid user', () => {})
+    it('rejects invalid user', async () => {
+      const u = await user.authenticate({
+        username: 'fake-test@example.com',
+        password: 'evilCrackerJack',
+      })
+      assert.equal(u, undefined)
+    })
 
-    it.todo('rejects invalid pass', () => {})
+    it('rejects invalid pass', async () => {
+      const u = await user.authenticate({
+        username: 'unit-test@example.com',
+        password: 'evilCrackerJack',
+      })
+      assert.equal(u, undefined)
+    })
 
     it('accepts a valid username & password', async () => {
       const u = await user.authenticate({
@@ -155,26 +152,41 @@ describe('user', function () {
 
 describe('session', function () {
   // session._mysql.debug(true)
+  let sessionId
 
   describe('create', () => {
     it('creates a login session', async () => {
-      const s = await session.create({
+      sessionId = await session.create({
         nt_user_id: userCase.nt_user_id,
         nt_user_session: 12345,
       })
-      assert.ok(s)
+      assert.ok(sessionId)
     })
   })
 
-  describe('read', function () {
+  describe('get', () => {
     it('finds a session by ID', async () => {
-      const s = await session.read({ id: this.sessionId })
-      assert.ok(s)
+      const s = await session.get({ nt_user_session_id: sessionId })
+      // console.log(s)
+      assert.ok(s.nt_user_session_id)
     })
 
     it('finds a session by session', async () => {
-      const s = await session.read({ nt_user_session: 12345 })
-      assert.ok(s)
+      const s = await session.get({ nt_user_session: 12345 })
+      assert.ok(s.nt_user_session_id)
+    })
+  })
+
+  describe('delete', () => {
+    it('deletes a session by ID', async () => {
+      assert.ok(await session.delete({ nt_user_session_id: sessionId }))
+    })
+
+    it('does not find a deleted session', async () => {
+      assert.equal(
+        await session.get({ nt_user_session_id: sessionId }),
+        undefined,
+      )
     })
   })
 })
