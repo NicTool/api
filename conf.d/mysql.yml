@@ -1,4 +1,4 @@
-
+# default settings apply to EVERY deployment
 default:
   host: 127.0.0.1
   port: 3306
@@ -10,14 +10,17 @@ default:
     - TIMESTAMP
   decimalNumbers: true
 
+# settings below this line override default settings
 production:
   host: mysql
   password: "********"
 
+# used for CI testing (GitHub Actions workflows)
 test:
   user: root
   password: root
 
+# used by code coverage testing
 cov:
   user: root
   password: root

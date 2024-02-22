@@ -10,6 +10,7 @@
     "prettier": "npx prettier *.js lib routes test html --check",
     "prettier:fix": "npm run prettier -- --write",
     "start": "NODE_ENV=production node ./server",
+    "develop": "NODE_ENV=development node ./server",
     "test": "test/fixtures/run.sh",
     "versions": "npx dependency-version-checker check",
     "watch": "npm run test -- --watch"
