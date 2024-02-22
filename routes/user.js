@@ -32,17 +32,14 @@ module.exports = (server) => {
         if (!account) {
           return h.response('Invalid authentication').code(401)
         }
-        // console.log(account)
 
         const sessId = await Session.create({
           nt_user_id: account.nt_user_id,
           nt_user_session: '12345',
         })
-        // console.log(`sessId:`)
-        // console.log(sessId)
 
         request.cookieAuth.set({
-          nt_user_id: sessId.nt_user_id,
+          nt_user_id: account.nt_user_id,
           nt_session_id: sessId.nt_user_session_id,
         })
         return h.response(`SUCCESS: you are logged in`).code(200)
@@ -51,9 +48,7 @@ module.exports = (server) => {
     {
       method: 'DELETE',
       path: '/session',
-      // auth: { mode: 'try' },
       handler: (request, h) => {
-        // console.log(request.auth)
         if (request.auth.isAuthenticated) {
           request.cookieAuth.clear()
           return h.response('You are logged out').code(200)

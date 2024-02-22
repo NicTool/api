@@ -44,7 +44,7 @@ const setup = async () => {
       const s = await Session.get({ nt_user_session_id: session.session_id })
       if (!s) return { isValid: false } // invalid cookie
 
-      // const account = await User.read({ nt_user_id: s.nt_user_id })
+      // const account = await User.get({ nt_user_id: s.nt_user_id })
       return { isValid: true } // , credentials: account }
     },
   })

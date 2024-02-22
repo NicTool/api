@@ -17,14 +17,14 @@ const setup = async () => {
 setup()
 
 async function createTestGroup() {
-  let g = group.read({ nt_group_id: groupCase.nt_group_id })
+  let g = group.get({ nt_group_id: groupCase.nt_group_id })
   if (g.length === 1) return
 
   await group.create(groupCase)
 }
 
 async function createTestUser() {
-  let u = await user.read({ nt_user_id: userCase.nt_user_id })
+  let u = await user.get({ nt_user_id: userCase.nt_user_id })
   if (u.length === 1) return
 
   const instance = JSON.parse(JSON.stringify(userCase))

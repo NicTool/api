@@ -12,9 +12,9 @@ after(async () => {
 })
 
 describe('user', function () {
-  describe('read', function () {
+  describe('get', function () {
     it('finds existing user by nt_user_id', async () => {
-      const u = await user.read({ nt_user_id: 4096 })
+      const u = await user.get({ nt_user_id: 4096 })
       // console.log(u)
       assert.deepEqual(u[0], {
         nt_group_id: 4096,
@@ -28,7 +28,7 @@ describe('user', function () {
     })
 
     it('finds existing user by username', async () => {
-      const u = await user.read({ username: 'unit-test' })
+      const u = await user.get({ username: 'unit-test' })
       // console.log(u)
       assert.deepEqual(u[0], {
         nt_group_id: 4096,
@@ -43,10 +43,10 @@ describe('user', function () {
 
     it('deletes a user', async () => {
       await user.delete({ nt_user_id: 4096 })
-      let u = await user.read({ nt_user_id: 4096 })
+      let u = await user.get({ nt_user_id: 4096 })
       assert.equal(u[0].deleted, 1)
       await user.delete({ nt_user_id: 4096 }, 0) // restore
-      u = await user.read({ nt_user_id: 4096 })
+      u = await user.get({ nt_user_id: 4096 })
       assert.equal(u[0].deleted, 0)
     })
   })
