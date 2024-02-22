@@ -9,14 +9,15 @@ const qs = require('qs')
 
 const util = require('../lib/util')
 util.setEnv()
-const config = require('../lib/config')
-const user = require('../lib/user')
+const Config = require('../lib/config')
+const Session = require('../lib/session')
+const User = require('../lib/user')
 const UserRoutes = require('./user')
 
 let server
 
 const setup = async () => {
-  const httpCfg = await config.get('http')
+  const httpCfg = await Config.get('http')
 
   server = hapi.server({
     port: httpCfg.port,
@@ -34,20 +35,17 @@ const setup = async () => {
   await server.register(require('@hapi/basic'))
   await server.register(require('@hapi/cookie'))
   await server.register(require('@hapi/inert'))
-  const sessionCfg = await config.get('session')
+  const sessionCfg = await Config.get('session')
 
   server.auth.strategy('session', 'cookie', {
     cookie: sessionCfg.cookie,
 
-    redirectTo: '/login',
-
     validate: async (request, session) => {
-      // console.log(`validate session: ${session}`)
-      const account = await session.read({ nt_user_session: session })
+      const s = await Session.get({ nt_user_session_id: session.session_id })
+      if (!s) return { isValid: false } // invalid cookie
 
-      if (!account) return { isValid: false } // invalid cookie
-
-      return { isValid: true, credentials: account }
+      // const account = await User.read({ nt_user_id: s.nt_user_id })
+      return { isValid: true } // , credentials: account }
     },
   })
 
@@ -56,10 +54,9 @@ const setup = async () => {
   server.route({
     method: 'GET',
     path: '/',
-    handler: (request) => {
-      return `Hello World! ${request?.auth?.credentials?.name}`
+    handler: (request, h) => {
+      return h.response({ joy: true }).code(200)
     },
-    // options: {},
   })
 
   UserRoutes(server)
@@ -73,7 +70,7 @@ const setup = async () => {
   })
 
   server.events.on('stop', () => {
-    user._mysql.disconnect()
+    User._mysql.disconnect()
   })
 }
 

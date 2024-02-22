@@ -57,12 +57,14 @@ const mysqlTestCfg = {
 
 const sessCfg = {
   cookie: {
+    clearInvalid: true,
     isHttpOnly: true,
     isSameSite: 'Strict',
     isSecure: false,
     name: 'sid-nictool',
     password: '^NicTool.Is,The#Best_Dns-Manager$',
     path: '/',
+    ttl: 3600000,
   },
   keepAlive: false,
 }

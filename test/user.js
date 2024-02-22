@@ -6,13 +6,6 @@ const user = require('../lib/user')
 
 const userCase = require('./fixtures/user.json')
 
-before(async () => {
-  this.sessionId = await session.create({
-    nt_user_id: userCase.nt_user_id,
-    nt_user_session: 12345,
-  })
-})
-
 after(async () => {
   // user._mysql.disconnect()
   session._mysql.disconnect()
@@ -159,26 +152,41 @@ describe('user', function () {
 
 describe('session', function () {
   // session._mysql.debug(true)
+  let sessionId
 
   describe('create', () => {
     it('creates a login session', async () => {
-      const s = await session.create({
+      sessionId = await session.create({
         nt_user_id: userCase.nt_user_id,
         nt_user_session: 12345,
       })
-      assert.ok(s)
+      assert.ok(sessionId)
     })
   })
 
-  describe('read', function () {
+  describe('get', () => {
     it('finds a session by ID', async () => {
-      const s = await session.read({ id: this.sessionId })
-      assert.ok(s)
+      const s = await session.get({ nt_user_session_id: sessionId })
+      // console.log(s)
+      assert.ok(s.nt_user_session_id)
     })
 
     it('finds a session by session', async () => {
-      const s = await session.read({ nt_user_session: 12345 })
-      assert.ok(s)
+      const s = await session.get({ nt_user_session: 12345 })
+      assert.ok(s.nt_user_session_id)
+    })
+  })
+
+  describe('delete', () => {
+    it('deletes a session by ID', async () => {
+      assert.ok(await session.delete({ nt_user_session_id: sessionId }))
+    })
+
+    it('does not find a deleted session', async () => {
+      assert.equal(
+        await session.get({ nt_user_session_id: sessionId }),
+        undefined,
+      )
     })
   })
 })

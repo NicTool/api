@@ -1,57 +1,64 @@
-const schema = require('@nictool/nt-validate')
+const validate = require('@nictool/nt-validate')
 
 const User = require('../lib/user')
+const Session = require('../lib/session')
 
 module.exports = (server) => {
   server.route([
     {
       method: 'GET',
-      path: '/login',
+      path: '/user',
       options: {
-        auth: { mode: 'try' },
-        plugins: {
-          cookie: {
-            redirectTo: false,
-          },
-        },
-        handler: async (request, h) => {
-          if (request.auth.isAuthenticated) {
-            return h.redirect('/')
-          }
+        // auth: { mode: 'try' },
+      },
+      handler: async (request, h) => {
+        // console.log(request.auth)
+        if (request.auth.isAuthenticated) {
+          return h.response('You ARE logged in!').code(200)
+        }
 
-          return 'You need to log in!'
-        },
+        return h.response('You are NOT logged in!').code(401)
       },
     },
     {
       method: 'POST',
-      path: '/login',
+      path: '/session',
       options: {
         auth: { mode: 'try' },
-        handler: async (request, h) => {
-          const account = await User.authenticate(request.payload)
-          if (!account) return 'Invalid authentication'
+        validate: { payload: validate.login },
+      },
+      handler: async (request, h) => {
+        const account = await User.authenticate(request.payload)
+        if (!account) {
+          return h.response('Invalid authentication').code(401)
+        }
+        // console.log(account)
 
-          // TODO: generate session
+        const sessId = await Session.create({
+          nt_user_id: account.nt_user_id,
+          nt_user_session: '12345',
+        })
+        // console.log(`sessId:`)
+        // console.log(sessId)
 
-          // console.log(account)
-
-          request.cookieAuth.set({ id: account.nt_user_id })
-          return h.redirect('/')
-        },
-        validate: {
-          payload: schema.login,
-        },
+        request.cookieAuth.set({
+          nt_user_id: sessId.nt_user_id,
+          nt_session_id: sessId.nt_user_session_id,
+        })
+        return h.response(`SUCCESS: you are logged in`).code(200)
       },
     },
     {
-      method: 'GET',
-      path: '/logout',
-      options: {
-        handler: (request, h) => {
+      method: 'DELETE',
+      path: '/session',
+      // auth: { mode: 'try' },
+      handler: (request, h) => {
+        // console.log(request.auth)
+        if (request.auth.isAuthenticated) {
           request.cookieAuth.clear()
-          return h.redirect('/')
-        },
+          return h.response('You are logged out').code(200)
+        }
+        return h.response('You are NOT logged in!').code(401)
       },
     },
   ])

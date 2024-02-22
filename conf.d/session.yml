@@ -4,15 +4,16 @@ default:
     # https://hapi.dev/module/cookie/api/?v=12.0.1
     name: sid-nictool
     password: af1b926a5e21f535c4f5b6c42941c4cf
-    # ttl:
+    ttl: 3600000   # 1 hour
     # domain:
     path: /
-    # clearInvalid: false
+    clearInvalid: true
     isSameSite: Strict
     isSecure: true
     isHttpOnly: true
   keepAlive: false
   # redirectTo:
+  # group: NicTool
 
 production:
   cookie:
