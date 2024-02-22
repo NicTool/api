@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict')
-const { describe, it, before, after } = require('node:test')
+const { describe, it, after } = require('node:test')
 
 const session = require('../lib/session')
 const user = require('../lib/user')
