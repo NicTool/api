@@ -51,7 +51,7 @@ jobs:
         node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
-      - name: sudo /etc/init.d/mysql start
+      - run: sudo /etc/init.d/mysql start
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
