@@ -10,7 +10,7 @@ module.exports = (server) => {
       path: '/user',
       options: {
         response: {
-          schema: validate.user.userGET,
+          schema: validate.user.GET,
         },
         // tags: ['api'],
       },
@@ -36,7 +36,7 @@ module.exports = (server) => {
       path: '/user/{id}',
       options: {
         response: {
-          schema: validate.user.userGET,
+          schema: validate.user.GET,
         },
         tags: ['api'],
       },
@@ -79,7 +79,7 @@ module.exports = (server) => {
           payload: validate.user.userPOST,
         },
         response: {
-          schema: validate.user.userGET,
+          schema: validate.user.GET,
         },
         tags: ['api'],
       },
@@ -103,7 +103,7 @@ module.exports = (server) => {
               msg: `I created this user`,
             },
           })
-          .code(200)
+          .code(201)
       },
     },
     {
@@ -111,7 +111,7 @@ module.exports = (server) => {
       path: '/user/{id}',
       options: {
         response: {
-          schema: validate.user.userGET,
+          schema: validate.user.GET,
         },
         tags: ['api'],
       },

@@ -17,9 +17,6 @@ const Config = require('../lib/config')
 const Session = require('../lib/session')
 const User = require('../lib/user')
 
-const SessionRoutes = require('./session')
-const UserRoutes = require('./user')
-
 let server
 
 const setup = async () => {
@@ -78,8 +75,9 @@ const setup = async () => {
     },
   })
 
-  SessionRoutes(server)
-  UserRoutes(server)
+  require('./group')(server)
+  require('./user')(server)
+  require('./session')(server)
 
   server.route({
     method: '*',
