@@ -1,6 +1,6 @@
 {
-  "nt_group_id": 4096,
   "nt_user_id": 4096,
+  "nt_group_id": 4096,
   "username": "unit-test",
   "email": "unit-test@example.com",
   "first_name": "Unit",

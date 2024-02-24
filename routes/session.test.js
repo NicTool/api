@@ -1,8 +1,8 @@
 const assert = require('node:assert/strict')
 const { describe, it, before, after } = require('node:test')
 
-const { init } = require('../routes')
-const userCase = require('./fixtures/user.json')
+const { init } = require('./index')
+const userCase = require('../test/user.json')
 
 before(async () => {
   this.server = await init()
@@ -19,22 +19,23 @@ const parseCookie = (c) => {
 describe('routes', () => {
   const routes = [{ GET: '/' }, { GET: '/user' }, { DELETE: '/session' }]
 
-  for (const r of routes) {
-    const key = Object.keys(r)[0]
-    const val = Object.values(r)[0]
-    describe(`${key} ${val}`, () => {
-      it('no session responds with 401', async () => {
+  describe('no session responds with 401', () => {
+    for (const r of routes) {
+      const key = Object.keys(r)[0]
+      const val = Object.values(r)[0]
+      it(`${key} ${val}`, async () => {
         const res = await this.server.inject({
           method: key,
           url: val,
         })
         assert.deepEqual(res.statusCode, 401)
+        // console.log(res.result)
       })
-    })
-  }
+    }
+  })
 
-  describe('POST /session', () => {
-    it('valid auth sets a cookie', async () => {
+  describe('valid auth sets a cookie', () => {
+    it('POST /session', async () => {
       const res = await this.server.inject({
         method: 'POST',
         url: '/session',
@@ -44,13 +45,12 @@ describe('routes', () => {
         },
       })
       assert.ok(res.headers['set-cookie'][0])
-      // console.log(res.headers['set-cookie'][0])
       this.sessionCookie = parseCookie(res.headers['set-cookie'][0])
-      // console.log(this.sessionCookie)
+      // console.log(res.result)
     })
   })
 
-  describe('with valid session, can retrieve URIs that require auth', () => {
+  describe('with session, can retrieve private URIs', () => {
     before(async () => {
       const res = await this.server.inject({
         method: 'POST',
@@ -72,10 +72,16 @@ describe('routes', () => {
           Cookie: this.sessionCookie,
         },
       })
-      console.log(res.result)
+      // console.log(res.result)
+      assert.equal(res.statusCode, 200)
     })
 
-    const routes = [{ GET: '/' }, { GET: '/user' }, { DELETE: '/session' }]
+    const routes = [
+      { GET: '/' },
+      { GET: '/user' },
+      { GET: '/session' },
+      { DELETE: '/session' },
+    ]
 
     for (const r of routes) {
       const key = Object.keys(r)[0]

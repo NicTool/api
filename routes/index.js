@@ -2,16 +2,22 @@
 
 const path = require('node:path')
 
-const hapi = require('@hapi/hapi')
+const Hapi = require('@hapi/hapi')
+const Inert = require('@hapi/inert')
+const Vision = require('@hapi/vision')
+const HapiSwagger = require('hapi-swagger')
+
 const qs = require('qs')
 // const hoek = require('@hapi/hoek')
-// const validate = require('@nictool/nt-validate')
+// const validate = require('@nictool/validate')
 
 const util = require('../lib/util')
 util.setEnv()
 const Config = require('../lib/config')
 const Session = require('../lib/session')
 const User = require('../lib/user')
+
+const SessionRoutes = require('./session')
 const UserRoutes = require('./user')
 
 let server
@@ -19,7 +25,7 @@ let server
 const setup = async () => {
   const httpCfg = await Config.get('http')
 
-  server = hapi.server({
+  server = Hapi.server({
     port: httpCfg.port,
     host: httpCfg.host,
     query: {
@@ -32,9 +38,22 @@ const setup = async () => {
     },
   })
 
-  await server.register(require('@hapi/basic'))
   await server.register(require('@hapi/cookie'))
   await server.register(require('@hapi/inert'))
+  await server.register([
+    Inert,
+    Vision,
+    {
+      plugin: HapiSwagger,
+      options: {
+        info: {
+          title: 'NicTool API Documentation',
+          version: require('../package.json').version,
+        },
+      },
+    },
+  ])
+
   const sessionCfg = await Config.get('session')
 
   server.auth.strategy('session', 'cookie', {
@@ -59,13 +78,14 @@ const setup = async () => {
     },
   })
 
+  SessionRoutes(server)
   UserRoutes(server)
 
   server.route({
     method: '*',
     path: '/{any*}',
     handler: function (request, h) {
-      return h.response('404 Error! Page Not Found!').code(404)
+      return h.response({ msg: '404 Error! Page Not Found!' }).code(404)
     },
   })
 

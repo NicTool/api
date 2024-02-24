@@ -1,5 +1,5 @@
 {
-  "name": "nt-api",
+  "name": "@nictool/api",
   "version": "3.0.0",
   "description": "NicTool API",
   "main": "index.js",
@@ -11,9 +11,9 @@
     "prettier:fix": "npm run prettier -- --write",
     "start": "NODE_ENV=production node ./server",
     "develop": "NODE_ENV=development node ./server",
-    "test": "test/fixtures/run.sh",
+    "test": "test/run.sh",
     "versions": "npx dependency-version-checker check",
-    "watch": "npm run test -- --watch"
+    "watch": "node test/.setup.js && node --test --watch; node test/.teardown.js"
   },
   "repository": {
     "type": "git",
@@ -35,12 +35,13 @@
     "eslint": "^8.56.0"
   },
   "dependencies": {
-    "@hapi/basic": "^7.0.2",
     "@hapi/cookie": "^12.0.1",
     "@hapi/hapi": "^21.3.3",
     "@hapi/hoek": "^11.0.4",
     "@hapi/inert": "^7.1.0",
-    "@nictool/nt-validate": "^0.6.1",
+    "@hapi/vision": "^7.0.3",
+    "@nictool/validate": "^0.6.3",
+    "hapi-swagger": "^17.2.1",
     "mysql2": "^3.9.1",
     "qs": "^6.11.2",
     "yaml": "^2.3.4"
