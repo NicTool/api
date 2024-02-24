@@ -1,6 +1,6 @@
-const group = require('../../lib/group')
-const user = require('../../lib/user')
-// const session = require('../../lib/session')
+const group = require('../lib/group')
+const user = require('../lib/user')
+// const session = require('../lib/session')
 const userCase = require('./user.json')
 const groupCase = require('./group.json')
 
@@ -8,8 +8,8 @@ const teardown = async () => {
   // await destroyTestSession()
   await destroyTestUser()
   await destroyTestGroup()
-  await user._mysql.disconnect()
-  await group._mysql.disconnect()
+  // await user._mysql.disconnect()
+  // await group._mysql.disconnect()
   process.exit()
 }
 

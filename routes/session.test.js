@@ -1,8 +1,8 @@
 const assert = require('node:assert/strict')
 const { describe, it, before, after } = require('node:test')
 
-const { init } = require('../routes')
-const userCase = require('./fixtures/user.json')
+const { init } = require('./index')
+const userCase = require('../test/user.json')
 
 before(async () => {
   this.server = await init()
@@ -46,7 +46,7 @@ describe('routes', () => {
       })
       assert.ok(res.headers['set-cookie'][0])
       this.sessionCookie = parseCookie(res.headers['set-cookie'][0])
-      // console.log(this.sessionCookie)
+      // console.log(res.result)
     })
   })
 
@@ -72,10 +72,16 @@ describe('routes', () => {
           Cookie: this.sessionCookie,
         },
       })
-      console.log(res.result)
+      // console.log(res.result)
+      assert.equal(res.statusCode, 200)
     })
 
-    const routes = [{ GET: '/' }, { GET: '/user' }, { DELETE: '/session' }]
+    const routes = [
+      { GET: '/' },
+      { GET: '/user' },
+      { GET: '/session' },
+      { DELETE: '/session' },
+    ]
 
     for (const r of routes) {
       const key = Object.keys(r)[0]
