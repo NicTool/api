@@ -9,18 +9,19 @@ const userCase = require('./user.json')
 const groupCase = require('./group.json')
 
 switch (process.argv[2]) {
-	case 'setup':
-		setup()
-		break;
-	case 'teardown':
-		teardown()
-		break;
-	default:
-		console.log(`\nusage:\tnode ${path.basename(process.argv[1])} [ setup | teardown ]\n`)
+  case 'setup':
+    setup()
+    break
+  case 'teardown':
+    teardown()
+    break
+  default:
+    console.log(
+      `\nusage:\tnode ${path.basename(process.argv[1])} [ setup | teardown ]\n`,
+    )
 }
 
-
-async function setup () {
+async function setup() {
   await createTestGroup()
   await createTestUser()
   // await createTestSession()
@@ -46,14 +47,14 @@ async function createTestUser() {
   await user.create(instance)
 }
 
-async function createTestSession() {
-  this.sessionId = await session.create({
-    nt_user_id: userCase.nt_user_id,
-    nt_user_session: '3.0.0',
-  })
-}
+// async function createTestSession() {
+//   this.sessionId = await session.create({
+//     nt_user_id: userCase.nt_user_id,
+//     nt_user_session: '3.0.0',
+//   })
+// }
 
-async function teardown () {
+async function teardown() {
   // await destroyTestSession()
   await destroyTestUser()
   await destroyTestGroup()
@@ -70,6 +71,6 @@ async function destroyTestUser() {
   await user.destroy({ nt_user_id: userCase.nt_user_id })
 }
 
-async function destroyTestSession() {
-  // await session.destroy({ nt_user_id: ... })
-}
+// async function destroyTestSession() {
+//   await session.destroy({ nt_user_id: ... })
+// }
