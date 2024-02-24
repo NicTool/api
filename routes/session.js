@@ -40,7 +40,7 @@ module.exports = (server) => {
       options: {
         auth: { mode: 'try' },
         validate: {
-          payload: validate.user.sessionPost,
+          payload: validate.user.sessionPOST,
         },
         response: {
           schema: validate.user.sessionOut,

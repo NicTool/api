@@ -5,8 +5,8 @@ const path = require('node:path')
 const group = require('../lib/group')
 const user = require('../lib/user')
 // const session = require('../lib/session')
-const userCase = require('./user.json')
-const groupCase = require('./group.json')
+const userCase = require('./v3/user.json')
+const groupCase = require('./v3/group.json')
 
 switch (process.argv[2]) {
   case 'setup':
@@ -31,14 +31,14 @@ async function setup() {
 }
 
 async function createTestGroup() {
-  let g = group.get({ nt_group_id: groupCase.nt_group_id })
+  let g = group.get({ id: groupCase.id })
   if (g.length === 1) return
 
   await group.create(groupCase)
 }
 
 async function createTestUser() {
-  let u = await user.get({ nt_user_id: userCase.nt_user_id })
+  let u = await user.get({ id: userCase.id })
   if (u.length === 1) return
 
   const instance = JSON.parse(JSON.stringify(userCase))
@@ -64,11 +64,11 @@ async function teardown() {
 }
 
 async function destroyTestGroup() {
-  await group.destroy({ nt_group_id: groupCase.nt_group_id })
+  await group.destroy({ id: groupCase.id })
 }
 
 async function destroyTestUser() {
-  await user.destroy({ nt_user_id: userCase.nt_user_id })
+  await user.destroy({ id: userCase.id })
 }
 
 // async function destroyTestSession() {

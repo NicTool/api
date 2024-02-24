@@ -1,6 +1,6 @@
 {
-  "nt_group_id": 4096,
-  "parent_group_id": 0,
+  "id": 4096,
+  "parent_gid": 0,
   "name": "example.com",
   "deleted": false
 }

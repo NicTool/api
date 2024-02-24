@@ -13,7 +13,7 @@
     "develop": "NODE_ENV=development node ./server",
     "test": "test/run.sh",
     "versions": "npx dependency-version-checker check",
-    "watch": "node test/.setup.js && node --test --watch; node test/.teardown.js"
+    "watch": "node test/suite setup && node --test --watch; node test/suite teardown"
   },
   "repository": {
     "type": "git",

@@ -111,3 +111,33 @@ process.on('unhandledRejection', (err) => {
   console.error(err)
   process.exit(1)
 })
+
+/*
+  server.route({
+    method: 'POST', // GET PUT POST DELETE
+    path: '/',
+    handler: (request, h) => {
+      // request.query
+      // request.params
+      // request.payload
+      // console.log(request.payload)
+      return 'Hello Login World!'
+    },
+    options: {
+      auth: { mode: 'try' },
+      // plugins: {
+      //   cookie: {
+      //     redirectTo: false,
+      //   }
+      // },
+      // response: {},
+      validate: {
+        // headers: true,
+        // query: true,
+        params: validate.login,
+        // payload: true,
+        // state: true,
+      },
+    },
+  }),
+*/

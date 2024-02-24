@@ -1,8 +1,9 @@
 {
-  "nt_user_id": 4096,
-  "nt_group_id": 4096,
+  "id": 4096,
+  "gid": 4096,
   "username": "unit-test",
   "email": "unit-test@example.com",
+  "password": "What@%Fun34Security",
   "first_name": "Unit",
   "last_name": "Test",
   "deleted": false
