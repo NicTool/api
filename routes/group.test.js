@@ -2,7 +2,7 @@ const assert = require('node:assert/strict')
 const { describe, it, before, after } = require('node:test')
 
 const { init } = require('./index')
-const Group = require('../lib/Group')
+const Group = require('../lib/group')
 const groupCase = require('../test/v3/group.json')
 
 before(async () => {
@@ -52,6 +52,7 @@ describe('group', () => {
     testCase.id = 4095 // make it unique
     testCase.name = `example2.com`
     delete testCase.deleted
+    // console.log(testCase)
 
     const res = await this.server.inject({
       method: 'POST',
