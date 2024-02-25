@@ -1,5 +1,5 @@
 #!/bin/sh
 
-node test/.setup.js
+node test/suite.js setup
 node --test
-node test/.teardown.js
+node test/suite.js teardown

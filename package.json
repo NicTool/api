@@ -13,7 +13,7 @@
     "develop": "NODE_ENV=development node ./server",
     "test": "test/run.sh",
     "versions": "npx dependency-version-checker check",
-    "watch": "node test/.setup.js && node --test --watch; node test/.teardown.js"
+    "watch": "node test/suite setup && node --test --watch; node test/suite teardown"
   },
   "repository": {
     "type": "git",
@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/NicTool/api#readme",
   "devDependencies": {
-    "eslint": "^8.56.0"
+    "eslint": "^8.57.0"
   },
   "dependencies": {
     "@hapi/cookie": "^12.0.1",
@@ -40,7 +40,7 @@
     "@hapi/hoek": "^11.0.4",
     "@hapi/inert": "^7.1.0",
     "@hapi/vision": "^7.0.3",
-    "@nictool/validate": "^0.6.3",
+    "@nictool/validate": "^0.7.1",
     "hapi-swagger": "^17.2.1",
     "mysql2": "^3.9.1",
     "qs": "^6.11.2",

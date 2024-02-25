@@ -2,7 +2,7 @@ const assert = require('node:assert/strict')
 const { describe, it, before, after } = require('node:test')
 
 const { init } = require('./index')
-const userCase = require('../test/user.json')
+const userCase = require('../test/v3/user.json')
 
 before(async () => {
   this.server = await init()
