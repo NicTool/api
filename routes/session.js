@@ -12,7 +12,7 @@ module.exports = (server) => {
       path: '/session',
       options: {
         response: {
-          schema: validate.user.sessionOut,
+          schema: validate.session.GET,
         },
         tags: ['api'],
       },
@@ -40,10 +40,10 @@ module.exports = (server) => {
       options: {
         auth: { mode: 'try' },
         validate: {
-          payload: validate.user.sessionPOST,
+          payload: validate.session.POST,
         },
         response: {
-          schema: validate.user.sessionOut,
+          schema: validate.session.GET,
         },
         tags: ['api'],
       },
@@ -93,7 +93,7 @@ module.exports = (server) => {
       },
       options: {
         response: {
-          schema: validate.user.sessionOut,
+          schema: validate.session.GET,
         },
         tags: ['api'],
       },
