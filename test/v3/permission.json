@@ -1,7 +1,7 @@
 {
-  "id": 4095,
-  "uid": 4095,
-  "gid": 4095,
+  "id": 4096,
+  "uid": 4096,
+  "gid": 4096,
   "inherit": true,
   "name": "Test Permission",
   "group_write": false,
