@@ -15,7 +15,7 @@ default:
     isHttpOnly: true
   keepAlive: false
   # redirectTo:
-  # group: NicTool
+  group: NicTool
 
 production:
   port: 8080
