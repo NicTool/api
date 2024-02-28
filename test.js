@@ -2,14 +2,14 @@
 
 import path from 'node:path'
 
-import Group from '../lib/group.js'
-import User from '../lib/user.js'
-import Session from '../lib/session.js'
+import Group from './lib/group.js'
+import User from './lib/user.js'
+import Session from './lib/session.js'
 
-import groupCase from '../lib/test/group.json' with { type: 'json' }
-import userCase from '../lib/test/user.json' with { type: 'json' }
-import groupCaseR from '../routes/test/group.json' with { type: 'json' }
-import userCaseR from '../routes/test/user.json' with { type: 'json' }
+import groupCase from './lib/test/group.json' with { type: 'json' }
+import userCase from './lib/test/user.json' with { type: 'json' }
+import groupCaseR from './routes/test/group.json' with { type: 'json' }
+import userCaseR from './routes/test/user.json' with { type: 'json' }
 
 switch (process.argv[2]) {
   case 'setup':

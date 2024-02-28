@@ -8,7 +8,7 @@ import User from '../lib/user.js'
 import groupCase from './test/group.json' with { type: 'json' }
 import userCase from './test/user.json' with { type: 'json' }
 
-let server, sessionCookie
+let server
 
 before(async () => {
   server = await init()
@@ -21,6 +21,8 @@ after(async () => {
 })
 
 describe('group routes', () => {
+  let sessionCookie
+
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
       method: 'POST',

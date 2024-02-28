@@ -12,9 +12,9 @@
     "prettier:fix": "npm run prettier -- --write",
     "start": "NODE_ENV=production node ./server",
     "develop": "NODE_ENV=development node ./server",
-    "test": "test/run.sh",
+    "test": "test.sh",
     "versions": "npx dependency-version-checker check",
-    "watch": "node --no-warnings=ExperimentalWarning test/suite setup && node --test --watch --no-warnings=ExperimentalWarning; node --no-warnings=ExperimentalWarning test/suite teardown"
+    "watch": "test.sh watch"
   },
   "repository": {
     "type": "git",
@@ -43,10 +43,10 @@
     "@hapi/hoek": "^11.0.4",
     "@hapi/inert": "^7.1.0",
     "@hapi/vision": "^7.0.3",
-    "@nictool/validate": "^0.7.1",
+    "@nictool/validate": "^0.7.2",
     "hapi-swagger": "^17.2.1",
-    "mysql2": "^3.9.1",
+    "mysql2": "^3.9.2",
     "qs": "^6.11.2",
-    "yaml": "^2.3.4"
+    "yaml": "^2.4.0"
   }
 }
