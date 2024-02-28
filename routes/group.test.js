@@ -1,64 +1,67 @@
-const assert = require('node:assert/strict')
-const { describe, it, before, after } = require('node:test')
+import assert from 'node:assert/strict'
+import { describe, it, before, after } from 'node:test'
 
-const { init } = require('./index')
-const Group = require('../lib/group')
-const groupCase = require('../test/v3/group.json')
+import { init } from './index.js'
+import Group from '../lib/group.js'
+import User from '../lib/user.js'
+
+import groupCase from './test/group.json' with { type: 'json' }
+import userCase from './test/user.json' with { type: 'json' }
+
+let server
 
 before(async () => {
-  const userCase = require('../test/v3/user.json')
-  this.server = await init()
-  const res = await this.server.inject({
-    method: 'POST',
-    url: '/session',
-    payload: {
-      username: `${userCase.username}@example.com`,
-      password: 'Wh@tA-Decent#P6ssw0rd',
-    },
-  })
-  assert.ok(res.headers['set-cookie'][0])
-  this.sessionCookie = res.headers['set-cookie'][0].split(';')[0]
+  server = await init()
+  await Group.create(groupCase)
+  await User.create(userCase)
 })
 
 after(async () => {
-  const res = await this.server.inject({
-    method: 'DELETE',
-    url: '/session',
-    headers: {
-      Cookie: this.sessionCookie,
-    },
-  })
-  // console.log(res.result)
-  assert.equal(res.statusCode, 200)
-
-  await this.server.stop()
+  await server.stop()
 })
 
-describe('group', () => {
-  it('GET /group/4096', async () => {
-    const res = await this.server.inject({
+describe('group routes', () => {
+  let sessionCookie
+
+  it('POST /session establishes a session', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/session',
+      payload: {
+        username: `${userCase.username}@${groupCase.name}`,
+        password: userCase.password,
+      },
+    })
+    assert.ok(res.headers['set-cookie'][0])
+    sessionCookie = res.headers['set-cookie'][0].split(';')[0]
+  })
+
+  it(`GET /group/${groupCase.id}`, async () => {
+    const res = await server.inject({
       method: 'GET',
-      url: '/group/4096',
+      url: `/group/${groupCase.id}`,
       headers: {
-        Cookie: this.sessionCookie,
+        Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
+  const case2Id = 4094
+
   it('POST /group', async () => {
     const testCase = JSON.parse(JSON.stringify(groupCase))
-    testCase.id = 4095 // make it unique
+    testCase.id = case2Id // make it unique
     testCase.name = `example2.com`
     delete testCase.deleted
     // console.log(testCase)
 
-    const res = await this.server.inject({
+    const res = await server.inject({
       method: 'POST',
       url: '/group',
       headers: {
-        Cookie: this.sessionCookie,
+        Cookie: sessionCookie,
       },
       payload: testCase,
     })
@@ -67,54 +70,73 @@ describe('group', () => {
   })
 
   it('GET /group', async () => {
-    const res = await this.server.inject({
+    const res = await server.inject({
       method: 'GET',
-      url: '/group/4095',
+      url: `/group/${case2Id}`,
       headers: {
-        Cookie: this.sessionCookie,
+        Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
-  it('DELETE /group', async () => {
-    const res = await this.server.inject({
+  it(`DELETE /group/${case2Id}`, async () => {
+    const res = await server.inject({
       method: 'DELETE',
-      url: '/group/4095',
+      url: `/group/${case2Id}`,
       headers: {
-        Cookie: this.sessionCookie,
+        Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
-  it('GET /group/4095', async () => {
-    const res = await this.server.inject({
+  it(`GET /group/${case2Id}`, async () => {
+    const res = await server.inject({
       method: 'GET',
-      url: '/group/4095',
+      url: `/group/${case2Id}`,
       headers: {
-        Cookie: this.sessionCookie,
+        Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 204)
   })
 
-  it('GET /group/4095 (deleted)', async () => {
-    const res = await this.server.inject({
+  it(`GET /group/${case2Id} (deleted)`, async () => {
+    const res = await server.inject({
       method: 'GET',
-      url: '/group/4095?deleted=1',
+      url: `/group/${case2Id}?deleted=1`,
       headers: {
-        Cookie: this.sessionCookie,
+        Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
-  it('nukes /group/4095', async () => {
-    assert.ok(Group.destroy({ id: 4095 }))
+  it(`DELETE /group/${case2Id}`, async () => {
+    const res = await server.inject({
+      method: 'DELETE',
+      url: `/group/${case2Id}?destroy=true`,
+      headers: {
+        Cookie: sessionCookie,
+      },
+    })
+    // console.log(res.result)
+    assert.equal(res.statusCode, 200)
+  })
+
+  it('DELETE /session', async () => {
+    const res = await server.inject({
+      method: 'DELETE',
+      url: '/session',
+      headers: {
+        Cookie: sessionCookie,
+      },
+    })
+    assert.equal(res.statusCode, 200)
   })
 })

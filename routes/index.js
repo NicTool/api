@@ -1,25 +1,28 @@
 'use strict'
 
-const path = require('node:path')
+import path from 'node:path'
+import url from 'node:url'
 
-const Hapi = require('@hapi/hapi')
-const Inert = require('@hapi/inert')
-const Vision = require('@hapi/vision')
-const HapiSwagger = require('hapi-swagger')
+import Hapi from '@hapi/hapi'
+import Cookie from '@hapi/cookie'
+import Inert from '@hapi/inert'
+import Vision from '@hapi/vision'
+import HapiSwagger from 'hapi-swagger'
+// import Hoek from '@hapi/hoek'
 
-const qs = require('qs')
-// const hoek = require('@hapi/hoek')
-// const validate = require('@nictool/validate')
+import qs from 'qs'
 
-const util = require('../lib/util')
-util.setEnv()
-const Config = require('../lib/config')
-const Session = require('../lib/session')
-const User = require('../lib/user')
+import Config from '../lib/config.js'
+
+import pkgJson from '../package.json' with { type: 'json' }
+
+import GroupRoutes from './group.js'
+import { User, UserRoutes } from './user.js'
+import { Session, SessionRoutes } from './session.js'
 
 let server
 
-const setup = async () => {
+async function setup() {
   const httpCfg = await Config.get('http')
 
   server = Hapi.server({
@@ -30,13 +33,16 @@ const setup = async () => {
     },
     routes: {
       files: {
-        relativeTo: path.join(__dirname, 'html'),
+        relativeTo: path.join(
+          path.dirname(url.fileURLToPath(import.meta.url)),
+          'html',
+        ),
       },
     },
   })
 
-  await server.register(require('@hapi/cookie'))
-  await server.register(require('@hapi/inert'))
+  await server.register(Cookie)
+  await server.register(Inert)
   await server.register([
     Inert,
     Vision,
@@ -45,7 +51,7 @@ const setup = async () => {
       options: {
         info: {
           title: 'NicTool API Documentation',
-          version: require('../package.json').version,
+          version: pkgJson.version,
         },
       },
     },
@@ -57,10 +63,10 @@ const setup = async () => {
     cookie: sessionCfg.cookie,
 
     validate: async (request, session) => {
-      const s = await Session.get({ nt_user_session_id: session.session_id })
+      const s = await Session.get({ id: session.nt_user_session_id })
       if (!s) return { isValid: false } // invalid cookie
 
-      // const account = await User.get({ nt_user_id: s.nt_user_id })
+      // const account = await User.get({ id: s.nt_user_id })
       return { isValid: true } // , credentials: account }
     },
   })
@@ -75,9 +81,9 @@ const setup = async () => {
     },
   })
 
-  require('./group')(server)
-  require('./user')(server)
-  require('./session')(server)
+  GroupRoutes(server)
+  UserRoutes(server)
+  SessionRoutes(server)
 
   server.route({
     method: '*',
@@ -88,22 +94,26 @@ const setup = async () => {
   })
 
   server.events.on('stop', () => {
-    User._mysql.disconnect()
+    if (User.mysql) User.mysql.disconnect()
+    if (Session.mysql) Session.mysql.disconnect()
   })
 }
 
-exports.init = async () => {
+async function init() {
   await setup()
   await server.initialize()
   return server
 }
 
-exports.start = async () => {
+async function start() {
   await setup()
+  /* c8 ignore next 3 */
   await server.start()
   console.log(`Server running at: ${server.info.uri}`)
   return server
 }
+
+export { init, start }
 
 process.on('unhandledRejection', (err) => {
   console.error(err)

@@ -1,8 +1,9 @@
 {
   "name": "@nictool/api",
-  "version": "3.0.0",
+  "version": "3.0.0-alpha.0",
   "description": "NicTool API",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "format": "npm run lint:fix && npm run prettier:fix",
     "lint": "npx eslint *.js **/*.js",
@@ -11,9 +12,9 @@
     "prettier:fix": "npm run prettier -- --write",
     "start": "NODE_ENV=production node ./server",
     "develop": "NODE_ENV=development node ./server",
-    "test": "test/run.sh",
+    "test": "./test.sh",
     "versions": "npx dependency-version-checker check",
-    "watch": "node test/suite setup && node --test --watch; node test/suite teardown"
+    "watch": "./test.sh watch"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,8 @@
   },
   "homepage": "https://github.com/NicTool/api#readme",
   "devDependencies": {
+    "@babel/eslint-parser": "^7.23.10",
+    "@babel/plugin-syntax-import-attributes": "^7.23.3",
     "eslint": "^8.57.0"
   },
   "dependencies": {
@@ -40,10 +43,10 @@
     "@hapi/hoek": "^11.0.4",
     "@hapi/inert": "^7.1.0",
     "@hapi/vision": "^7.0.3",
-    "@nictool/validate": "^0.7.1",
+    "@nictool/validate": "^0.7.2",
     "hapi-swagger": "^17.2.1",
-    "mysql2": "^3.9.1",
+    "mysql2": "^3.9.2",
     "qs": "^6.11.2",
-    "yaml": "^2.3.4"
+    "yaml": "^2.4.0"
   }
 }

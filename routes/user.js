@@ -1,9 +1,9 @@
-const validate = require('@nictool/validate')
+import validate from '@nictool/validate'
 
-const User = require('../lib/user')
-const Util = require('../lib/util')
+import User from '../lib/user.js'
+import { meta } from '../lib/util.js'
 
-module.exports = (server) => {
+function UserRoutes(server) {
   server.route([
     {
       method: 'GET',
@@ -24,7 +24,7 @@ module.exports = (server) => {
           .response({
             user: users[0],
             meta: {
-              api: Util.meta.api,
+              api: meta.api,
               msg: `this is you`,
             },
           })
@@ -49,7 +49,7 @@ module.exports = (server) => {
           return h
             .response({
               meta: {
-                api: Util.meta.api,
+                api: meta.api,
                 msg: `No unique user match`,
               },
             })
@@ -64,7 +64,7 @@ module.exports = (server) => {
             user: users[0],
             group: { id: gid },
             meta: {
-              api: Util.meta.api,
+              api: meta.api,
               msg: `here's your user`,
             },
           })
@@ -84,7 +84,6 @@ module.exports = (server) => {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        // console.log(request.payload)
         const uid = await User.create(request.payload)
         if (!uid) {
           console.log(`POST /user oops`) // TODO
@@ -99,7 +98,7 @@ module.exports = (server) => {
             user: users[0],
             group,
             meta: {
-              api: Util.meta.api,
+              api: meta.api,
               msg: `I created this user`,
             },
           })
@@ -121,21 +120,23 @@ module.exports = (server) => {
           return h
             .response({
               meta: {
-                api: Util.meta.api,
+                api: meta.api,
                 msg: `No unique user match`,
               },
             })
             .code(204)
         }
 
-        await User.delete({ id: users[0].id })
+        const action = request.query.destroy === 'true' ? 'destroy' : 'delete'
+        await User[action]({ id: users[0].id })
+
         delete users[0].gid
 
         return h
           .response({
             user: users[0],
             meta: {
-              api: Util.meta.api,
+              api: meta.api,
               msg: `I deleted that user`,
             },
           })
@@ -144,3 +145,7 @@ module.exports = (server) => {
     },
   ])
 }
+
+export default UserRoutes
+
+export { User, UserRoutes }

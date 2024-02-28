@@ -1,5 +1,5 @@
 'use strict'
 
-const { start } = require('./routes/index')
+import { start } from './routes/index.js'
 
 start()
