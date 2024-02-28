@@ -12,9 +12,9 @@
     "prettier:fix": "npm run prettier -- --write",
     "start": "NODE_ENV=production node ./server",
     "develop": "NODE_ENV=development node ./server",
-    "test": "./test.sh",
+    "test": "sh test.sh",
     "versions": "npx dependency-version-checker check",
-    "watch": "./test.sh watch"
+    "watch": "sh test.sh watch"
   },
   "repository": {
     "type": "git",
