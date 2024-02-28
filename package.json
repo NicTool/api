@@ -14,7 +14,7 @@
     "develop": "NODE_ENV=development node ./server",
     "test": "test/run.sh",
     "versions": "npx dependency-version-checker check",
-    "watch": "node test/suite setup && node --test --watch; node test/suite teardown"
+    "watch": "node --no-warnings=ExperimentalWarning test/suite setup && node --test --watch --no-warnings=ExperimentalWarning; node --no-warnings=ExperimentalWarning test/suite teardown"
   },
   "repository": {
     "type": "git",

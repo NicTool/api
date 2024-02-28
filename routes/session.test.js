@@ -1,30 +1,40 @@
-const assert = require('node:assert/strict')
-const { describe, it, before, after } = require('node:test')
+import assert from 'node:assert/strict'
+import { describe, it, before, after } from 'node:test'
 
-const { init } = require('./index')
-const userCase = require('../test/v3/user.json')
+import { init } from './index.js'
+import userCase from './test/user.json' with { type: 'json' }
+import groupCase from './test/group.json' with { type: 'json' }
+
+import User from '../lib/user.js'
+import Group from '../lib/group.js'
+
+let server
 
 before(async () => {
-  this.server = await init()
+  await Group.create(groupCase)
+  await User.create(userCase)
+  server = await init()
 })
 
 after(async () => {
-  await this.server.stop()
+  await server.stop()
 })
 
 const parseCookie = (c) => {
   return c.split(';')[0]
 }
 
-describe('routes', () => {
-  const routes = [{ GET: '/' }, { GET: '/user' }, { DELETE: '/session' }]
+describe('session routes', () => {
+  let sessionCookie
+
+  const routes = [{ GET: '/' }, { DELETE: '/session' }]
 
   describe('no session responds with 401', () => {
     for (const r of routes) {
       const key = Object.keys(r)[0]
       const val = Object.values(r)[0]
       it(`${key} ${val}`, async () => {
-        const res = await this.server.inject({
+        const res = await server.inject({
           method: key,
           url: val,
         })
@@ -36,40 +46,43 @@ describe('routes', () => {
 
   describe('valid auth sets a cookie', () => {
     it('POST /session', async () => {
-      const res = await this.server.inject({
+      const res = await server.inject({
         method: 'POST',
         url: '/session',
         payload: {
-          username: `${userCase.username}@example.com`,
-          password: 'Wh@tA-Decent#P6ssw0rd',
+          username: `${userCase.username}@${groupCase.name}`,
+          password: userCase.password,
         },
       })
+      assert.equal(res.statusCode, 200)
       assert.ok(res.headers['set-cookie'][0])
-      this.sessionCookie = parseCookie(res.headers['set-cookie'][0])
-      // console.log(res.result)
+      sessionCookie = parseCookie(res.headers['set-cookie'][0])
     })
   })
 
   describe('with session, can retrieve private URIs', () => {
+    let sessionCookie
+
     before(async () => {
-      const res = await this.server.inject({
+      const res = await server.inject({
         method: 'POST',
         url: '/session',
         payload: {
-          username: `${userCase.username}@example.com`,
-          password: 'Wh@tA-Decent#P6ssw0rd',
+          username: `${userCase.username}@${groupCase.name}`,
+          password: userCase.password,
         },
       })
+      assert.equal(res.statusCode, 200)
       assert.ok(res.headers['set-cookie'][0])
-      this.sessionCookie = parseCookie(res.headers['set-cookie'][0])
+      sessionCookie = parseCookie(res.headers['set-cookie'][0])
     })
 
     after(async () => {
-      const res = await this.server.inject({
+      const res = await server.inject({
         method: 'DELETE',
         url: '/session',
         headers: {
-          Cookie: this.sessionCookie,
+          Cookie: sessionCookie,
         },
       })
       // console.log(res.result)
@@ -78,7 +91,6 @@ describe('routes', () => {
 
     const routes = [
       { GET: '/' },
-      { GET: '/user' },
       { GET: '/session' },
       { DELETE: '/session' },
     ]
@@ -87,11 +99,11 @@ describe('routes', () => {
       const key = Object.keys(r)[0]
       const val = Object.values(r)[0]
       it(`${key} ${val}`, async () => {
-        const res = await this.server.inject({
+        const res = await server.inject({
           method: key,
           url: val,
           headers: {
-            Cookie: this.sessionCookie,
+            Cookie: sessionCookie,
           },
         })
         assert.equal(res.request.auth.isAuthenticated, true)

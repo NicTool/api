@@ -1,11 +1,11 @@
-const validate = require('@nictool/validate')
+import validate from '@nictool/validate'
 
-const Group = require('../lib/group')
-const User = require('../lib/user')
-const Session = require('../lib/session')
-const Util = require('../lib/util')
+import Group from '../lib/group.js'
+import User from '../lib/user.js'
+import Session from '../lib/session.js'
+import { meta } from '../lib/util.js'
 
-module.exports = (server) => {
+function SessionRoutes(server) {
   server.route([
     {
       method: 'GET',
@@ -19,7 +19,7 @@ module.exports = (server) => {
       handler: async (request, h) => {
         const { nt_user_id, nt_user_session_id } = request.state['sid-nictool']
         const users = await User.get({ id: nt_user_id })
-        const groups = await Group.get({ nt_group_id: users[0].gid })
+        const groups = await Group.get({ id: users[0].gid })
         delete users[0].gid
         return h
           .response({
@@ -27,7 +27,7 @@ module.exports = (server) => {
             group: groups[0],
             session: { id: nt_user_session_id },
             meta: {
-              api: Util.meta.api,
+              api: meta.api,
               msg: `working on it`,
             },
           })
@@ -56,6 +56,7 @@ module.exports = (server) => {
         const sessId = await Session.create({
           nt_user_id: account.user.id,
           nt_user_session: '3.0.0',
+          last_access: parseInt(Date.now() / 1000, 10),
         })
 
         request.cookieAuth.set({
@@ -69,7 +70,7 @@ module.exports = (server) => {
             group: account.group,
             session: { id: sessId },
             meta: {
-              api: Util.meta.api,
+              api: meta.api,
               msg: `you are logged in`,
             },
           })
@@ -85,7 +86,7 @@ module.exports = (server) => {
         return h
           .response({
             meta: {
-              api: Util.meta.api,
+              api: meta.api,
               msg: 'You are logged out',
             },
           })
@@ -99,4 +100,11 @@ module.exports = (server) => {
       },
     },
   ])
+}
+
+export default SessionRoutes
+
+export {
+  Session,
+  SessionRoutes,
 }

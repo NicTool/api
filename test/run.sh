@@ -1,5 +1,5 @@
 #!/bin/sh
 
-node test/suite.js setup
-node --test
-node test/suite.js teardown
+node --no-warnings=ExperimentalWarning test/suite.js setup
+node --no-warnings=ExperimentalWarning --test
+node --no-warnings=ExperimentalWarning test/suite.js teardown
