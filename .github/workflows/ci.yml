@@ -50,8 +50,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [ 20 ]
         # node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: [ 20 ]
       fail-fast: false
     steps:
       - run: sudo /etc/init.d/mysql start
@@ -68,8 +68,8 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        node-version: [ 20 ]
         # node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: [ 20 ]
       fail-fast: false
     steps:
       - name: Install & Start MySQL
@@ -107,4 +107,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: sh sql/init-mysql.sh
       - run: npm install
-      - run: npm test
+      - run: sh test.sh
+        env:
+          MYSQL_PWD: ''
