@@ -3,6 +3,7 @@
   "version": "3.0.0-alpha.0",
   "description": "NicTool API",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "format": "npm run lint:fix && npm run prettier:fix",
     "lint": "npx eslint *.js **/*.js",
