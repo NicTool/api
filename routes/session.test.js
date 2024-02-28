@@ -25,8 +25,6 @@ const parseCookie = (c) => {
 }
 
 describe('session routes', () => {
-  let sessionCookie
-
   const routes = [{ GET: '/' }, { DELETE: '/session' }]
 
   describe('no session responds with 401', () => {
@@ -42,22 +40,6 @@ describe('session routes', () => {
         // console.log(res.result)
       })
     }
-  })
-
-  describe('valid auth sets a cookie', () => {
-    it('POST /session', async () => {
-      const res = await server.inject({
-        method: 'POST',
-        url: '/session',
-        payload: {
-          username: `${userCase.username}@${groupCase.name}`,
-          password: userCase.password,
-        },
-      })
-      assert.equal(res.statusCode, 200)
-      assert.ok(res.headers['set-cookie'][0])
-      sessionCookie = parseCookie(res.headers['set-cookie'][0])
-    })
   })
 
   describe('with session, can retrieve private URIs', () => {

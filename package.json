@@ -33,6 +33,8 @@
   },
   "homepage": "https://github.com/NicTool/api#readme",
   "devDependencies": {
+    "@babel/eslint-parser": "^7.23.10",
+    "@babel/plugin-syntax-import-attributes": "^7.23.3",
     "eslint": "^8.57.0"
   },
   "dependencies": {

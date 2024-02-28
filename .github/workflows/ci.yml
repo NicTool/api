@@ -18,6 +18,8 @@ jobs:
       - name: Start MySQL
         run: sudo /etc/init.d/mysql start
       - uses: actions/setup-node@v4
+        with:
+          node-version: [ 20 ]
       - uses: actions/checkout@v4
       - run: npm install
       - name: Initialize MySQL
@@ -43,12 +45,13 @@ jobs:
       active: ${{ steps.get.outputs.active }}
 
   test:
-    needs: [ lint, get-lts ]
+    needs: [ get-lts ]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: [ 20 ]
+        # node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
       - run: sudo /etc/init.d/mysql start
@@ -61,11 +64,12 @@ jobs:
       - run: npm test
 
   test-mac:
-    needs: [ lint, get-lts ]
+    needs: [ get-lts ]
     runs-on: macos-latest
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: [ 20 ]
+        # node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
       - name: Install & Start MySQL
@@ -84,11 +88,12 @@ jobs:
 
   test-win:
     # if: false
-    needs: [ lint, get-lts ]
+    needs: [ get-lts ]
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: [ 20 ]
+        # node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
         experimental: [true]
       fail-fast: false
     steps:

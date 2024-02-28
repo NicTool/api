@@ -43,13 +43,13 @@ async function createTestUser() {
   await User.create(userCaseR)
 }
 
-async function createTestSession() {
-  await Session.create({
-    nt_user_id: userCase.nt_user_id,
-    nt_user_session: '3.0.0',
-    last_access: parseInt(Date.now(), 10),
-  })
-}
+// async function createTestSession() {
+//   await Session.create({
+//     nt_user_id: userCase.nt_user_id,
+//     nt_user_session: '3.0.0',
+//     last_access: parseInt(Date.now(), 10),
+//   })
+// }
 
 async function teardown() {
   await destroyTestSession()
