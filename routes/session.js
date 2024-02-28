@@ -104,7 +104,4 @@ function SessionRoutes(server) {
 
 export default SessionRoutes
 
-export {
-  Session,
-  SessionRoutes,
-}
+export { Session, SessionRoutes }

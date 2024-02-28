@@ -3,7 +3,7 @@ import validate from '@nictool/validate'
 import Group from '../lib/group.js'
 import { meta } from '../lib/util.js'
 
-function GroupRoutes(server, mysql) {
+function GroupRoutes(server) {
   server.route([
     {
       method: 'GET',

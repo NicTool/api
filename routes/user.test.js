@@ -25,7 +25,6 @@ const parseCookie = (c) => {
 }
 
 describe('user routes', () => {
-
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
       method: 'POST',
@@ -36,7 +35,7 @@ describe('user routes', () => {
       },
     })
     assert.ok(res.headers['set-cookie'][0])
-    sessionCookie = parseCookie(res.headers['set-cookie'][0])    
+    sessionCookie = parseCookie(res.headers['set-cookie'][0])
   })
 
   it('GET /user', async () => {

@@ -148,7 +148,4 @@ function UserRoutes(server) {
 
 export default UserRoutes
 
-export {
-  User,
-  UserRoutes,
-}
+export { User, UserRoutes }

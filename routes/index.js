@@ -33,7 +33,10 @@ async function setup() {
     },
     routes: {
       files: {
-        relativeTo: path.join(path.dirname(url.fileURLToPath(import.meta.url)), 'html'),
+        relativeTo: path.join(
+          path.dirname(url.fileURLToPath(import.meta.url)),
+          'html',
+        ),
       },
     },
   })
@@ -109,10 +112,7 @@ async function start() {
   return server
 }
 
-export {
-  init,
-  start,
-}
+export { init, start }
 
 process.on('unhandledRejection', (err) => {
   console.error(err)

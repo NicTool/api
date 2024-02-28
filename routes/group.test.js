@@ -21,7 +21,6 @@ after(async () => {
 })
 
 describe('group routes', () => {
-
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
       method: 'POST',

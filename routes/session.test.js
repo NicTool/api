@@ -89,11 +89,7 @@ describe('session routes', () => {
       assert.equal(res.statusCode, 200)
     })
 
-    const routes = [
-      { GET: '/' },
-      { GET: '/session' },
-      { DELETE: '/session' },
-    ]
+    const routes = [{ GET: '/' }, { GET: '/session' }, { DELETE: '/session' }]
 
     for (const r of routes) {
       const key = Object.keys(r)[0]
