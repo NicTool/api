@@ -2,3 +2,33 @@
 default:
   host: localhost
   port: 3000
+  cookie:
+    # https://hapi.dev/module/cookie/api/?v=12.0.1
+    name: sid-nictool
+    password: af1b926a5e21f535c4f5b6c42941c4cf
+    ttl: 3600000   # 1 hour
+    # domain:
+    path: /
+    clearInvalid: true
+    isSameSite: Strict
+    isSecure: true
+    isHttpOnly: true
+  keepAlive: false
+  # redirectTo:
+  # group: NicTool
+
+production:
+  port: 8080
+  cookie:
+    # Set your own secret password. hint: openssl rand -hex 16
+    # password:
+
+test:
+  cookie:
+    isSecure: false
+    password: ^NicTool.Is,The#Best_Dns-Manager$
+
+development:
+  cookie:
+    isSecure: false
+    password: ^NicTool.Is,The#Best_Dns-Manager$
