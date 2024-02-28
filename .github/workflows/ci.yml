@@ -19,7 +19,7 @@ jobs:
         run: sudo /etc/init.d/mysql start
       - uses: actions/setup-node@v4
         with:
-          node-version: [ 20 ]
+          node-version: 20
       - uses: actions/checkout@v4
       - run: npm install
       - name: Initialize MySQL
