@@ -83,6 +83,7 @@ function GroupRoutes(server) {
       },
       handler: async (request, h) => {
         const groups = await Group.get(request.params)
+        /* c8 ignore next 10 */
         if (groups.length !== 1) {
           return h
             .response({

@@ -1,6 +1,6 @@
 {
   "name": "@nictool/api",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.2",
   "description": "NicTool API",
   "main": "index.js",
   "type": "module",
@@ -43,7 +43,7 @@
     "@hapi/hoek": "^11.0.4",
     "@hapi/inert": "^7.1.0",
     "@hapi/vision": "^7.0.3",
-    "@nictool/validate": "^0.7.2",
+    "@nictool/validate": "^0.7.3",
     "hapi-swagger": "^17.2.1",
     "mysql2": "^3.9.2",
     "qs": "^6.11.2",

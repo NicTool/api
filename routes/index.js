@@ -57,10 +57,8 @@ async function setup() {
     },
   ])
 
-  const sessionCfg = await Config.get('session')
-
   server.auth.strategy('session', 'cookie', {
-    cookie: sessionCfg.cookie,
+    cookie: httpCfg.cookie,
 
     validate: async (request, session) => {
       const s = await Session.get({ id: session.nt_user_session_id })

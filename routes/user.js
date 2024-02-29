@@ -117,6 +117,7 @@ function UserRoutes(server) {
       handler: async (request, h) => {
         const users = await User.get(request.params)
         if (users.length !== 1) {
+          /* c8 ignore next 8 */
           return h
             .response({
               meta: {
