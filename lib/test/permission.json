@@ -1,27 +1,18 @@
 {
   "id": 4096,
-  "uid": 4096,
-  "gid": 4096,
   "inherit": true,
   "name": "Test Permission",
-  "group_write": false,
-  "group_create": false,
-  "group_delete": false,
-  "zone_write": true,
-  "zone_create": true,
-  "zone_delegate": true,
-  "zone_delete": true,
-  "zonerecord_write": false,
-  "zonerecord_create": false,
-  "zonerecord_delegate": false,
-  "zonerecord_delete": false,
-  "user_write": false,
-  "user_create": false,
-  "user_delete": false,
-  "nameserver_write": false,
-  "nameserver_create": false,
-  "nameserver_delete": false,
   "self_write": false,
   "usable_ns": "",
-  "deleted": false
+  "deleted": false,
+  "group": { "id": 4096, "create": false, "write": false, "delete": false },
+  "nameserver": { "create": false, "write": false, "delete": false },
+  "zone": { "create": true, "write": true, "delete": true, "delegate": true },
+  "zonerecord": {
+    "create": false,
+    "write": false,
+    "delete": false,
+    "delegate": false
+  },
+  "user": { "id": 4096, "create": false, "write": false, "delete": false }
 }
