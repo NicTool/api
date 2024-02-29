@@ -3,10 +3,14 @@
   "inherit": true,
   "name": "Test Permission",
   "self_write": false,
-  "usable_ns": "",
   "deleted": false,
   "group": { "id": 4096, "create": false, "write": false, "delete": false },
-  "nameserver": { "create": false, "write": false, "delete": false },
+  "nameserver": {
+    "usable": [],
+    "create": false,
+    "write": false,
+    "delete": false
+  },
   "zone": { "create": true, "write": true, "delete": true, "delegate": true },
   "zonerecord": {
     "create": false,
