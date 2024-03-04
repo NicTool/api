@@ -78,7 +78,6 @@ function PermissionRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-
         const permission = await Permission.get({
           deleted: parseInt(request.query.deleted ?? 0),
           id: parseInt(request.params.id, 10),

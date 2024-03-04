@@ -1,9 +1,9 @@
 import validate from '@nictool/validate'
 
-import Group from '../lib/group.js'
+// import Group from '../lib/group.js'
 import User from '../lib/user.js'
 import Session from '../lib/session.js'
-import Permission from '../lib/permission.js'
+// import Permission from '../lib/permission.js'
 import { meta } from '../lib/util.js'
 
 function SessionRoutes(server) {

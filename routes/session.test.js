@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it, before, after } from 'node:test'
-import util from 'node:util'
+// import util from 'node:util'
 
 import { init } from './index.js'
 import userCase from './test/user.json' with { type: 'json' }
