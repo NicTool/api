@@ -13,7 +13,7 @@ default:
 # settings below this line override default settings
 production:
   host: mysql
-  password: "********"
+  password: '********'
 
 # used for CI testing (GitHub Actions workflows)
 test:
