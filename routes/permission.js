@@ -10,8 +10,7 @@ function PermissionRoutes(server) {
       path: '/permission/{id}',
       options: {
         validate: {
-          // params: ??,
-          query: validate.permission.GET,
+          query: validate.permission.v3,
         },
         response: {
           schema: validate.permission.GET,
@@ -19,12 +18,12 @@ function PermissionRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        // console.log(request.params)
-
-        const permission = await Permission.get({
-          deleted: request.query.deleted ?? 0,
+        const getArgs = {
+          deleted: request.query.deleted === true ? 1 : 0,
           id: parseInt(request.params.id, 10),
-        })
+        }
+
+        const permission = await Permission.get(getArgs)
 
         return h
           .response({
@@ -72,14 +71,17 @@ function PermissionRoutes(server) {
       method: 'DELETE',
       path: '/permission/{id}',
       options: {
-        // response: {
-        //   schema: validate.permission.GET,
-        // },
+        validate: {
+          query: validate.permission.DELETE,
+        },
+        response: {
+          schema: validate.permission.GET,
+        },
         tags: ['api'],
       },
       handler: async (request, h) => {
         const permission = await Permission.get({
-          deleted: parseInt(request.query.deleted ?? 0),
+          deleted: request.query.deleted === true ? 1 : 0,
           id: parseInt(request.params.id, 10),
         })
 
@@ -94,13 +96,10 @@ function PermissionRoutes(server) {
             .code(404)
         }
 
-        const action = request.query.destroy === 'true' ? 'destroy' : 'delete'
-        // console.log(`action: ${action}`)
-        await Permission[action]({
+        await Permission.delete({
           id: permission.id,
-          deleted: permission.deleted,
+          deleted: 1,
         })
-        delete permission.gid
 
         return h
           .response({

@@ -19,7 +19,10 @@ before(async () => {
   await Permission.create(permCase)
 })
 
+let case2Id = 4094
+
 after(async () => {
+  Permission.destroy({ id: case2Id })
   await server.stop()
 })
 
@@ -53,13 +56,11 @@ describe('permission routes', () => {
     assert.equal(res.result.permission.nameserver.create, false)
   })
 
-  let case2Id = 4094
-
-  it('POST /permission', async () => {
+  it(`POST /permission (${case2Id})`, async () => {
     const testCase = JSON.parse(JSON.stringify(permCase))
     testCase.id = case2Id // make it unique
-    testCase.uid = case2Id
-    testCase.gid = case2Id
+    testCase.user.id = case2Id
+    testCase.group.id = case2Id
     testCase.name = `Route Test Permission 2`
     delete testCase.deleted
     // console.log(testCase)
@@ -120,25 +121,14 @@ describe('permission routes', () => {
   it(`GET /permission/${case2Id} (deleted)`, async () => {
     const res = await server.inject({
       method: 'GET',
-      url: `/permission/${case2Id}?deleted=1`,
+      url: `/permission/${case2Id}?deleted=true`,
       headers: {
         Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
-  })
-
-  it(`DELETE /permission/${case2Id}`, async () => {
-    const res = await server.inject({
-      method: 'DELETE',
-      url: `/permission/${case2Id}?deleted=1&destroy=true`,
-      headers: {
-        Cookie: sessionCookie,
-      },
-    })
-    // console.log(res.result)
-    assert.equal(res.statusCode, 200)
+    assert.ok(res.result.permission)
   })
 
   it('DELETE /session', async () => {

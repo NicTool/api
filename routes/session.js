@@ -1,9 +1,8 @@
 import validate from '@nictool/validate'
 
-// import Group from '../lib/group.js'
 import User from '../lib/user.js'
 import Session from '../lib/session.js'
-// import Permission from '../lib/permission.js'
+
 import { meta } from '../lib/util.js'
 
 function SessionRoutes(server) {
@@ -19,13 +18,6 @@ function SessionRoutes(server) {
       },
       handler: async (request, h) => {
         const { user, group, session } = request.state['sid-nictool']
-
-        // const users = await User.get({ id: user.id })
-        // const groups = await Group.get({ id: users[0].gid })
-        // delete users[0].gid
-
-        // const userPerm = await Permission.get({ uid: user.id })
-        // const groupPerm = await Permission.getGroup({ uid: user.id })
 
         Session.put({ id: session.id, last_access: true })
 
@@ -89,6 +81,15 @@ function SessionRoutes(server) {
     {
       method: 'DELETE',
       path: '/session',
+      options: {
+        validate: {
+          query: validate.session.DELETE,
+        },
+        response: {
+          schema: validate.session.GET,
+        },
+        tags: ['api'],
+      },
       handler: (request, h) => {
         request.cookieAuth.clear()
 
@@ -100,12 +101,6 @@ function SessionRoutes(server) {
             },
           })
           .code(200)
-      },
-      options: {
-        response: {
-          schema: validate.session.GET,
-        },
-        tags: ['api'],
       },
     },
   ])
