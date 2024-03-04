@@ -21,7 +21,7 @@
   "nameserver_write": false,
   "nameserver_create": false,
   "nameserver_delete": false,
-  "self_write": false,
+  "self_write": true,
   "usable_ns": "",
   "deleted": false
 }

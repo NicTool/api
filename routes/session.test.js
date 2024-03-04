@@ -1,18 +1,22 @@
 import assert from 'node:assert/strict'
 import { describe, it, before, after } from 'node:test'
+import util from 'node:util'
 
 import { init } from './index.js'
 import userCase from './test/user.json' with { type: 'json' }
 import groupCase from './test/group.json' with { type: 'json' }
+import permCase from './test/permission.json' with { type: 'json' }
 
 import User from '../lib/user.js'
 import Group from '../lib/group.js'
+import Permission from '../lib/permission.js'
 
 let server
 
 before(async () => {
   await Group.create(groupCase)
   await User.create(userCase)
+  await Permission.create(permCase)
   server = await init()
 })
 
@@ -84,9 +88,9 @@ describe('session routes', () => {
             Cookie: sessionCookie,
           },
         })
+        // console.log(util.inspect(res.result, { depth: null }))
         assert.equal(res.request.auth.isAuthenticated, true)
         assert.equal(res.statusCode, 200)
-        // console.log(res.result)
       })
     }
   })
