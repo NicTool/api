@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { describe, it, before, after } from 'node:test'
-// import util from 'node:util'
 
 import { init } from './index.js'
 import userCase from './test/user.json' with { type: 'json' }
@@ -88,7 +87,6 @@ describe('session routes', () => {
             Cookie: sessionCookie,
           },
         })
-        // console.log(util.inspect(res.result, { depth: null }))
         assert.equal(res.request.auth.isAuthenticated, true)
         assert.equal(res.statusCode, 200)
       })
