@@ -5,6 +5,7 @@ import path from 'node:path'
 import Group from './lib/group.js'
 import User from './lib/user.js'
 import Session from './lib/session.js'
+import Permission from './lib/permission.js'
 
 import groupCase from './lib/test/group.json' with { type: 'json' }
 import userCase from './lib/test/user.json' with { type: 'json' }
@@ -55,6 +56,7 @@ async function teardown() {
   await destroyTestSession()
   await destroyTestUser()
   await destroyTestGroup()
+  await destroyTestPermission()
   await User.mysql.disconnect()
   await Group.mysql.disconnect()
   process.exit(0)
@@ -72,4 +74,9 @@ async function destroyTestUser() {
 
 async function destroyTestSession() {
   await Session.delete({ nt_user_id: userCase.id })
+}
+
+async function destroyTestPermission() {
+  await Permission.destroy({ id: userCase.id })
+  await Permission.destroy({ id: userCase.id - 1 })
 }

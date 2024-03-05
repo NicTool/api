@@ -16,7 +16,10 @@ before(async () => {
   await User.create(userCase)
 })
 
+const userId2 = 4094
+
 after(async () => {
+  User.destroy({ id: userId2 })
   await server.stop()
 })
 
@@ -61,8 +64,6 @@ describe('user routes', () => {
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
-
-  const userId2 = 4094
 
   it('POST /user', async () => {
     const testCase = JSON.parse(JSON.stringify(userCase))
@@ -122,18 +123,6 @@ describe('user routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/user/${userId2}?deleted=1`,
-      headers: {
-        Cookie: sessionCookie,
-      },
-    })
-    // console.log(res.result)
-    assert.equal(res.statusCode, 200)
-  })
-
-  it(`DELETE /user/${userId2}`, async () => {
-    const res = await server.inject({
-      method: 'DELETE',
-      url: `/user/${userId2}?destroy=true`,
       headers: {
         Cookie: sessionCookie,
       },

@@ -33,7 +33,7 @@ or
 
 `npm run develop (development)`
 
-will start up the HTTP service on the port specified in `conf.d/http.yml`. The default URL for the service is [http://localhost:3000](http://localhost:3000) and the API methods have documentation at [http://localhost:3000/documentation](http://localhost:3000/documentation).
+will start up the HTTP service on the port specified in `conf.d/http.yml`. The default URL for the service is [http://localhost:3000](http://localhost:3000) and the API methods have documentation at [http://localhost:3000/documentation#/](http://localhost:3000/documentation#/).
 
 
 ## Using the API service

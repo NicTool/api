@@ -1,6 +1,7 @@
 #!/bin/sh
 
 NODE="node --no-warnings=ExperimentalWarning"
+$NODE test.js teardown
 $NODE test.js setup
 
 if [ "$1" = "watch" ]; then

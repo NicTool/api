@@ -1,8 +1,8 @@
 import validate from '@nictool/validate'
 
-import Group from '../lib/group.js'
 import User from '../lib/user.js'
 import Session from '../lib/session.js'
+
 import { meta } from '../lib/util.js'
 
 function SessionRoutes(server) {
@@ -17,15 +17,15 @@ function SessionRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const { nt_user_id, nt_user_session_id } = request.state['sid-nictool']
-        const users = await User.get({ id: nt_user_id })
-        const groups = await Group.get({ id: users[0].gid })
-        delete users[0].gid
+        const { user, group, session } = request.state['sid-nictool']
+
+        Session.put({ id: session.id, last_access: true })
+
         return h
           .response({
-            user: users[0],
-            group: groups[0],
-            session: { id: nt_user_session_id },
+            user: user,
+            group: group,
+            session: { id: session.id },
             meta: {
               api: meta.api,
               msg: `working on it`,
@@ -54,14 +54,15 @@ function SessionRoutes(server) {
         }
 
         const sessId = await Session.create({
-          nt_user_id: account.user.id,
-          nt_user_session: '3.0.0',
+          uid: account.user.id,
+          session: '3.0.0',
           last_access: parseInt(Date.now() / 1000, 10),
         })
 
         request.cookieAuth.set({
-          nt_user_id: account.user.id,
-          nt_user_session_id: sessId,
+          user: account.user,
+          group: account.group,
+          session: { id: sessId },
         })
 
         return h
@@ -80,6 +81,15 @@ function SessionRoutes(server) {
     {
       method: 'DELETE',
       path: '/session',
+      options: {
+        validate: {
+          query: validate.session.DELETE,
+        },
+        response: {
+          schema: validate.session.GET,
+        },
+        tags: ['api'],
+      },
       handler: (request, h) => {
         request.cookieAuth.clear()
 
@@ -91,12 +101,6 @@ function SessionRoutes(server) {
             },
           })
           .code(200)
-      },
-      options: {
-        response: {
-          schema: validate.session.GET,
-        },
-        tags: ['api'],
       },
     },
   ])

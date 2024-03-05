@@ -19,6 +19,7 @@ import pkgJson from '../package.json' with { type: 'json' }
 import GroupRoutes from './group.js'
 import { User, UserRoutes } from './user.js'
 import { Session, SessionRoutes } from './session.js'
+import { PermissionRoutes } from './permission.js'
 
 let server
 
@@ -61,7 +62,7 @@ async function setup() {
     cookie: httpCfg.cookie,
 
     validate: async (request, session) => {
-      const s = await Session.get({ id: session.nt_user_session_id })
+      const s = await Session.get({ id: session.id })
       if (!s) return { isValid: false } // invalid cookie
 
       // const account = await User.get({ id: s.nt_user_id })
@@ -82,6 +83,7 @@ async function setup() {
   GroupRoutes(server)
   UserRoutes(server)
   SessionRoutes(server)
+  PermissionRoutes(server)
 
   server.route({
     method: '*',

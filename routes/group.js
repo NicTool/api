@@ -19,6 +19,7 @@ function GroupRoutes(server) {
           deleted: request.query.deleted ?? 0,
           id: parseInt(request.params.id, 10),
         })
+
         if (groups.length !== 1) {
           return h
             .response({
