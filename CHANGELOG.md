@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+
+### [3.0.0-alpha.4] - 2024-03-05
+
+- feat(lib/nameserver): added, with tests
+
+
 ### 3.0.0-alpha.3
 
 - routes/permission: added GET, POST, DELETE
@@ -14,3 +20,4 @@
 
 
 [3.0.0-alpha.3]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.3
+[3.0.0-alpha.4]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.4
