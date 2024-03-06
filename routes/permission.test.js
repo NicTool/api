@@ -11,6 +11,7 @@ import userCase from './test/user.json' with { type: 'json' }
 import permCase from './test/permission.json' with { type: 'json' }
 
 let server
+let case2Id = 4094
 
 before(async () => {
   server = await init()
@@ -18,8 +19,6 @@ before(async () => {
   await User.create(userCase)
   await Permission.create(permCase)
 })
-
-let case2Id = 4094
 
 after(async () => {
   Permission.destroy({ id: case2Id })
@@ -103,6 +102,18 @@ describe('permission routes', () => {
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
+  })
+
+  it(`DELETE /permission/${case2Id}`, async () => {
+    const res = await server.inject({
+      method: 'DELETE',
+      url: `/permission/${case2Id}`,
+      headers: {
+        Cookie: sessionCookie,
+      },
+    })
+    // console.log(res.result)
+    assert.equal(res.statusCode, 404)
   })
 
   it(`GET /permission/${case2Id}`, async () => {

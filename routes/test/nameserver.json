@@ -1,0 +1,19 @@
+{
+  "id": 4095,
+  "gid": 4095,
+  "name": "b.ns.example.com.",
+  "description": "",
+  "address": "2.3.4.5",
+  "address6": "2001:DB8::2",
+  "remote_login": "nsd",
+  "logdir": "/foo",
+  "datadir": "/bar",
+  "export": {
+    "interval": 0,
+    "serials": true,
+    "status": "last run:03-05 15:25<br>last cp :09-20 12:59",
+    "type": "NSD"
+  },
+  "ttl": 3600,
+  "deleted": false
+}

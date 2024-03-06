@@ -9,8 +9,11 @@ function GroupRoutes(server) {
       method: 'GET',
       path: '/group/{id}',
       options: {
+        validate: {
+          query: validate.group.GET_req,
+        },
         response: {
-          schema: validate.group.GET,
+          schema: validate.group.GET_res,
         },
         tags: ['api'],
       },
@@ -50,15 +53,12 @@ function GroupRoutes(server) {
           payload: validate.group.POST,
         },
         response: {
-          schema: validate.group.GET,
+          schema: validate.group.GET_res,
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
         const gid = await Group.create(request.payload)
-        if (!gid) {
-          console.log(`POST /group oops`) // TODO
-        }
 
         const groups = await Group.get({ id: gid })
 
@@ -77,13 +77,16 @@ function GroupRoutes(server) {
       method: 'DELETE',
       path: '/group/{id}',
       options: {
+        validate: {
+          query: validate.group.DELETE,
+        },
         response: {
-          schema: validate.group.GET,
+          schema: validate.group.GET_res,
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const groups = await Group.get(request.params)
+        const groups = await Group.get({ id: parseInt(request.params.id, 10) })
         /* c8 ignore next 10 */
         if (groups.length !== 1) {
           return h
@@ -96,8 +99,7 @@ function GroupRoutes(server) {
             .code(204)
         }
 
-        const action = request.query.destroy === 'true' ? 'destroy' : 'delete'
-        await Group[action]({ id: groups[0].id })
+        await Group.delete({ id: groups[0].id })
         delete groups[0].gid
 
         return h

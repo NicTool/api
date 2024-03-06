@@ -1,10 +1,19 @@
 #!/bin/sh
 
+set -eu
+
 NODE="node --no-warnings=ExperimentalWarning"
 $NODE test.js teardown
 $NODE test.js setup
 
-if [ "$1" = "watch" ]; then
+cleanup() {
+	echo "cleaning DB objects"
+	$NODE test.js teardown
+}
+
+trap cleanup EXIT 1 2 3 6
+
+if [ $# -ge 1 ] && [ "$1" = "watch" ]; then
 	$NODE --test --watch
 else
 	# if [ -n "$GITHUB_WORKFLOW" ]; then
@@ -16,5 +25,3 @@ else
 fi
 
 # npx mocha --exit --no-warnings=ExperimentalWarning lib/*.test.js routes/*.test.js
-
-$NODE test.js teardown

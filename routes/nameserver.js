@@ -1,19 +1,19 @@
 import validate from '@nictool/validate'
 
-import Permission from '../lib/permission.js'
+import Nameserver from '../lib/nameserver.js'
 import { meta } from '../lib/util.js'
 
-function PermissionRoutes(server) {
+function NameserverRoutes(server) {
   server.route([
     {
       method: 'GET',
-      path: '/permission/{id}',
+      path: '/nameserver/{id}',
       options: {
         validate: {
-          query: validate.permission.GET_req,
+          query: validate.nameserver.GET_req,
         },
         response: {
-          schema: validate.permission.GET_res,
+          schema: validate.nameserver.GET_res,
         },
         tags: ['api'],
       },
@@ -23,14 +23,14 @@ function PermissionRoutes(server) {
           id: parseInt(request.params.id, 10),
         }
 
-        const permission = await Permission.get(getArgs)
+        const nameservers = await Nameserver.get(getArgs)
 
         return h
           .response({
-            permission,
+            nameserver: nameservers[0],
             meta: {
               api: meta.api,
-              msg: `here's your permission`,
+              msg: `here's your nameserver`,
             },
           })
           .code(200)
@@ -38,27 +38,27 @@ function PermissionRoutes(server) {
     },
     {
       method: 'POST',
-      path: '/permission',
+      path: '/nameserver',
       options: {
         validate: {
-          payload: validate.permission.POST,
+          payload: validate.nameserver.POST,
         },
         response: {
-          schema: validate.permission.GET_res,
+          schema: validate.nameserver.GET_res,
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const pid = await Permission.create(request.payload)
+        const id = await Nameserver.create(request.payload)
 
-        const permission = await Permission.get({ id: pid })
+        const nameservers = await Nameserver.get({ id })
 
         return h
           .response({
-            permission,
+            nameserver: nameservers[0],
             meta: {
               api: meta.api,
-              msg: `the permission was created`,
+              msg: `the nameserver was created`,
             },
           })
           .code(201)
@@ -66,44 +66,44 @@ function PermissionRoutes(server) {
     },
     {
       method: 'DELETE',
-      path: '/permission/{id}',
+      path: '/nameserver/{id}',
       options: {
         validate: {
-          query: validate.permission.DELETE,
+          query: validate.nameserver.DELETE,
         },
         response: {
-          schema: validate.permission.GET_res,
+          schema: validate.nameserver.GET_res,
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const permission = await Permission.get({
+        const nameservers = await Nameserver.get({
           deleted: request.query.deleted === true ? 1 : 0,
           id: parseInt(request.params.id, 10),
         })
 
-        if (!permission) {
+        if (nameservers.length === 0) {
           return h
             .response({
               meta: {
                 api: meta.api,
-                msg: `I couldn't find that permission`,
+                msg: `I couldn't find that nameserver`,
               },
             })
             .code(404)
         }
 
-        await Permission.delete({
-          id: permission.id,
+        await Nameserver.delete({
+          id: nameservers[0].id,
           deleted: 1,
         })
 
         return h
           .response({
-            permission,
+            nameserver: nameservers[0],
             meta: {
               api: meta.api,
-              msg: `I deleted that permission`,
+              msg: `I deleted that nameserver`,
             },
           })
           .code(200)
@@ -112,6 +112,6 @@ function PermissionRoutes(server) {
   ])
 }
 
-export default PermissionRoutes
+export default NameserverRoutes
 
-export { Permission, PermissionRoutes }
+export { Nameserver, NameserverRoutes }

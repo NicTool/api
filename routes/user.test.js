@@ -122,7 +122,7 @@ describe('user routes', () => {
   it(`GET /user/${userId2}?deleted=1`, async () => {
     const res = await server.inject({
       method: 'GET',
-      url: `/user/${userId2}?deleted=1`,
+      url: `/user/${userId2}?deleted=true`,
       headers: {
         Cookie: sessionCookie,
       },

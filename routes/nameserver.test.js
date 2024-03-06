@@ -4,25 +4,29 @@ import { describe, it, before, after } from 'node:test'
 import { init } from './index.js'
 import Group from '../lib/group.js'
 import User from '../lib/user.js'
+import Nameserver from '../lib/nameserver.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
 import userCase from './test/user.json' with { type: 'json' }
+import nsCase from './test/nameserver.json' with { type: 'json' }
 
 let server
-const case2Id = 4094
+let case2Id = 4094
 
 before(async () => {
-  server = await init()
+  await Nameserver.destroy({ id: case2Id })
   await Group.create(groupCase)
   await User.create(userCase)
+  await Nameserver.create(nsCase)
+  server = await init()
 })
 
 after(async () => {
-  await Group.destroy({ id: case2Id })
+  await Nameserver.destroy({ id: case2Id })
   server.stop()
 })
 
-describe('group routes', () => {
+describe('nameserver routes', () => {
   let sessionCookie
 
   it('POST /session establishes a session', async () => {
@@ -38,28 +42,28 @@ describe('group routes', () => {
     sessionCookie = res.headers['set-cookie'][0].split(';')[0]
   })
 
-  it(`GET /group/${groupCase.id}`, async () => {
+  it(`GET /nameserver/${nsCase.id}`, async () => {
     const res = await server.inject({
       method: 'GET',
-      url: `/group/${groupCase.id}`,
+      url: `/nameserver/${nsCase.id}`,
       headers: {
         Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
-    assert.ok([200, 204].includes(res.statusCode))
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.nameserver.name, nsCase.name)
   })
 
-  it('POST /group', async () => {
-    const testCase = JSON.parse(JSON.stringify(groupCase))
+  it(`POST /nameserver (${case2Id})`, async () => {
+    const testCase = JSON.parse(JSON.stringify(nsCase))
     testCase.id = case2Id // make it unique
-    testCase.name = `example2.com`
-    delete testCase.deleted
-    // console.log(testCase)
+    testCase.gid = case2Id
+    testCase.name = 'c.ns.example.com.'
 
     const res = await server.inject({
       method: 'POST',
-      url: '/group',
+      url: '/nameserver',
       headers: {
         Cookie: sessionCookie,
       },
@@ -67,24 +71,26 @@ describe('group routes', () => {
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 201)
+    assert.ok(res.result.nameserver.gid)
   })
 
-  it(`GET /group/${case2Id}`, async () => {
+  it(`GET /nameserver/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'GET',
-      url: `/group/${case2Id}`,
+      url: `/nameserver/${case2Id}`,
       headers: {
         Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
-    assert.ok([200, 204].includes(res.statusCode))
+    assert.equal(res.statusCode, 200)
+    assert.ok(res.result.nameserver.gid)
   })
 
-  it(`DELETE /group/${case2Id}`, async () => {
+  it(`DELETE /nameserver/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'DELETE',
-      url: `/group/${case2Id}`,
+      url: `/nameserver/${case2Id}`,
       headers: {
         Cookie: sessionCookie,
       },
@@ -93,28 +99,42 @@ describe('group routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it(`GET /group/${case2Id}`, async () => {
+  it(`DELETE /nameserver/${case2Id}`, async () => {
     const res = await server.inject({
-      method: 'GET',
-      url: `/group/${case2Id}`,
+      method: 'DELETE',
+      url: `/nameserver/${case2Id}`,
       headers: {
         Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
-    assert.equal(res.statusCode, 204)
+    assert.equal(res.statusCode, 404)
   })
 
-  it(`GET /group/${case2Id} (deleted)`, async () => {
+  it(`GET /nameserver/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'GET',
-      url: `/group/${case2Id}?deleted=true`,
+      url: `/nameserver/${case2Id}`,
       headers: {
         Cookie: sessionCookie,
       },
     })
     // console.log(res.result)
-    assert.ok([200, 204].includes(res.statusCode))
+    // assert.equal(res.statusCode, 200)
+    assert.equal(res.result.nameserver, undefined)
+  })
+
+  it(`GET /nameserver/${case2Id} (deleted)`, async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/nameserver/${case2Id}?deleted=true`,
+      headers: {
+        Cookie: sessionCookie,
+      },
+    })
+    // console.log(res.result)
+    assert.equal(res.statusCode, 200)
+    assert.ok(res.result.nameserver)
   })
 
   it('DELETE /session', async () => {
