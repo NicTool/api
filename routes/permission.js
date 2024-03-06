@@ -50,9 +50,6 @@ function PermissionRoutes(server) {
       },
       handler: async (request, h) => {
         const pid = await Permission.create(request.payload)
-        if (!pid) {
-          console.log(`POST /permission oops`) // TODO
-        }
 
         const permission = await Permission.get({ id: pid })
 
