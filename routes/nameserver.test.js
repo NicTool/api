@@ -99,6 +99,18 @@ describe('nameserver routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
+  it(`DELETE /nameserver/${case2Id}`, async () => {
+    const res = await server.inject({
+      method: 'DELETE',
+      url: `/nameserver/${case2Id}`,
+      headers: {
+        Cookie: sessionCookie,
+      },
+    })
+    // console.log(res.result)
+    assert.equal(res.statusCode, 404)
+  })
+
   it(`GET /nameserver/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'GET',

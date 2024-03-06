@@ -82,7 +82,7 @@ function NameserverRoutes(server) {
           id: parseInt(request.params.id, 10),
         })
 
-        if (!nameservers) {
+        if (nameservers.length === 0) {
           return h
             .response({
               meta: {

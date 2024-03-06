@@ -104,6 +104,18 @@ describe('permission routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
+  it(`DELETE /permission/${case2Id}`, async () => {
+    const res = await server.inject({
+      method: 'DELETE',
+      url: `/permission/${case2Id}`,
+      headers: {
+        Cookie: sessionCookie,
+      },
+    })
+    // console.log(res.result)
+    assert.equal(res.statusCode, 404)
+  })
+
   it(`GET /permission/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'GET',

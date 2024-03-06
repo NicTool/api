@@ -47,10 +47,12 @@ function UserRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
+
         const users = await User.get({
           deleted: request.query.deleted ?? 0,
           id: parseInt(request.params.id, 10),
         })
+
         if (users.length !== 1) {
           return h
             .response({
