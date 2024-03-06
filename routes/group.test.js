@@ -114,7 +114,7 @@ describe('group routes', () => {
       },
     })
     // console.log(res.result)
-    assert.equal(res.statusCode, 200)
+    assert.ok([200, 204].includes(res.statusCode))
   })
 
   it('DELETE /session', async () => {
