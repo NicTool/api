@@ -6,7 +6,7 @@
 ### [3.0.0-alpha.4] - 2024-03-05
 
 - feat(lib/nameserver): added, with tests
-
+- feat(routes/nameserver): added, with tests
 
 ### 3.0.0-alpha.3
 

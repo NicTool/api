@@ -20,6 +20,7 @@ import GroupRoutes from './group.js'
 import { User, UserRoutes } from './user.js'
 import { Session, SessionRoutes } from './session.js'
 import { PermissionRoutes } from './permission.js'
+import { NameserverRoutes } from './nameserver.js'
 
 let server
 
@@ -84,6 +85,7 @@ async function setup() {
   UserRoutes(server)
   SessionRoutes(server)
   PermissionRoutes(server)
+  NameserverRoutes(server)
 
   server.route({
     method: '*',
