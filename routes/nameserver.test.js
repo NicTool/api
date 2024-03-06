@@ -21,7 +21,6 @@ before(async () => {
   server = await init()
 })
 
-
 after(async () => {
   await server.stop()
 })
