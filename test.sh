@@ -11,7 +11,7 @@ cleanup() {
 	$NODE test.js teardown
 }
 
-trap cleanup EXIT SIGINT SIGKILL
+trap cleanup EXIT 1 2 3 6
 
 if [ $# -ge 1 ] && [ "$1" = "watch" ]; then
 	$NODE --test --watch
