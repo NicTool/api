@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -euo pipefail
+set -eu
 
 NODE="node --no-warnings=ExperimentalWarning"
 $NODE test.js teardown
