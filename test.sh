@@ -6,7 +6,7 @@ NODE="node --no-warnings=ExperimentalWarning"
 $NODE test.js teardown
 $NODE test.js setup
 
-function cleanup {
+cleanup() {
 	echo "cleaning DB objects"
 	$NODE test.js teardown
 }
