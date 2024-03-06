@@ -9,8 +9,11 @@ function UserRoutes(server) {
       method: 'GET',
       path: '/user',
       options: {
+        validate: {
+          query: validate.user.GET_req,
+        },
         response: {
-          schema: validate.user.GET,
+          schema: validate.user.GET_res,
         },
         // tags: ['api'],
       },
@@ -35,8 +38,11 @@ function UserRoutes(server) {
       method: 'GET',
       path: '/user/{id}',
       options: {
+        validate: {
+          query: validate.user.GET_req,
+        },
         response: {
-          schema: validate.user.GET,
+          schema: validate.user.GET_res,
         },
         tags: ['api'],
       },
@@ -76,10 +82,10 @@ function UserRoutes(server) {
       path: '/user',
       options: {
         validate: {
-          payload: validate.user.userPOST,
+          payload: validate.user.POST,
         },
         response: {
-          schema: validate.user.GET,
+          schema: validate.user.GET_res,
         },
         tags: ['api'],
       },
@@ -109,8 +115,11 @@ function UserRoutes(server) {
       method: 'DELETE',
       path: '/user/{id}',
       options: {
+        validate: {
+          query: validate.user.DELETE,
+        },
         response: {
-          schema: validate.user.GET,
+          schema: validate.user.GET_res,
         },
         tags: ['api'],
       },

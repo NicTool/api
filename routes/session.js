@@ -12,7 +12,7 @@ function SessionRoutes(server) {
       path: '/session',
       options: {
         response: {
-          schema: validate.session.GET,
+          schema: validate.session.GET_res,
         },
         tags: ['api'],
       },

@@ -86,7 +86,6 @@ function GroupRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-
         const groups = await Group.get({ id: parseInt(request.params.id, 10) })
         /* c8 ignore next 10 */
         if (groups.length !== 1) {

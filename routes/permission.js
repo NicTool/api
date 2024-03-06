@@ -10,10 +10,10 @@ function PermissionRoutes(server) {
       path: '/permission/{id}',
       options: {
         validate: {
-          query: validate.permission.v3,
+          query: validate.permission.GET_req,
         },
         response: {
-          schema: validate.permission.GET,
+          schema: validate.permission.GET_res,
         },
         tags: ['api'],
       },
@@ -44,7 +44,7 @@ function PermissionRoutes(server) {
           payload: validate.permission.POST,
         },
         response: {
-          schema: validate.permission.GET,
+          schema: validate.permission.GET_res,
         },
         tags: ['api'],
       },
@@ -72,7 +72,7 @@ function PermissionRoutes(server) {
           query: validate.permission.DELETE,
         },
         response: {
-          schema: validate.permission.GET,
+          schema: validate.permission.GET_res,
         },
         tags: ['api'],
       },

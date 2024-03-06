@@ -48,7 +48,7 @@ async function setup() {
 
 async function teardown() {
   await Nameserver.destroy({ id: nsCaseR.id })
-  await Nameserver.destroy({ id: nsCaseR.id -1 })
+  await Nameserver.destroy({ id: nsCaseR.id - 1 })
   await Permission.destroy({ id: userCase.id })
   await Permission.destroy({ id: userCase.id - 1 })
   await Session.delete({ nt_user_id: userCase.id })
