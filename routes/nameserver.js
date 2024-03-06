@@ -10,10 +10,10 @@ function NameserverRoutes(server) {
       path: '/nameserver/{id}',
       options: {
         validate: {
-          query: validate.nameserver.v3,
+          query: validate.nameserver.GET_req,
         },
         response: {
-          schema: validate.nameserver.GET,
+          schema: validate.nameserver.GET_res,
         },
         tags: ['api'],
       },
@@ -44,7 +44,7 @@ function NameserverRoutes(server) {
           payload: validate.nameserver.POST,
         },
         response: {
-          schema: validate.nameserver.GET,
+          schema: validate.nameserver.GET_res,
         },
         tags: ['api'],
       },
@@ -72,7 +72,7 @@ function NameserverRoutes(server) {
           query: validate.nameserver.DELETE,
         },
         response: {
-          schema: validate.nameserver.GET,
+          schema: validate.nameserver.GET_res,
         },
         tags: ['api'],
       },

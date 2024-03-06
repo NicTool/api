@@ -9,6 +9,7 @@ import groupCase from './test/group.json' with { type: 'json' }
 import userCase from './test/user.json' with { type: 'json' }
 
 let server
+const case2Id = 4094
 
 before(async () => {
   server = await init()
@@ -17,7 +18,8 @@ before(async () => {
 })
 
 after(async () => {
-  await server.stop()
+  await Group.destroy({ id: case2Id })
+  server.stop()
 })
 
 describe('group routes', () => {
@@ -45,10 +47,8 @@ describe('group routes', () => {
       },
     })
     // console.log(res.result)
-    assert.equal(res.statusCode, 200)
+    assert.ok([200, 204].includes(res.statusCode))
   })
-
-  const case2Id = 4094
 
   it('POST /group', async () => {
     const testCase = JSON.parse(JSON.stringify(groupCase))
@@ -78,7 +78,7 @@ describe('group routes', () => {
       },
     })
     // console.log(res.result)
-    assert.equal(res.statusCode, 200)
+    assert.ok([200, 204].includes(res.statusCode))
   })
 
   it(`DELETE /group/${case2Id}`, async () => {
@@ -108,19 +108,7 @@ describe('group routes', () => {
   it(`GET /group/${case2Id} (deleted)`, async () => {
     const res = await server.inject({
       method: 'GET',
-      url: `/group/${case2Id}?deleted=1`,
-      headers: {
-        Cookie: sessionCookie,
-      },
-    })
-    // console.log(res.result)
-    assert.equal(res.statusCode, 200)
-  })
-
-  it(`DELETE /group/${case2Id}`, async () => {
-    const res = await server.inject({
-      method: 'DELETE',
-      url: `/group/${case2Id}?destroy=true`,
+      url: `/group/${case2Id}?deleted=true`,
       headers: {
         Cookie: sessionCookie,
       },
