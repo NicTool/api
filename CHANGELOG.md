@@ -5,7 +5,8 @@
 
 ### [3.0.0-alpha.5] - 2024-03-06
 
-- feat(lib/nameserver): added, with tests, fixes #22
+- feat(lib/zone): added, with tests, fixes #22
+- feat(lib/zone_record): added, with tests, fixes #23
 
 
 ### [3.0.0-alpha.4] - 2024-03-05
