@@ -6,6 +6,5 @@
   "password": "Wh@tA-Decent#P6ssw0rd",
   "first_name": "Unit",
   "last_name": "Test",
-  "is_admin": false,
-  "deleted": false
+  "is_admin": false
 }

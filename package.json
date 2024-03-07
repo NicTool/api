@@ -43,7 +43,7 @@
     "@hapi/hoek": "^11.0.4",
     "@hapi/inert": "^7.1.0",
     "@hapi/vision": "^7.0.3",
-    "@nictool/dns-resource-record": "^1.1.7",
+    "@nictool/dns-resource-record": "^1.2.0",
     "@nictool/validate": "^0.8.0",
     "hapi-swagger": "^17.2.1",
     "mysql2": "^3.9.2",

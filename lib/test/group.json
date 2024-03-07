@@ -1,6 +1,5 @@
 {
   "id": 4096,
   "parent_gid": 0,
-  "name": "example.com",
-  "deleted": false
+  "name": "example.com"
 }

@@ -11,6 +11,5 @@
   "minimum": 4,
   "ttl": 3600,
   "location": "",
-  "last_publish": null,
-  "deleted": false
+  "last_publish": null
 }

@@ -14,6 +14,5 @@
     "status": "last run:03-05 15:25<br>last cp :09-20 12:59",
     "type": "NSD"
   },
-  "ttl": 3600,
-  "deleted": false
+  "ttl": 3600
 }
