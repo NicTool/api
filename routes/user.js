@@ -138,8 +138,7 @@ function UserRoutes(server) {
             .code(204)
         }
 
-        const action = request.query.destroy === 'true' ? 'destroy' : 'delete'
-        await User[action]({ id: users[0].id })
+        await User.delete({ id: users[0].id })
 
         delete users[0].gid
 
