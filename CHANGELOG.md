@@ -3,6 +3,11 @@
 ### Unreleased
 
 
+### [3.0.0-alpha.5] - 2024-03-06
+
+- feat(lib/nameserver): added, with tests, fixes #22
+
+
 ### [3.0.0-alpha.4] - 2024-03-05
 
 - feat(lib/nameserver): added, with tests
@@ -21,3 +26,4 @@
 
 [3.0.0-alpha.3]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.3
 [3.0.0-alpha.4]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.4
+[3.0.0-alpha.5]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.5
