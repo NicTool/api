@@ -7,9 +7,9 @@
 
 - feat(lib/zone): added, with tests, fixes #22
 - feat(lib/zone_record): added, with tests, fixes #23
-- feat: default get sets deleted=false
+- feat: default GET sets deleted=false
   - group, nameserver, permission, user, zone
-
+- sql: return indicative boolean for delete
 
 ### [3.0.0-alpha.4] - 2024-03-05
 
