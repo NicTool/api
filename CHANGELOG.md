@@ -10,6 +10,7 @@
 - feat: default GET sets deleted=false
   - group, nameserver, permission, user, zone
 - sql: return indicative boolean for delete
+- test(zr): added maps from NT SQL 2 to dns-rr std formats
 
 ### [3.0.0-alpha.4] - 2024-03-05
 
