@@ -1,0 +1,14 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "example.com.",
+  "ttl": 86400,
+  "type": "SOA",
+  "mname": "ns1.example.com.",
+  "rname": "matt.example.com.",
+  "serial": 1,
+  "refresh": 7200,
+  "retry": 3600,
+  "expire": 1209600,
+  "minimum": 3600
+}

@@ -1,0 +1,8 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "ns1.example.com.",
+  "ttl": 86400,
+  "type": "CNAME",
+  "cname": "ns2.example.com."
+}

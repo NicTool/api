@@ -1,0 +1,12 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "38.2.0.192.in-addr.arpa.",
+  "ttl": 86400,
+  "type": "IPSECKEY",
+  "precedence": 10,
+  "gateway type": 1,
+  "algorithm": 2,
+  "gateway": "192.0.2.38",
+  "publickey": "AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ=="
+}

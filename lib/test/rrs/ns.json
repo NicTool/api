@@ -1,0 +1,8 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "example.com.",
+  "ttl": 86400,
+  "type": "NS",
+  "dname": "ns1.example.com."
+}

@@ -1,0 +1,10 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "mail.example.com.",
+  "ttl": 86400,
+  "type": "SSHFP",
+  "fingerprint": "ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26",
+  "fptype": 0,
+  "algorithm": 0
+}

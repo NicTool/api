@@ -3,6 +3,15 @@
 ### Unreleased
 
 
+### [3.0.0-alpha.5] - 2024-03-06
+
+- feat(lib/zone): added, with tests, fixes #22
+- feat(lib/zone_record): added, with tests, fixes #23
+- feat: default GET sets deleted=false
+  - group, nameserver, permission, user, zone
+- sql: return indicative boolean for delete
+- test(zr): added maps from NT SQL 2 to dns-rr std formats
+
 ### [3.0.0-alpha.4] - 2024-03-05
 
 - feat(lib/nameserver): added, with tests
@@ -21,3 +30,4 @@
 
 [3.0.0-alpha.3]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.3
 [3.0.0-alpha.4]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.4
+[3.0.0-alpha.5]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.5

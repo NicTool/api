@@ -1,0 +1,11 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "mail.example.com.",
+  "ttl": 86400,
+  "type": "CERT",
+  "cert type": "PGP",
+  "key tag": 0,
+  "algorithm": 0,
+  "certificate": "hexidecimalkeystring1"
+}

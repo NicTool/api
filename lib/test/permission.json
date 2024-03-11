@@ -3,7 +3,6 @@
   "inherit": true,
   "name": "Test Permission",
   "self_write": false,
-  "deleted": false,
   "group": { "id": 4096, "create": false, "write": false, "delete": false },
   "nameserver": {
     "usable": [],

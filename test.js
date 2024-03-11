@@ -7,9 +7,13 @@ import User from './lib/user.js'
 import Session from './lib/session.js'
 import Permission from './lib/permission.js'
 import Nameserver from './lib/nameserver.js'
+import Zone from './lib/zone.js'
+// import ZoneRecord from './lib/zone_record.js'
 
 import groupCase from './lib/test/group.json' with { type: 'json' }
 import userCase from './lib/test/user.json' with { type: 'json' }
+import zoneCase from './lib/test/zone.json' with { type: 'json' }
+// import zrCase from './lib/test/zone_record.json' with { type: 'json' }
 import groupCaseR from './routes/test/group.json' with { type: 'json' }
 import userCaseR from './routes/test/user.json' with { type: 'json' }
 import nsCaseR from './routes/test/nameserver.json' with { type: 'json' }
@@ -47,6 +51,8 @@ async function setup() {
 // }
 
 async function teardown() {
+  // await ZoneRecord.destroy({ id: zrCase.id })
+  await Zone.destroy({ id: zoneCase.id })
   await Nameserver.destroy({ id: nsCaseR.id })
   await Nameserver.destroy({ id: nsCaseR.id - 1 })
   await Permission.destroy({ id: userCase.id })

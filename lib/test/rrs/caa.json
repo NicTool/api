@@ -1,0 +1,10 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "ns1.example.com.",
+  "ttl": 86400,
+  "type": "CAA",
+  "flags": 0,
+  "tag": "issue",
+  "value": "http://letsencrypt.org"
+}

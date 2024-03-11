@@ -1,0 +1,15 @@
+{
+  "id": 4096,
+  "gid": 4096,
+  "zone": "example.com",
+  "mailaddr": "hostmaster.example.com.",
+  "description": "unit test",
+  "serial": 20240306,
+  "refresh": 1,
+  "retry": 2,
+  "expire": 3,
+  "minimum": 4,
+  "ttl": 3600,
+  "location": "",
+  "last_publish": null
+}

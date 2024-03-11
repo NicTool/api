@@ -1,0 +1,13 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "ttl": 86400,
+  "type": "NAPTR",
+  "owner": "cid.urn.arpa.",
+  "order": 100,
+  "preference": 10,
+  "flags": "",
+  "service": "",
+  "regexp": "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\\x02!i",
+  "replacement": "."
+}

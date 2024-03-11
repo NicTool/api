@@ -1,0 +1,9 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "server-under-my-desk.example.com.",
+  "ttl": 86400,
+  "type": "HINFO",
+  "cpu": "PDP-11/73",
+  "os": "UNIX"
+}

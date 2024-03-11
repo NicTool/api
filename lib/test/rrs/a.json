@@ -1,0 +1,8 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "a.example.com.",
+  "ttl": 86400,
+  "type": "A",
+  "address": "1.1.1.1"
+}
