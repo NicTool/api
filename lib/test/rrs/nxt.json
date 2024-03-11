@@ -1,0 +1,9 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "ttl": 86400,
+  "type": "NXT",
+  "owner": "big.example.com.",
+  "next domain": "medium.example.com.",
+  "type bit map": "A SIG NXT"
+}

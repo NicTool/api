@@ -1,0 +1,13 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "ttl": 86400,
+  "type": "NSEC3",
+  "owner": "test.example.com.",
+  "hash algorithm": 1,
+  "flags": 1,
+  "iterations": 12,
+  "salt": "aabbccdd",
+  "type bit maps": "A\tRRSIG",
+  "next hashed owner name": "2vptu5timamqttgl4luu9kg21e0aor3s"
+}

@@ -1,0 +1,8 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "2.2.0.192.in-addr.arpa.",
+  "ttl": 86400,
+  "type": "PTR",
+  "dname": "dhcp.example.com."
+}

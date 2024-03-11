@@ -1,0 +1,9 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "ttl": 86400,
+  "type": "NSEC",
+  "owner": "alfa.example.com.",
+  "next domain": "host.example.com.",
+  "type bit maps": "A MX RRSIG NSEC TYPE1234"
+}

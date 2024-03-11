@@ -1,0 +1,11 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "_443._tcp.www.example.com.",
+  "ttl": 86400,
+  "type": "TLSA",
+  "certificate usage": 0,
+  "selector": 0,
+  "matching type": 1,
+  "certificate association data": "d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971"
+}

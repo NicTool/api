@@ -1,0 +1,8 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "matt.example.com.",
+  "ttl": 86400,
+  "type": "OPENPGPKEY",
+  "public key": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nxsBNBGXucegBCAD+FLaLfH4QsU2DS2gkbI3QktOg27I2LQvdEI4mvR+nHGev1KK7\n...\n0VFBNRBmWIMXRAtmrzPyNp/nD7BymAQ=\n=kezp\n-----END PGP PUBLIC KEY BLOCK-----"
+}

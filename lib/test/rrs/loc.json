@@ -1,0 +1,8 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "loc.home.example.com.",
+  "ttl": 86400,
+  "type": "LOC",
+  "address": "47 43 47 N 122 21 35 W 132m 100m 100m 2m"
+}
