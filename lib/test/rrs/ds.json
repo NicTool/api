@@ -1,0 +1,11 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "ttl": 86400,
+  "type": "DS",
+  "owner": "dskey.example.com.",
+  "key tag": 60485,
+  "algorithm": 5,
+  "digest type": 1,
+  "digest": "( 2BB183AF5F22588179A53B0A 98631FAD1A292118 )"
+}

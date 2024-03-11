@@ -1,0 +1,11 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "_imaps._tcp.example.com.",
+  "ttl": 86400,
+  "type": "SRV",
+  "target": "mail.example.com.",
+  "priority": 1,
+  "weight": 0,
+  "port": 993
+}

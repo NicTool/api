@@ -1,0 +1,8 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "_tcp.example.com.",
+  "ttl": 86400,
+  "type": "DNAME",
+  "target": "_tcp.example.net."
+}

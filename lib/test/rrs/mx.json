@@ -1,0 +1,9 @@
+{
+  "id": 4096,
+  "zid": 4096,
+  "owner": "test.example.com.",
+  "ttl": 86400,
+  "type": "MX",
+  "preference": 0,
+  "exchange": "mail.example.com."
+}
