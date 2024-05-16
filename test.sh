@@ -3,12 +3,12 @@
 set -eu
 
 NODE="node --no-warnings=ExperimentalWarning"
-$NODE test.js teardown
-$NODE test.js setup
+$NODE test-fixtures.js teardown
+$NODE test-fixtures.js setup
 
 cleanup() {
 	echo "cleaning DB objects"
-	$NODE test.js teardown
+	$NODE test-fixtures.js teardown
 }
 
 trap cleanup EXIT 1 2 3 6
