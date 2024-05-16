@@ -20,7 +20,7 @@ else
 		# npm i --no-save node-test-github-reporter
 		# $NODE --test --test-reporter=node-test-github-reporter
 	# else
-		$NODE --test --test-reporter=spec
+		$NODE --test --test-reporter=spec lib/*.test.js routes/*.test.js
 	# fi
 fi
 
