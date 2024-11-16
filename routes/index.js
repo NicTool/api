@@ -21,6 +21,7 @@ import { User, UserRoutes } from './user.js'
 import { Session, SessionRoutes } from './session.js'
 import { PermissionRoutes } from './permission.js'
 import { NameserverRoutes } from './nameserver.js'
+import { ZoneRoutes } from './zone.js'
 
 let server
 
@@ -86,6 +87,7 @@ async function setup() {
   SessionRoutes(server)
   PermissionRoutes(server)
   NameserverRoutes(server)
+  ZoneRoutes(server)
 
   server.route({
     method: '*',

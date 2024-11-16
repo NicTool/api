@@ -121,8 +121,8 @@ and if we peek inside the cookie jar:
 
 We can see that our session cookie has been saved. Now we can make other requests to the API using that session cookie:
 
-```
- curl -b nt-session -X GET http://localhost:3000/user/4096 --header "Content-Type: application/json" | json_pp
+```sh
+curl -b nt-session -X GET http://localhost:3000/user/4096 --header "Content-Type: application/json" | json_pp
 {
    "group" : {
       "id" : 4096

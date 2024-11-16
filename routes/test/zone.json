@@ -1,0 +1,15 @@
+{
+  "id": 4095,
+  "gid": 4095,
+  "zone": "route.example.com",
+  "mailaddr": "route-master.example.com.",
+  "description": "route test",
+  "serial": 20240306,
+  "refresh": 2,
+  "retry": 3,
+  "expire": 4,
+  "minimum": 5,
+  "ttl": 3601,
+  "location": "",
+  "last_publish": null
+}
