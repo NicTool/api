@@ -3,12 +3,12 @@
 set -eu
 
 NODE="node --no-warnings=ExperimentalWarning"
-$NODE test.js teardown
-$NODE test.js setup
+$NODE test-fixtures.js teardown
+$NODE test-fixtures.js setup
 
 cleanup() {
 	echo "cleaning DB objects"
-	$NODE test.js teardown
+	$NODE test-fixtures.js teardown
 }
 
 trap cleanup EXIT 1 2 3 6
@@ -20,7 +20,7 @@ else
 		# npm i --no-save node-test-github-reporter
 		# $NODE --test --test-reporter=node-test-github-reporter
 	# else
-		$NODE --test --test-reporter=spec
+		$NODE --test --test-reporter=spec lib/*.test.js routes/*.test.js
 	# fi
 fi
 
