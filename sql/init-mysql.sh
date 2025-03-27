@@ -1,5 +1,7 @@
 #!/bin/sh
 
+MYSQL_BIN=""
+
 if [ "$MYSQL_PWD" = "" ];
 then
 	export MYSQL_PWD=root
@@ -9,7 +11,8 @@ then
 		Linux*)
 		;;
 		Darwin*)
-			mysqladmin --user=root --password='' --protocol=tcp password 'root'
+			MYSQL_BIN=/opt/homebrew/opt/mysql@8.4/bin/
+			${MYSQL_BIN}mysqladmin --user=root --password='' --protocol=tcp password 'root'
 		;;
 		CYGWIN*|MINGW*|MINGW32*|MSYS*)
 			mysqladmin --user=root --password='' --protocol=tcp password 'root'
@@ -21,14 +24,14 @@ fi
 # AUTH="--defaults-extra-file=./sql/my-gha.cnf"
 
 if [ "$1" = "drop" ]; then
-	mysql --user=root -e 'DROP DATABASE IF EXISTS nictool;' || exit 1
+	${MYSQL_BIN}mysql --user=root -e 'DROP DATABASE IF EXISTS nictool;' || exit 1
 fi
-mysql --user=root -e 'CREATE DATABASE nictool;' || exit 1
+${MYSQL_BIN}mysql --user=root -e 'CREATE DATABASE nictool;' || exit 1
 
 for f in ./sql/*.sql;
 do
 	echo "cat $f | mysql nictool"
-	cat $f | mysql --user=root nictool || exit 1
+	cat $f | ${MYSQL_BIN}mysql --user=root nictool || exit 1
 done
 
 exit 0

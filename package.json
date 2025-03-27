@@ -1,6 +1,6 @@
 {
   "name": "@nictool/api",
-  "version": "3.0.0-alpha.5",
+  "version": "3.0.0-alpha.6",
   "description": "NicTool API",
   "main": "index.js",
   "type": "module",
@@ -11,9 +11,10 @@
     "prettier": "npx prettier *.js conf.d lib routes html --check",
     "prettier:fix": "npx prettier *.js conf.d lib routes html --write",
     "start": "NODE_ENV=production node ./server",
-    "develop": "NODE_ENV=development node ./server",
+    "develop": "NODE_ENV=development node --watch server.js ./server",
     "test": "./test.sh",
     "versions": "npx dependency-version-checker check",
+    "versions:fix": "npx dependency-version-checker update",
     "watch": "./test.sh watch"
   },
   "repository": {
@@ -33,21 +34,22 @@
   },
   "homepage": "https://github.com/NicTool/api#readme",
   "devDependencies": {
-    "@babel/eslint-parser": "^7.23.10",
-    "@babel/plugin-syntax-import-attributes": "^7.23.3",
-    "eslint": "^8.57.0"
+    "@babel/eslint-parser": "^7.27.0",
+    "@babel/plugin-syntax-import-attributes": "^7.26.0",
+    "eslint": "^9.24.0"
   },
   "dependencies": {
     "@hapi/cookie": "^12.0.1",
-    "@hapi/hapi": "^21.3.3",
-    "@hapi/hoek": "^11.0.4",
+    "@hapi/hapi": "^21.4.0",
+    "@hapi/hoek": "^11.0.7",
     "@hapi/inert": "^7.1.0",
+    "@hapi/jwt": "^3.2.0",
     "@hapi/vision": "^7.0.3",
-    "@nictool/dns-resource-record": "^1.2.1",
-    "@nictool/validate": "^0.8.0",
-    "hapi-swagger": "^17.2.1",
-    "mysql2": "^3.9.2",
-    "qs": "^6.11.2",
-    "yaml": "^2.4.0"
+    "@nictool/dns-resource-record": "^1.2.2",
+    "@nictool/validate": "^0.8.2",
+    "hapi-swagger": "^17.3.2",
+    "mysql2": "^3.14.0",
+    "qs": "^6.14.0",
+    "yaml": "^2.7.1"
   }
 }

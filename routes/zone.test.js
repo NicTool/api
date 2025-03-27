@@ -27,7 +27,7 @@ after(async () => {
 })
 
 describe('zone routes', () => {
-  let sessionCookie
+  let auth = { headers: { } }
 
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
@@ -38,21 +38,19 @@ describe('zone routes', () => {
         password: userCase.password,
       },
     })
-    assert.ok(res.headers['set-cookie'][0])
-    sessionCookie = res.headers['set-cookie'][0].split(';')[0]
+    assert.ok(res.result.user.id)
+    auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
   })
 
   it(`GET /zone/${nsCase.id}`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/zone/${nsCase.id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
-    assert.equal(res.result.zone.name, nsCase.name)
+    assert.equal(res.result.zone[0].name, nsCase.name)
   })
 
   it(`POST /zone (${case2Id})`, async () => {
@@ -64,36 +62,30 @@ describe('zone routes', () => {
     const res = await server.inject({
       method: 'POST',
       url: '/zone',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
       payload: testCase,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 201)
-    assert.ok(res.result.zone.gid)
+    assert.ok(res.result.zone[0].gid)
   })
 
   it(`GET /zone/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/zone/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
-    assert.ok(res.result.zone.gid)
+    assert.ok(res.result.zone[0].gid)
   })
 
   it(`DELETE /zone/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/zone/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
@@ -103,9 +95,7 @@ describe('zone routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/zone/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 404)
@@ -115,35 +105,29 @@ describe('zone routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/zone/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     // assert.equal(res.statusCode, 200)
-    assert.equal(res.result.zone, undefined)
+    assert.deepEqual(res.result.zone, [])
   })
 
   it(`GET /zone/${case2Id} (deleted)`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/zone/${case2Id}?deleted=true`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
-    assert.equal(res?.result?.zone, undefined)
+    assert.ok(res.result.zone)
   })
 
   it('DELETE /session', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: '/session',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     assert.equal(res.statusCode, 200)
   })

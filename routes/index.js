@@ -3,8 +3,9 @@
 import path from 'node:path'
 import url from 'node:url'
 
+import Jwt from '@hapi/jwt'
 import Hapi from '@hapi/hapi'
-import Cookie from '@hapi/cookie'
+// import Cookie from '@hapi/cookie'
 import Inert from '@hapi/inert'
 import Vision from '@hapi/vision'
 import HapiSwagger from 'hapi-swagger'
@@ -22,6 +23,7 @@ import { Session, SessionRoutes } from './session.js'
 import { PermissionRoutes } from './permission.js'
 import { NameserverRoutes } from './nameserver.js'
 import { ZoneRoutes } from './zone.js'
+import { ZoneRecordRoutes } from './zone_record.js'
 
 let server
 
@@ -31,10 +33,12 @@ async function setup() {
   server = Hapi.server({
     port: httpCfg.port,
     host: httpCfg.host,
+    tls: httpCfg.tls,
     query: {
       parser: (query) => qs.parse(query),
     },
     routes: {
+      cors: true,
       files: {
         relativeTo: path.join(
           path.dirname(url.fileURLToPath(import.meta.url)),
@@ -44,7 +48,7 @@ async function setup() {
     },
   })
 
-  await server.register(Cookie)
+  await server.register(Jwt)
   await server.register(Inert)
   await server.register([
     Inert,
@@ -60,19 +64,28 @@ async function setup() {
     },
   ])
 
-  server.auth.strategy('session', 'cookie', {
-    cookie: httpCfg.cookie,
-
-    validate: async (request, session) => {
-      const s = await Session.get({ id: session.id })
-      if (!s) return { isValid: false } // invalid cookie
-
-      // const account = await User.get({ id: s.nt_user_id })
-      return { isValid: true } // , credentials: account }
+  server.auth.strategy('nt_jwt_strategy', 'jwt', {
+    keys: httpCfg.jwt.key,
+    verify: {
+      aud: 'urn:audience:test',
+      iss: 'urn:issuer:test',
+      sub: false,
+      nbf: true,
+      exp: true,
+      maxAgeSec: 14400, // 4 hours
+      timeSkewSec: 15,
+    },
+    httpAuthScheme: 'Bearer',
+    headerName: 'authorization',
+    validate: (artifacts, request, h) => {
+      return {
+        isValid: true,
+        credentials: artifacts.decoded.payload.nt,
+      }
     },
   })
 
-  server.auth.default('session')
+  server.auth.default('nt_jwt_strategy')
 
   server.route({
     method: 'GET',
@@ -88,6 +101,7 @@ async function setup() {
   PermissionRoutes(server)
   NameserverRoutes(server)
   ZoneRoutes(server)
+  ZoneRecordRoutes(server)
 
   server.route({
     method: '*',
@@ -95,6 +109,14 @@ async function setup() {
     handler: function (request, h) {
       return h.response({ msg: '404 Error! Page Not Found!' }).code(404)
     },
+  })
+
+  server.events.on('request', (request, event, tags) => {
+    if (tags.error) {
+      console.error(
+        `Request ${event.request} error: ${event.error ? event.error.message : 'unknown'}`,
+      )
+    }
   })
 
   server.events.on('stop', () => {

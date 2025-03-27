@@ -8,7 +8,7 @@ import Group from '../lib/group.js'
 import groupCase from './test/group.json' with { type: 'json' }
 import userCase from './test/user.json' with { type: 'json' }
 
-let server, sessionCookie
+let server, auth = { headers: { } }
 
 before(async () => {
   server = await init()
@@ -23,10 +23,6 @@ after(async () => {
   await server.stop()
 })
 
-const parseCookie = (c) => {
-  return c.split(';')[0]
-}
-
 describe('user routes', () => {
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
@@ -37,17 +33,15 @@ describe('user routes', () => {
         password: userCase.password,
       },
     })
-    assert.ok(res.headers['set-cookie'][0])
-    sessionCookie = parseCookie(res.headers['set-cookie'][0])
+    assert.ok(res.result.user.id)
+    auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
   })
 
   it('GET /user', async () => {
     const res = await server.inject({
       method: 'GET',
       url: '/user',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
@@ -57,11 +51,8 @@ describe('user routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/user/${userCase.id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
@@ -74,12 +65,9 @@ describe('user routes', () => {
     const res = await server.inject({
       method: 'POST',
       url: '/user',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
       payload: testCase,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 201)
   })
 
@@ -87,11 +75,8 @@ describe('user routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/user/${userId2}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
@@ -99,11 +84,8 @@ describe('user routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/user/${userId2}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
@@ -111,11 +93,8 @@ describe('user routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/user/${userId2}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.ok([200, 204].includes(res.statusCode))
   })
 
@@ -123,11 +102,8 @@ describe('user routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/user/${userId2}?deleted=true`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.ok([200, 204].includes(res.statusCode))
   })
 
@@ -135,11 +111,8 @@ describe('user routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: '/session',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 })

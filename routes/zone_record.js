@@ -1,20 +1,20 @@
 import validate from '@nictool/validate'
 
-import Permission from '../lib/permission.js'
+import ZoneRecord from '../lib/zone_record.js'
 import { meta } from '../lib/util.js'
 
-function PermissionRoutes(server) {
+function ZoneRecordRoutes(server) {
   server.route([
     {
       method: 'GET',
-      path: '/permission/{id}',
+      path: '/zone_record/{id?}',
       options: {
         validate: {
-          query: validate.permission.GET_req,
+          query: validate.zone_record.GET_req,
           failAction: 'log',
         },
         response: {
-          schema: validate.permission.GET_res,
+          schema: validate.zone_record.GET_res,
           failAction: 'log',
         },
         tags: ['api'],
@@ -22,17 +22,18 @@ function PermissionRoutes(server) {
       handler: async (request, h) => {
         const getArgs = {
           deleted: request.query.deleted === true ? 1 : 0,
-          id: parseInt(request.params.id, 10),
         }
+        if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
+        if (request.query.zid) getArgs.zid = parseInt(request.query.zid, 10)
 
-        const permission = await Permission.get(getArgs)
+        const zrs = await ZoneRecord.get(getArgs)
 
         return h
           .response({
-            permission,
+            zone_record: zrs,
             meta: {
               api: meta.api,
-              msg: `here's your permission`,
+              msg: `here's your zone record(s)`,
             },
           })
           .code(200)
@@ -40,29 +41,27 @@ function PermissionRoutes(server) {
     },
     {
       method: 'POST',
-      path: '/permission',
+      path: '/zone_record',
       options: {
         validate: {
-          payload: validate.permission.POST,
-          failAction: 'log',
+          payload: validate.zone_record.POST,
         },
         response: {
-          schema: validate.permission.GET_res,
-          failAction: 'log',
+          schema: validate.zone_record.GET_res,
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const pid = await Permission.create(request.payload)
+        const id = await ZoneRecord.create(request.payload)
 
-        const permission = await Permission.get({ id: pid })
+        const zrs = await ZoneRecord.get({ id })
 
         return h
           .response({
-            permission,
+            zone_record: zrs[0],
             meta: {
               api: meta.api,
-              msg: `the permission was created`,
+              msg: `the zone record was created`,
             },
           })
           .code(201)
@@ -70,46 +69,45 @@ function PermissionRoutes(server) {
     },
     {
       method: 'DELETE',
-      path: '/permission/{id}',
+      path: '/zone_record/{id}',
       options: {
         validate: {
-          query: validate.permission.DELETE,
-          failAction: 'log',
+          query: validate.zone_record.DELETE,
         },
         response: {
-          schema: validate.permission.GET_res,
-          failAction: 'log',
+          schema: validate.zone_record.GET_res,
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const permission = await Permission.get({
+        const zrs = await ZoneRecord.get({
           deleted: request.query.deleted === true ? 1 : 0,
           id: parseInt(request.params.id, 10),
         })
 
-        if (!permission) {
+        if (zrs.length === 0) {
           return h
             .response({
               meta: {
                 api: meta.api,
-                msg: `I couldn't find that permission`,
+                msg: `I couldn't find that zone record`,
               },
             })
             .code(404)
         }
 
-        await Permission.delete({
-          id: permission.id,
+        const r = await ZoneRecord.delete({
+          id: zrs[0].id,
           deleted: 1,
         })
+        console.log(`deleted`, r)
 
         return h
           .response({
-            permission,
+            zone: zrs[0],
             meta: {
               api: meta.api,
-              msg: `I deleted that permission`,
+              msg: `I deleted that zone record`,
             },
           })
           .code(200)
@@ -118,6 +116,6 @@ function PermissionRoutes(server) {
   ])
 }
 
-export default PermissionRoutes
+export default ZoneRecordRoutes
 
-export { Permission, PermissionRoutes }
+export { ZoneRecord, ZoneRecordRoutes }

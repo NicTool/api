@@ -11,21 +11,25 @@ function UserRoutes(server) {
       options: {
         validate: {
           query: validate.user.GET_req,
+          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
+          failAction: 'log',
         },
-        // tags: ['api'],
+        tags: ['api'],
       },
       handler: async (request, h) => {
         // get myself
-        const { nt_user_id } = request.state['sid-nictool']
-        const users = await User.get({ id: nt_user_id })
+        const { user, group, session } = h.request.auth.credentials
+
+        const users = await User.get({ id: user.id })
 
         delete users[0].gid
+
         return h
           .response({
-            user: users[0],
+            user: users,
             meta: {
               api: meta.api,
               msg: `this is you`,
@@ -40,9 +44,11 @@ function UserRoutes(server) {
       options: {
         validate: {
           query: validate.user.GET_req,
+          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -68,7 +74,7 @@ function UserRoutes(server) {
 
         return h
           .response({
-            user: users[0],
+            user: users,
             group: { id: gid },
             meta: {
               api: meta.api,
@@ -84,9 +90,11 @@ function UserRoutes(server) {
       options: {
         validate: {
           payload: validate.user.POST,
+          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -102,7 +110,7 @@ function UserRoutes(server) {
 
         return h
           .response({
-            user: users[0],
+            user: users,
             group,
             meta: {
               api: meta.api,
@@ -118,9 +126,11 @@ function UserRoutes(server) {
       options: {
         validate: {
           query: validate.user.DELETE,
+          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -144,7 +154,7 @@ function UserRoutes(server) {
 
         return h
           .response({
-            user: users[0],
+            user: users,
             meta: {
               api: meta.api,
               msg: `I deleted that user`,

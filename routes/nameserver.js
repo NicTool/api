@@ -7,27 +7,29 @@ function NameserverRoutes(server) {
   server.route([
     {
       method: 'GET',
-      path: '/nameserver/{id}',
+      path: '/nameserver/{id?}',
       options: {
         validate: {
           query: validate.nameserver.GET_req,
+          failAction: 'log',
         },
         response: {
           schema: validate.nameserver.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
         const getArgs = {
           deleted: request.query.deleted === true ? 1 : 0,
-          id: parseInt(request.params.id, 10),
         }
+        if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
 
         const nameservers = await Nameserver.get(getArgs)
 
         return h
           .response({
-            nameserver: nameservers[0],
+            nameserver: nameservers,
             meta: {
               api: meta.api,
               msg: `here's your nameserver`,
@@ -42,9 +44,11 @@ function NameserverRoutes(server) {
       options: {
         validate: {
           payload: validate.nameserver.POST,
+          failAction: 'log',
         },
         response: {
           schema: validate.nameserver.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -55,7 +59,7 @@ function NameserverRoutes(server) {
 
         return h
           .response({
-            nameserver: nameservers[0],
+            nameserver: nameservers,
             meta: {
               api: meta.api,
               msg: `the nameserver was created`,
@@ -70,9 +74,11 @@ function NameserverRoutes(server) {
       options: {
         validate: {
           query: validate.nameserver.DELETE,
+          failAction: 'log',
         },
         response: {
           schema: validate.nameserver.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -100,7 +106,7 @@ function NameserverRoutes(server) {
 
         return h
           .response({
-            nameserver: nameservers[0],
+            nameserver: nameservers,
             meta: {
               api: meta.api,
               msg: `I deleted that nameserver`,

@@ -26,7 +26,7 @@ after(async () => {
 })
 
 describe('permission routes', () => {
-  let sessionCookie
+  let auth = { headers: { } }
 
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
@@ -37,19 +37,16 @@ describe('permission routes', () => {
         password: userCase.password,
       },
     })
-    assert.ok(res.headers['set-cookie'][0])
-    sessionCookie = res.headers['set-cookie'][0].split(';')[0]
+    assert.ok(res.result.user.id)
+    auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
   })
 
   it(`GET /permission/${userCase.id}`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/permission/${userCase.id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
     assert.equal(res.result.permission.zone.create, true)
     assert.equal(res.result.permission.nameserver.create, false)
@@ -67,9 +64,7 @@ describe('permission routes', () => {
     const res = await server.inject({
       method: 'POST',
       url: '/permission',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
       payload: testCase,
     })
     // console.log(res.result)
@@ -82,9 +77,7 @@ describe('permission routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/permission/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
@@ -96,9 +89,7 @@ describe('permission routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/permission/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
@@ -108,9 +99,7 @@ describe('permission routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/permission/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 404)
@@ -120,9 +109,7 @@ describe('permission routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/permission/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     // assert.equal(res.statusCode, 200)
@@ -133,9 +120,7 @@ describe('permission routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/permission/${case2Id}?deleted=true`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
@@ -146,9 +131,7 @@ describe('permission routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: '/session',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     assert.equal(res.statusCode, 200)
   })
