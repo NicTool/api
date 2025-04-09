@@ -23,10 +23,6 @@ after(async () => {
   await server.stop()
 })
 
-const parseCookie = (c) => {
-  return c.split(';')[0]
-}
-
 describe('session routes', () => {
   const routes = [{ GET: '/' }, { DELETE: '/session' }]
 
@@ -46,7 +42,7 @@ describe('session routes', () => {
   })
 
   describe('with session, can retrieve private URIs', () => {
-    let sessionCookie
+    let auth = { headers: { } }
 
     before(async () => {
       const res = await server.inject({
@@ -58,17 +54,15 @@ describe('session routes', () => {
         },
       })
       assert.equal(res.statusCode, 200)
-      assert.ok(res.headers['set-cookie'][0])
-      sessionCookie = parseCookie(res.headers['set-cookie'][0])
+      assert.ok(res.result.user.id)
+      auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
     })
 
     after(async () => {
       const res = await server.inject({
         method: 'DELETE',
         url: '/session',
-        headers: {
-          Cookie: sessionCookie,
-        },
+        headers: auth.headers,
       })
       // console.log(res.result)
       assert.equal(res.statusCode, 200)
@@ -83,9 +77,7 @@ describe('session routes', () => {
         const res = await server.inject({
           method: key,
           url: val,
-          headers: {
-            Cookie: sessionCookie,
-          },
+          headers: auth.headers,
         })
         assert.equal(res.request.auth.isAuthenticated, true)
         assert.equal(res.statusCode, 200)

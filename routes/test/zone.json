@@ -10,6 +10,5 @@
   "expire": 4,
   "minimum": 5,
   "ttl": 3601,
-  "location": "",
   "last_publish": null
 }

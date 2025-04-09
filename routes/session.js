@@ -1,9 +1,14 @@
 import validate from '@nictool/validate'
 
+import Config from '../lib/config.js'
+import Jwt from '@hapi/jwt'
+
 import User from '../lib/user.js'
 import Session from '../lib/session.js'
 
 import { meta } from '../lib/util.js'
+
+const httpCfg = await Config.get('http')
 
 function SessionRoutes(server) {
   server.route([
@@ -13,11 +18,12 @@ function SessionRoutes(server) {
       options: {
         response: {
           schema: validate.session.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const { user, group, session } = request.state['sid-nictool']
+        const { user, group, session } = h.request.auth.credentials
 
         Session.put({ id: session.id, last_access: true })
 
@@ -41,9 +47,11 @@ function SessionRoutes(server) {
         auth: { mode: 'try' },
         validate: {
           payload: validate.session.POST,
+          failAction: 'log',
         },
         response: {
-          schema: validate.session.GET,
+          schema: validate.session.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -59,17 +67,30 @@ function SessionRoutes(server) {
           last_access: parseInt(Date.now() / 1000, 10),
         })
 
-        request.cookieAuth.set({
-          user: account.user,
-          group: account.group,
-          session: { id: sessId },
-        })
+        const token = Jwt.token.generate(
+          {
+            aud: 'urn:audience:test',
+            iss: 'urn:issuer:test',
+            nt: {
+              user: account.user,
+              group: account.group,
+              session: { id: sessId },
+            },
+          },
+          {
+            key: httpCfg.jwt.key,
+            algorithm: 'HS512',
+          },
+          {
+            ttlSec: 28800, // 8 hours
+          },
+        )
 
         return h
           .response({
             user: account.user,
             group: account.group,
-            session: { id: sessId },
+            session: { id: sessId, token: token },
             meta: {
               api: meta.api,
               msg: `you are logged in`,
@@ -84,20 +105,27 @@ function SessionRoutes(server) {
       options: {
         validate: {
           query: validate.session.DELETE,
+          failAction: 'log',
         },
         response: {
           schema: validate.session.GET,
+          failAction: 'log',
         },
         tags: ['api'],
       },
-      handler: (request, h) => {
-        request.cookieAuth.clear()
+      handler: async (request, h) => {
+        const { user, group, session } = h.request.auth.credentials
+
+        const bool = await Session.delete({
+          id: session.id,
+          session: '3.0.0',
+        })
 
         return h
           .response({
             meta: {
               api: meta.api,
-              msg: 'You are logged out',
+              msg: `You are logged out: ${bool}`,
             },
           })
           .code(200)

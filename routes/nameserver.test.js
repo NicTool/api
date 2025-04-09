@@ -27,7 +27,7 @@ after(async () => {
 })
 
 describe('nameserver routes', () => {
-  let sessionCookie
+  let auth = { headers: { } }
 
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
@@ -38,21 +38,19 @@ describe('nameserver routes', () => {
         password: userCase.password,
       },
     })
-    assert.ok(res.headers['set-cookie'][0])
-    sessionCookie = res.headers['set-cookie'][0].split(';')[0]
+    assert.ok(res.result.session.token)
+    auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
   })
 
   it(`GET /nameserver/${nsCase.id}`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/nameserver/${nsCase.id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
-    assert.equal(res.result.nameserver.name, nsCase.name)
+    assert.equal(res.result.nameserver[0].name, nsCase.name)
   })
 
   it(`POST /nameserver (${case2Id})`, async () => {
@@ -64,38 +62,29 @@ describe('nameserver routes', () => {
     const res = await server.inject({
       method: 'POST',
       url: '/nameserver',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
       payload: testCase,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 201)
-    assert.ok(res.result.nameserver.gid)
+    assert.ok(res.result.nameserver[0].gid)
   })
 
   it(`GET /nameserver/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/nameserver/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
-    assert.ok(res.result.nameserver.gid)
+    assert.ok(res.result.nameserver[0].gid)
   })
 
   it(`DELETE /nameserver/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/nameserver/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
@@ -103,11 +92,8 @@ describe('nameserver routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/nameserver/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 404)
   })
 
@@ -115,24 +101,17 @@ describe('nameserver routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/nameserver/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
-    // assert.equal(res.statusCode, 200)
-    assert.equal(res.result.nameserver, undefined)
+    assert.deepEqual(res.result.nameserver, [])
   })
 
   it(`GET /nameserver/${case2Id} (deleted)`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/nameserver/${case2Id}?deleted=true`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
     assert.ok(res.result.nameserver)
   })
@@ -141,9 +120,7 @@ describe('nameserver routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: '/session',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     assert.equal(res.statusCode, 200)
   })

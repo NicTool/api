@@ -1,6 +1,11 @@
 default:
   host: localhost
   port: 3000
+  tls:
+    key: null
+    cert: null
+  jwt:
+    key: 'af1b926a5e21f535c4f5b6c42941c4cf'
   cookie:
     # https://hapi.dev/module/cookie/api/?v=12.0.1
     name: sid-nictool
@@ -11,7 +16,7 @@ default:
     clearInvalid: true
     isSameSite: Strict
     isSecure: true
-    isHttpOnly: true
+    isHttpOnly: false
   keepAlive: false
   # redirectTo:
   group: NicTool
@@ -28,6 +33,32 @@ test:
     password: ^NicTool.Is,The#Best_Dns-Manager$
 
 development:
+  host: box-under-my-desk.example.com
+  tls:
+    key: |
+      -----BEGIN PRIVATE KEY-----
+      MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDwBx1Qt9309i89
+      O9Y8bhHO9BqyWWzd0hXI1o3d8Zn4aT2lhwmeeu2oSQsczvny0cJSs6HYe6asI6XZ
+      <snip>
+      Ane1BnOJ6/E+7Clo463N++OS
+      -----END PRIVATE KEY-----
+
+    cert: |
+      -----BEGIN CERTIFICATE-----
+      MIID9DCCAtygAwIBAgIUF+ziLgjIA3qCf95DmVskHqSNvLUwDQYJKoZIhvcNAQEL
+      BQAwfDELMAkGA1UEBhMCVVMxEzARBgNVBAgMCldhc2hpbmd0b24xGjAYBgNVBAoM
+      <snip>
+      juZxYqQoPYBpk+eG/sudGGFKKGow1RbGbbNUrqATYxJCqPrN0mZuNkAgATbQtBjS
+      vyvASCDueS0=
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      MIID2TCCAsGgAwIBAgIUF+ziLgjIA3qCf95DmVskHqSNvLEwDQYJKoZIhvcNAQEL
+      BQAwfDELMAkGA1UEBhMCVVMxEzARBgNVBAgMCldhc2hpbmd0b24xGjAYBgNVBAoM
+      <snip>
+      iMt4AE3zfKgj/OLyAeseUlqukbnBQYlTiMUuPLTTp6d7uBi8/VuXBTrZ9nafPvSZ
+      TqccpFMgxCeImsJCgO5hBJYUTELDNEmJS5Vgy3Y=
+      -----END CERTIFICATE-----
+
   cookie:
-    isSecure: false
+    # isSecure: false
     password: ^NicTool.Is,The#Best_Dns-Manager$

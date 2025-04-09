@@ -29,7 +29,7 @@ Running one of these commands:
 
 `npm run start (production)`
 
-or 
+or
 
 `npm run develop (development)`
 

@@ -7,30 +7,32 @@ function ZoneRoutes(server) {
   server.route([
     {
       method: 'GET',
-      path: '/zone/{id}',
+      path: '/zone/{id?}',
       options: {
         validate: {
           query: validate.zone.GET_req,
+          failAction: 'log',
         },
         response: {
           schema: validate.zone.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
         const getArgs = {
           deleted: request.query.deleted === true ? 1 : 0,
-          id: parseInt(request.params.id, 10),
         }
+        if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
 
         const zones = await Zone.get(getArgs)
 
         return h
           .response({
-            zone: zones[0],
+            zone: zones,
             meta: {
               api: meta.api,
-              msg: `here's your zone`,
+              msg: `here's your zone(s)`,
             },
           })
           .code(200)
@@ -42,9 +44,11 @@ function ZoneRoutes(server) {
       options: {
         validate: {
           payload: validate.zone.POST,
+          failAction: 'log',
         },
         response: {
           schema: validate.zone.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -55,7 +59,7 @@ function ZoneRoutes(server) {
 
         return h
           .response({
-            zone: zones[0],
+            zone: zones,
             meta: {
               api: meta.api,
               msg: `the zone was created`,
@@ -70,9 +74,11 @@ function ZoneRoutes(server) {
       options: {
         validate: {
           query: validate.zone.DELETE,
+          failAction: 'log',
         },
         response: {
           schema: validate.zone.GET_res,
+          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -100,7 +106,7 @@ function ZoneRoutes(server) {
 
         return h
           .response({
-            zone: zones[0],
+            zone: zones,
             meta: {
               api: meta.api,
               msg: `I deleted that zone`,

@@ -9,6 +9,7 @@ on:
 env:
   CI: true
   NODE_ENV: test
+  NODE_VER: 22
 
 jobs:
   lint:
@@ -21,7 +22,7 @@ jobs:
         run: sudo /etc/init.d/mysql start
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VER }}
       - uses: actions/checkout@v4
       - run: npm install
       - name: Initialize MySQL
@@ -43,8 +44,11 @@ jobs:
       - id: get
         uses: msimerson/node-lts-versions@v1
     outputs:
-      lts: ${{ steps.get.outputs.lts }}
       active: ${{ steps.get.outputs.active }}
+      maintenance: ${{ steps.get.outputs.maintenance }}
+      lts: ${{ steps.get.outputs.lts }}
+      current: ${{ steps.get.outputs.current }}
+      min: ${{ steps.get.outputs.min }}
 
   test:
     needs: [ get-lts ]
@@ -52,8 +56,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        # node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
-        node-version: [ 20 ]
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
       - run: sudo /etc/init.d/mysql start
@@ -70,15 +73,13 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        # node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
-        node-version: [ 20 ]
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
       - name: Install & Start MySQL
         run: |
-          brew install mysql
-          brew tap homebrew/services
-          brew services start mysql
+          brew install mysql@8.4
+          brew services start mysql@8.4
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
@@ -94,8 +95,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: [ 20 ]
-        # node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
         experimental: [true]
       fail-fast: false
     steps:

@@ -23,7 +23,7 @@ after(async () => {
 })
 
 describe('group routes', () => {
-  let sessionCookie
+  let auth = { headers: { } }
 
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
@@ -34,19 +34,17 @@ describe('group routes', () => {
         password: userCase.password,
       },
     })
-    assert.ok(res.headers['set-cookie'][0])
-    sessionCookie = res.headers['set-cookie'][0].split(';')[0]
+    assert.ok(res.result.group.id)
+    // auth.headers = { Cookie: res.headers['set-cookie'][0].split(';')[0] }
+    auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
   })
 
   it(`GET /group/${groupCase.id}`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/group/${groupCase.id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.ok([200, 204].includes(res.statusCode))
   })
 
@@ -55,17 +53,13 @@ describe('group routes', () => {
     testCase.id = case2Id // make it unique
     testCase.name = `example2.com`
     delete testCase.deleted
-    // console.log(testCase)
 
     const res = await server.inject({
       method: 'POST',
       url: '/group',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
       payload: testCase,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 201)
   })
 
@@ -73,11 +67,8 @@ describe('group routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/group/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.ok([200, 204].includes(res.statusCode))
   })
 
@@ -85,11 +76,8 @@ describe('group routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/group/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 200)
   })
 
@@ -97,11 +85,8 @@ describe('group routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/group/${case2Id}`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.equal(res.statusCode, 204)
   })
 
@@ -109,11 +94,8 @@ describe('group routes', () => {
     const res = await server.inject({
       method: 'GET',
       url: `/group/${case2Id}?deleted=true`,
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
-    // console.log(res.result)
     assert.ok([200, 204].includes(res.statusCode))
   })
 
@@ -121,9 +103,7 @@ describe('group routes', () => {
     const res = await server.inject({
       method: 'DELETE',
       url: '/session',
-      headers: {
-        Cookie: sessionCookie,
-      },
+      headers: auth.headers,
     })
     assert.equal(res.statusCode, 200)
   })
