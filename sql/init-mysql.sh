@@ -30,7 +30,7 @@ ${MYSQL_BIN}mysql --user=root -e 'CREATE DATABASE nictool;' || exit 1
 
 for f in ./sql/*.sql;
 do
-	echo "cat $f | mysql nictool"
+	echo "cat $f | ${MYSQL_BIN}mysql nictool"
 	cat $f | ${MYSQL_BIN}mysql --user=root nictool || exit 1
 done
 
