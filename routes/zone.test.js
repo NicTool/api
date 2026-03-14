@@ -14,6 +14,7 @@ let server
 let case2Id = 4094
 
 before(async () => {
+  await Zone.destroy({ id: nsCase.id })
   await Zone.destroy({ id: case2Id })
   await Group.create(groupCase)
   await User.create(userCase)
@@ -27,7 +28,7 @@ after(async () => {
 })
 
 describe('zone routes', () => {
-  let auth = { headers: { } }
+  let auth = { headers: {} }
 
   it('POST /session establishes a session', async () => {
     const res = await server.inject({
@@ -50,7 +51,7 @@ describe('zone routes', () => {
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
-    assert.equal(res.result.zone[0].name, nsCase.name)
+    assert.equal(res.result.zone[0].zone, nsCase.zone)
   })
 
   it(`POST /zone (${case2Id})`, async () => {

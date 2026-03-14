@@ -26,9 +26,7 @@ switch (process.argv[2]) {
     teardown()
     break
   default:
-    console.log(
-      `\nusage:\tnode ${path.basename(process.argv[1])} [ setup | teardown ]\n`,
-    )
+    console.log(`\nusage:\tnode ${path.basename(process.argv[1])} [ setup | teardown ]\n`)
 }
 
 async function setup() {

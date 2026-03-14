@@ -1,9 +1,10 @@
 {
   "name": "@nictool/api",
-  "version": "3.0.0-alpha.6",
+  "version": "3.0.0-alpha.7",
   "description": "NicTool API",
   "main": "index.js",
   "type": "module",
+  "files": [ "CHANGELOG.md", "conf.d", "html", "lib", "routes", "sql", "server.js" ],
   "scripts": {
     "format": "npm run lint:fix && npm run prettier:fix",
     "lint": "npx eslint *.js **/*.js",
@@ -13,6 +14,7 @@
     "start": "NODE_ENV=production node ./server",
     "develop": "NODE_ENV=development node --watch server.js ./server",
     "test": "./test.sh",
+    "test:develop": "NODE_ENV=development ./test.sh",
     "versions": "npx dependency-version-checker check",
     "versions:fix": "npx dependency-version-checker update",
     "watch": "./test.sh watch"
@@ -51,5 +53,11 @@
     "mysql2": "^3.14.0",
     "qs": "^6.14.0",
     "yaml": "^2.7.1"
+  },
+  "prettier": {
+    "printWidth": 110,
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
   }
 }

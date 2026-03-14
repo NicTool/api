@@ -1,6 +1,14 @@
+# Changelog
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/).
+
 # CHANGES
 
 ### Unreleased
+
+### [3.0.0-alpha.7] - 2026-03-13
+
+- fixes
 
 ### [3.0.0-alpha.6] - 2025-04-08
 
@@ -39,7 +47,11 @@
 - lib/user.get: convert booleans
 
 
+[3.0.0-alpha.0]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.0
+[3.0.0-alpha.1]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.1
+[3.0.0-alpha.2]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.2
 [3.0.0-alpha.3]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.3
-[3.0.0-alpha.4]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.4
-[3.0.0-alpha.5]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.5
-[3.0.0-alpha.6]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.6
+[3.0.0-alpha.4]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.4
+[3.0.0-alpha.5]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.5
+[3.0.0-alpha.6]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.6
+[3.0.0-alpha.7]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.7

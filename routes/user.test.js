@@ -8,7 +8,8 @@ import Group from '../lib/group.js'
 import groupCase from './test/group.json' with { type: 'json' }
 import userCase from './test/user.json' with { type: 'json' }
 
-let server, auth = { headers: { } }
+let server,
+  auth = { headers: {} }
 
 before(async () => {
   server = await init()

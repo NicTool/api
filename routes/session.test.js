@@ -42,7 +42,7 @@ describe('session routes', () => {
   })
 
   describe('with session, can retrieve private URIs', () => {
-    let auth = { headers: { } }
+    let auth = { headers: {} }
 
     before(async () => {
       const res = await server.inject({
