@@ -1,10 +1,8 @@
 name: CI
 
 on:
-  push:
-    paths-ignore:
-      - '*.md'
   pull_request:
+    types: [opened, synchronize, reopened]
 
 env:
   CI: true
@@ -23,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VER }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: npm install
       - name: Initialize MySQL
         run: sh sql/init-mysql.sh
@@ -56,12 +54,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: ${{ fromJson(needs.get-lts.outputs.lts) }}
       fail-fast: false
     steps:
       - run: sudo /etc/init.d/mysql start
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - run: sh sql/init-mysql.sh
@@ -73,15 +71,15 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: ${{ fromJson(needs.get-lts.outputs.lts) }}
       fail-fast: false
     steps:
       - name: Install & Start MySQL
         run: |
           brew install mysql@8.4
           brew services start mysql@8.4
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
         with:
           node-version: ${{ matrix.node-version }}
@@ -95,15 +93,15 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
+        node-version: ${{ fromJson(needs.get-lts.outputs.lts) }}
         experimental: [true]
       fail-fast: false
     steps:
       - name: Install MySQL
         run: |
           choco install mysql
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         name: Node ${{ matrix.node-version }}
         with:
           node-version: ${{ matrix.node-version }}
