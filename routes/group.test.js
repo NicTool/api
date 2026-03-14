@@ -23,7 +23,7 @@ after(async () => {
 })
 
 describe('group routes', () => {
-  let auth = { headers: { } }
+  let auth = { headers: {} }
 
   it('POST /session establishes a session', async () => {
     const res = await server.inject({

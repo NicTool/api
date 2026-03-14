@@ -40,10 +40,7 @@ async function setup() {
     routes: {
       cors: true,
       files: {
-        relativeTo: path.join(
-          path.dirname(url.fileURLToPath(import.meta.url)),
-          'html',
-        ),
+        relativeTo: path.join(path.dirname(url.fileURLToPath(import.meta.url)), 'html'),
       },
     },
   })
@@ -113,9 +110,7 @@ async function setup() {
 
   server.events.on('request', (request, event, tags) => {
     if (tags.error) {
-      console.error(
-        `Request ${event.request} error: ${event.error ? event.error.message : 'unknown'}`,
-      )
+      console.error(`Request ${event.request} error: ${event.error ? event.error.message : 'unknown'}`)
     }
   })
 

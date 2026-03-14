@@ -12,7 +12,7 @@
     "interval": 0,
     "serials": true,
     "status": "last run:03-05 15:25<br>last cp :09-20 12:59",
-    "type": "NSD"
+    "type": "nsd"
   },
   "ttl": 3600
 }
