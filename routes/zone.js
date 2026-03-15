@@ -3,6 +3,24 @@ import validate from '@nictool/validate'
 import Zone from '../lib/zone.js'
 import { meta } from '../lib/util.js'
 
+function zoneResponseFailAction(request, h, err) {
+  const detail = err?.details?.find((d) =>
+    Array.isArray(d.path) && d.path[0] === 'zone' && d.path[2] === 'zone',
+  )
+
+  if (detail) {
+    const index = detail.path[1]
+    const badZone = request.response?.source?.zone?.[index]?.zone
+    const badId = request.response?.source?.zone?.[index]?.id
+
+    if (badZone !== undefined) {
+      err.message = `${err.message}. Invalid zone value: "${badZone}" (id: ${badId ?? 'unknown'})`
+    }
+  }
+
+  throw err
+}
+
 function ZoneRoutes(server) {
   server.route([
     {
@@ -15,13 +33,14 @@ function ZoneRoutes(server) {
         },
         response: {
           schema: validate.zone.GET_res,
-          failAction: 'log',
+          failAction: zoneResponseFailAction,
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
         const getArgs = {
           deleted: request.query.deleted === true ? 1 : 0,
+          limit: 1000,
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
 
@@ -48,7 +67,7 @@ function ZoneRoutes(server) {
         },
         response: {
           schema: validate.zone.GET_res,
-          failAction: 'log',
+          failAction: zoneResponseFailAction,
         },
         tags: ['api'],
       },
@@ -78,7 +97,7 @@ function ZoneRoutes(server) {
         },
         response: {
           schema: validate.zone.GET_res,
-          failAction: 'log',
+          failAction: zoneResponseFailAction,
         },
         tags: ['api'],
       },
