@@ -38,13 +38,32 @@ function ZoneRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
+        const deleted = request.query.deleted === true
         const getArgs = {
-          deleted: request.query.deleted === true ? 1 : 0,
-          limit: 1000,
+          deleted,
+          limit: Number.isInteger(request.query.limit) ? request.query.limit : 1000,
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
+        if (request.query.search) getArgs.search = request.query.search
+        if (Number.isInteger(request.query.offset)) getArgs.offset = request.query.offset
+        if (request.query.zone_like) getArgs.zone_like = request.query.zone_like
+        if (request.query.description_like) getArgs.description_like = request.query.description_like
+        if (request.query.sort_by) getArgs.sort_by = request.query.sort_by
+        if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
 
-        const zones = await Zone.get(getArgs)
+        const countArgs = {
+          deleted,
+          ...(getArgs.id ? { id: getArgs.id } : {}),
+          ...(getArgs.search ? { search: getArgs.search } : {}),
+          ...(getArgs.zone_like ? { zone_like: getArgs.zone_like } : {}),
+          ...(getArgs.description_like ? { description_like: getArgs.description_like } : {}),
+        }
+
+        const [zones, filtered, total] = await Promise.all([
+          Zone.get(getArgs),
+          Zone.count(countArgs),
+          Zone.count(getArgs.id ? { deleted, id: getArgs.id } : { deleted }),
+        ])
 
         return h
           .response({
@@ -52,6 +71,12 @@ function ZoneRoutes(server) {
             meta: {
               api: meta.api,
               msg: `here's your zone(s)`,
+              pagination: {
+                total,
+                filtered,
+                limit: getArgs.limit,
+                offset: getArgs.offset ?? 0,
+              },
             },
           })
           .code(200)
@@ -103,7 +128,7 @@ function ZoneRoutes(server) {
       },
       handler: async (request, h) => {
         const zones = await Zone.get({
-          deleted: request.query.deleted === true ? 1 : 0,
+          deleted: request.query.deleted === true,
           id: parseInt(request.params.id, 10),
         })
 

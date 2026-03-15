@@ -54,6 +54,16 @@ describe('zone routes', () => {
     assert.equal(res.result.zone[0].zone, nsCase.zone)
   })
 
+  it('GET /zone?search=... returns DB matches', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: '/zone?search=route.example',
+      headers: auth.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    assert.ok(res.result.zone.some((z) => z.zone === nsCase.zone))
+  })
+
   it(`POST /zone (${case2Id})`, async () => {
     const testCase = JSON.parse(JSON.stringify(nsCase))
     testCase.id = case2Id // make it unique
