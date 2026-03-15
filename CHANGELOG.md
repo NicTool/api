@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - lib/nameserver.js: handle null fields from DB
 - routes/zone: report zone name on validation failure
 
-### [3.0.0-alpha.7.0] - 2026-03-13
+### [3.0.0-alpha.7] - 2026-03-13
 
 - fixes
 
