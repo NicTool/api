@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [3.0.0-alpha.8.1] - 2026-03-15
+
 - feat(zone): use DataTable for list, added search/limit options
 - routes/zr: add extra data about ZR parse failures
 
@@ -65,3 +67,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [3.0.0-alpha.6]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.6
 [3.0.0-alpha.7]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.7
 [3.0.0-alpha.8]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.8
+[3.0.0-alpha.9]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.9
+[3.0.0]: https://github.com/NicTool/api/releases/tag/3.0.0
+[3.0.0-alpha.7.0]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.7.0
