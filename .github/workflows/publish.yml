@@ -37,7 +37,14 @@ jobs:
           # fetch-depth 0 needed by GitHub Release
 
       - name: publish to NPM
-        run: npm publish --access=public
+        run: |
+          VERSION=$(node -e 'console.log(require("./package.json").version)')
+          if printf '%s' "$VERSION" | grep -q -- '-'; then
+            # prerelease versions get the "next" tag
+            npm publish --access=public --tag=next
+          else
+            npm publish --access=public
+          fi
 
   publish-gpr:
     needs: build
