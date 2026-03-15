@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [3.0.0-alpha.8] - 2026-03-14
+
+- lib/zone: add limit option
+- lib/nameserver.js: handle null fields from DB
+- routes/zone: report zone name on validation failure
+
 ### [3.0.0-alpha.7] - 2026-03-13
 
 - fixes
@@ -36,7 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - feat(lib/nameserver): added, with tests
 - feat(routes/nameserver): added, with tests
 
-### 3.0.0-alpha.3
+### [3.0.0-alpha.3]
 
 - routes/permission: added GET, POST, DELETE
 - permission.get: default search with deleted=0
@@ -55,3 +61,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [3.0.0-alpha.5]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.5
 [3.0.0-alpha.6]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.6
 [3.0.0-alpha.7]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.7
+[3.0.0-alpha.8]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.8
