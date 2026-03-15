@@ -1,7 +1,31 @@
 import validate from '@nictool/validate'
 
 import ZoneRecord from '../lib/zone_record.js'
+import Zone from '../lib/zone.js'
 import { meta } from '../lib/util.js'
+
+async function zoneRecordResponseFailAction(request, h, err) {
+  const detail = err?.details?.find(
+    (d) => Array.isArray(d.path) && d.path[0] === 'zone_record' && d.path[2] === 'owner',
+  )
+
+  if (detail) {
+    const index = detail.path[1]
+    const badRecord = request.response?.source?.zone_record?.[index]
+
+    if (badRecord) {
+      let zoneName = 'unknown'
+      if (Number.isInteger(badRecord.zid)) {
+        const zones = await Zone.get({ id: badRecord.zid, deleted: 0 })
+        if (zones.length > 0) zoneName = zones[0].zone
+      }
+
+      err.message = `${err.message}. Invalid zone record owner for zone "${zoneName}" (zone id: ${badRecord.zid ?? 'unknown'}, record id: ${badRecord.id ?? 'unknown'}, owner: "${badRecord.owner ?? 'unknown'}")`
+    }
+  }
+
+  throw err
+}
 
 function ZoneRecordRoutes(server) {
   server.route([
@@ -15,7 +39,7 @@ function ZoneRecordRoutes(server) {
         },
         response: {
           schema: validate.zone_record.GET_res,
-          failAction: 'log',
+          failAction: zoneRecordResponseFailAction,
         },
         tags: ['api'],
       },
