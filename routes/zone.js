@@ -4,8 +4,8 @@ import Zone from '../lib/zone.js'
 import { meta } from '../lib/util.js'
 
 function zoneResponseFailAction(request, h, err) {
-  const detail = err?.details?.find((d) =>
-    Array.isArray(d.path) && d.path[0] === 'zone' && d.path[2] === 'zone',
+  const detail = err?.details?.find(
+    (d) => Array.isArray(d.path) && d.path[0] === 'zone' && d.path[2] === 'zone',
   )
 
   if (detail) {
