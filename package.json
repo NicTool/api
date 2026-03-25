@@ -1,6 +1,6 @@
 {
   "name": "@nictool/api",
-  "version": "3.0.0-alpha.9",
+  "version": "3.0.0-alpha.10",
   "description": "NicTool API",
   "main": "index.js",
   "type": "module",
@@ -14,6 +14,7 @@
     "server.js"
   ],
   "scripts": {
+    "clean": "rm -rf node_modules package-lock.json",
     "format": "npm run lint:fix && npm run prettier:fix",
     "lint": "npx eslint *.js **/*.js",
     "lint:fix": "npm run lint -- --fix",
@@ -23,9 +24,10 @@
     "develop": "NODE_ENV=development node --watch server.js ./server",
     "test": "./test.sh",
     "test:develop": "NODE_ENV=development ./test.sh",
-    "versions": "npx dependency-version-checker check",
-    "versions:fix": "npx dependency-version-checker update",
-    "watch": "./test.sh watch"
+    "versions": "npx npm-dep-mgr check",
+    "versions:fix": "npx npm-dep-mgr update",
+    "watch": "./test.sh watch",
+    "test:coverage": "npx c8 --reporter=text --reporter=text-summary npm test"
   },
   "repository": {
     "type": "git",
@@ -44,23 +46,24 @@
   },
   "homepage": "https://github.com/NicTool/api#readme",
   "devDependencies": {
-    "@babel/eslint-parser": "^7.27.0",
-    "@babel/plugin-syntax-import-attributes": "^7.26.0",
-    "eslint": "^9.24.0"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0"
   },
   "dependencies": {
     "@hapi/cookie": "^12.0.1",
-    "@hapi/hapi": "^21.4.0",
+    "@hapi/hapi": "^21.4.7",
     "@hapi/hoek": "^11.0.7",
     "@hapi/inert": "^7.1.0",
-    "@hapi/jwt": "^3.2.0",
+    "@hapi/jwt": "^3.2.3",
     "@hapi/vision": "^7.0.3",
-    "@nictool/dns-resource-record": "^1.2.2",
-    "@nictool/validate": "^0.8.2",
+    "@nictool/dns-resource-record": "^1.5.0",
+    "@nictool/validate": "^0.8.7",
     "hapi-swagger": "^17.3.2",
-    "mysql2": "^3.14.0",
-    "qs": "^6.14.0",
-    "yaml": "^2.7.1"
+    "mysql2": "^3.20.0",
+    "qs": "^6.15.0",
+    "smol-toml": "^1.6.1"
   },
   "prettier": {
     "printWidth": 110,

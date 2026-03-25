@@ -1,0 +1,18 @@
+host      = "localhost"
+port      = 3000
+keepAlive = false
+group     = "NicTool"
+
+[jwt]
+key = "af1b926a5e21f535c4f5b6c42941c4cf"
+
+[cookie]
+# https://hapi.dev/module/cookie/api/?v=12.0.1
+name         = "sid-nictool"
+ttl          = 3600000  # 1 hour
+path         = "/"
+clearInvalid = true
+isSameSite   = "Strict"
+isSecure     = true
+isHttpOnly   = false
+password     = ""   # hint: openssl rand -hex 16

@@ -1,0 +1,9 @@
+host           = "127.0.0.1"
+port           = 3306
+socketPath     = ""
+user           = "nictool"
+database       = "nictool"
+timezone       = "+00:00"
+dateStrings    = ["DATETIME", "TIMESTAMP"]
+decimalNumbers = true
+password       = ""

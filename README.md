@@ -3,6 +3,7 @@
 
 # NicTool API v3
 
+A RESTful JSON web service that exposes DNS management functions to users.
 
 ## Install
 
