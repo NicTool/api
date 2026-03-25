@@ -2,6 +2,11 @@
 
 set -eu
 
+if [ "${CI:-}" = "true" ]; then
+	sed -i.bak 's/^user[[:space:]]*=.*/user = "root"/' conf.d/mysql.toml
+	sed -i.bak 's/^password[[:space:]]*=.*/password = "root"/' conf.d/mysql.toml
+fi
+
 NODE="node --no-warnings=ExperimentalWarning"
 $NODE test-fixtures.js teardown
 $NODE test-fixtures.js setup

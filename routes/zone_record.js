@@ -82,7 +82,7 @@ function ZoneRecordRoutes(server) {
 
         return h
           .response({
-            zone_record: zrs[0],
+            zone_record: zrs,
             meta: {
               api: meta.api,
               msg: `the zone record was created`,
@@ -120,15 +120,19 @@ function ZoneRecordRoutes(server) {
             .code(404)
         }
 
-        const r = await ZoneRecord.delete({
+        await ZoneRecord.delete({
           id: zrs[0].id,
           deleted: 1,
         })
-        console.log(`deleted`, r)
+
+        const deletedZrs = await ZoneRecord.get({
+          id: zrs[0].id,
+          deleted: true,
+        })
 
         return h
           .response({
-            zone: zrs[0],
+            zone_record: deletedZrs,
             meta: {
               api: meta.api,
               msg: `I deleted that zone record`,
