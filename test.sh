@@ -2,6 +2,7 @@
 
 set -eu
 
+# set up test database connection for CI (GitHub Actions)
 if [ "${CI:-}" = "true" ]; then
 	sed -i.bak 's/^user[[:space:]]*=.*/user = "root"/' conf.d/mysql.toml
 	sed -i.bak 's/^password[[:space:]]*=.*/password = "root"/' conf.d/mysql.toml
@@ -29,7 +30,5 @@ else
 		# npm i --no-save node-test-github-reporter
 		# $NODE --test --test-reporter=node-test-github-reporter
 	# fi
-	$NODE --test --test-reporter=spec lib/*.test.js routes/*.test.js
+	$NODE --test --test-reporter=spec lib/*.test.js lib/*/test.js routes/*.test.js
 fi
-
-# npx mocha --exit --no-warnings=ExperimentalWarning lib/*.test.js routes/*.test.js

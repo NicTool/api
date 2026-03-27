@@ -130,7 +130,7 @@ async function start() {
   await setup()
   /* c8 ignore next 3 */
   await server.start()
-  console.log(`Server running at: ${server.info.uri}`)
+  console.log(`API running at: ${server.info.uri}`)
   return server
 }
 

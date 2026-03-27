@@ -130,4 +130,5 @@ dist
 .pnp.*
 
 package-lock.json
+.release/
 conf.d/*.pem

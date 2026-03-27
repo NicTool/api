@@ -1,6 +1,6 @@
 import validate from '@nictool/validate'
 
-import Group from '../lib/group.js'
+import Group from '../lib/group/index.js'
 import { meta } from '../lib/util.js'
 
 function GroupRoutes(server) {

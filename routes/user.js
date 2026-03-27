@@ -1,6 +1,6 @@
 import validate from '@nictool/validate'
 
-import User from '../lib/user.js'
+import User from '../lib/user/index.js'
 import { meta } from '../lib/util.js'
 
 function UserRoutes(server) {
