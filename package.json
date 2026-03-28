@@ -20,6 +20,7 @@
     "lint:fix": "npm run lint -- --fix",
     "prettier": "npx prettier *.js conf.d lib routes html --check",
     "prettier:fix": "npx prettier *.js conf.d lib routes html --write",
+    "server": "node ./server.js",
     "start": "node ./server.js",
     "develop": "node --watch server.js ./server",
     "test": "./test.sh",

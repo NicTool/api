@@ -113,6 +113,38 @@ function ZoneRoutes(server) {
       },
     },
     {
+      method: 'PUT',
+      path: '/zone/{id}',
+      options: {
+        validate: {
+          payload: validate.zone.PUT,
+          failAction: 'log',
+        },
+        response: {
+          schema: validate.zone.GET_res,
+          failAction: zoneResponseFailAction,
+        },
+        tags: ['api'],
+      },
+      handler: async (request, h) => {
+        const id = parseInt(request.params.id, 10)
+        const zones = await Zone.get({ id })
+
+        if (zones.length === 0) {
+          return h
+            .response({ meta: { api: meta.api, msg: `I couldn't find that zone` } })
+            .code(404)
+        }
+
+        await Zone.put({ id, ...request.payload })
+
+        const updated = await Zone.get({ id })
+        return h
+          .response({ zone: updated, meta: { api: meta.api, msg: `the zone was updated` } })
+          .code(200)
+      },
+    },
+    {
       method: 'DELETE',
       path: '/zone/{id}',
       options: {
