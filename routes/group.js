@@ -7,6 +7,31 @@ function GroupRoutes(server) {
   server.route([
     {
       method: 'GET',
+      path: '/group',
+      options: {
+        validate: {
+          query: validate.group.GET_list_req,
+        },
+        response: {
+          schema: validate.group.GET_list_res,
+          failAction: 'log',
+        },
+        tags: ['api'],
+      },
+      handler: async (request, h) => {
+        const getArgs = { deleted: request.query.deleted === true ? 1 : 0 }
+        if (request.query.parent_gid !== undefined) getArgs.parent_gid = request.query.parent_gid
+        if (request.query.name     !== undefined) getArgs.name       = request.query.name
+
+        const groups = await Group.get(getArgs)
+
+        return h
+          .response({ group: groups, meta: { api: meta.api, msg: `here are your groups` } })
+          .code(200)
+      },
+    },
+    {
+      method: 'GET',
       path: '/group/{id}',
       options: {
         validate: {

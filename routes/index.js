@@ -110,7 +110,11 @@ async function setup() {
 
   server.events.on('request', (request, event, tags) => {
     if (tags.error) {
-      console.error(`Request ${event.request} error: ${event.error ? event.error.message : 'unknown'}`)
+      const err = event.error
+      const details = err?.details?.map((d) => `${d.path.join('.')}: ${d.message}`).join(', ')
+      console.error(
+        `Request ${event.request} error: ${err ? err.message : 'unknown'}${details ? ` [${details}]` : ''} | path=${request.path} query=${JSON.stringify(request.query)} tags=${JSON.stringify(tags)}`,
+      )
     }
   })
 

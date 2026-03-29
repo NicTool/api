@@ -24,6 +24,7 @@ function NameserverRoutes(server) {
           deleted: request.query.deleted === true ? 1 : 0,
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
+        if (request.query.gid) getArgs.gid = parseInt(request.query.gid, 10)
 
         const nameservers = await Nameserver.get(getArgs)
 

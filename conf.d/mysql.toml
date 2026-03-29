@@ -6,4 +6,4 @@ database       = "nictool"
 timezone       = "+00:00"
 dateStrings    = ["DATETIME", "TIMESTAMP"]
 decimalNumbers = true
-password       = ""
+password       = "lootcin!mysql"

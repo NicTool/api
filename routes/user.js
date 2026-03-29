@@ -20,19 +20,22 @@ function UserRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        // get myself
-        const { user, group, session } = h.request.auth.credentials
+        const { group } = h.request.auth.credentials
+        const gid = request.query.gid ?? group.id
+        const getArgs = {
+          gid: parseInt(gid, 10),
+          deleted: request.query.deleted === true ? 1 : 0,
+        }
 
-        const users = await User.get({ id: user.id })
-
-        delete users[0].gid
+        const users = await User.get(getArgs)
+        for (const u of users) delete u.gid
 
         return h
           .response({
             user: users,
             meta: {
               api: meta.api,
-              msg: `this is you`,
+              msg: `users in group`,
             },
           })
           .code(200)
@@ -118,6 +121,47 @@ function UserRoutes(server) {
             },
           })
           .code(201)
+      },
+    },
+    {
+      method: 'PUT',
+      path: '/user/{id}',
+      options: {
+        validate: {
+          payload: validate.user.PUT,
+          failAction: 'log',
+        },
+        response: {
+          schema: validate.user.GET_res,
+          failAction: 'log',
+        },
+        tags: ['api'],
+      },
+      handler: async (request, h) => {
+        const id = parseInt(request.params.id, 10)
+        const args = { ...request.payload, id }
+
+        if (args.password) {
+          args.pass_salt = User.generateSalt()
+          args.password = await User.hashAuthPbkdf2(args.password, args.pass_salt)
+        }
+
+        await User.put(args)
+
+        const users = await User.get({ id })
+        if (!users.length) {
+          return h
+            .response({ meta: { api: meta.api, msg: `user not found` } })
+            .code(404)
+        }
+        delete users[0].gid
+
+        return h
+          .response({
+            user: users,
+            meta: { api: meta.api, msg: `user updated` },
+          })
+          .code(200)
       },
     },
     {
