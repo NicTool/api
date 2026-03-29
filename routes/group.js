@@ -14,7 +14,6 @@ function GroupRoutes(server) {
         },
         response: {
           schema: validate.group.GET_list_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },

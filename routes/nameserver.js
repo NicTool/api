@@ -11,11 +11,9 @@ function NameserverRoutes(server) {
       options: {
         validate: {
           query: validate.nameserver.GET_req,
-          failAction: 'log',
         },
         response: {
           schema: validate.nameserver.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -45,11 +43,9 @@ function NameserverRoutes(server) {
       options: {
         validate: {
           payload: validate.nameserver.POST,
-          failAction: 'log',
         },
         response: {
           schema: validate.nameserver.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -75,11 +71,9 @@ function NameserverRoutes(server) {
       options: {
         validate: {
           query: validate.nameserver.DELETE,
-          failAction: 'log',
         },
         response: {
           schema: validate.nameserver.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },

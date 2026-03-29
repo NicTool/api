@@ -11,11 +11,9 @@ function UserRoutes(server) {
       options: {
         validate: {
           query: validate.user.GET_req,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -47,11 +45,9 @@ function UserRoutes(server) {
       options: {
         validate: {
           query: validate.user.GET_req,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -93,11 +89,9 @@ function UserRoutes(server) {
       options: {
         validate: {
           payload: validate.user.POST,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -129,11 +123,9 @@ function UserRoutes(server) {
       options: {
         validate: {
           payload: validate.user.PUT,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -170,11 +162,9 @@ function UserRoutes(server) {
       options: {
         validate: {
           query: validate.user.DELETE,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },

@@ -4,24 +4,6 @@ import Zone from '../lib/zone.js'
 import Mysql from '../lib/mysql.js'
 import { meta } from '../lib/util.js'
 
-function zoneResponseFailAction(request, h, err) {
-  const detail = err?.details?.find(
-    (d) => Array.isArray(d.path) && d.path[0] === 'zone' && d.path[2] === 'zone',
-  )
-
-  if (detail) {
-    const index = detail.path[1]
-    const badZone = request.response?.source?.zone?.[index]?.zone
-    const badId = request.response?.source?.zone?.[index]?.id
-
-    if (badZone !== undefined) {
-      err.message = `${err.message}. Invalid zone value: "${badZone}" (id: ${badId ?? 'unknown'})`
-    }
-  }
-
-  throw err
-}
-
 function ZoneRoutes(server) {
   server.route([
     {
@@ -30,11 +12,9 @@ function ZoneRoutes(server) {
       options: {
         validate: {
           query: validate.zone.GET_req,
-          failAction: 'log',
         },
         response: {
           schema: validate.zone.GET_res,
-          failAction: zoneResponseFailAction,
         },
         tags: ['api'],
       },
@@ -96,11 +76,9 @@ function ZoneRoutes(server) {
       options: {
         validate: {
           payload: validate.zone.POST,
-          failAction: 'log',
         },
         response: {
           schema: validate.zone.GET_res,
-          failAction: zoneResponseFailAction,
         },
         tags: ['api'],
       },
@@ -126,17 +104,16 @@ function ZoneRoutes(server) {
       options: {
         validate: {
           payload: validate.zone.PUT,
-          failAction: 'log',
         },
         response: {
           schema: validate.zone.GET_res,
-          failAction: zoneResponseFailAction,
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
         const id = parseInt(request.params.id, 10)
-        const zones = await Zone.get({ id })
+        let zones = await Zone.get({ id })
+        if (zones.length === 0) zones = await Zone.get({ id, deleted: 1 })
 
         if (zones.length === 0) {
           return h
@@ -158,7 +135,6 @@ function ZoneRoutes(server) {
       options: {
         response: {
           schema: validate.zone.GET_ns_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -190,11 +166,9 @@ function ZoneRoutes(server) {
       options: {
         validate: {
           query: validate.zone.DELETE,
-          failAction: 'log',
         },
         response: {
           schema: validate.zone.GET_res,
-          failAction: zoneResponseFailAction,
         },
         tags: ['api'],
       },

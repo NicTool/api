@@ -35,7 +35,6 @@ function ZoneRecordRoutes(server) {
       options: {
         validate: {
           query: validate.zone_record.GET_req,
-          failAction: 'log',
         },
         response: {
           schema: validate.zone_record.GET_res,

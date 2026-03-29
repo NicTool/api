@@ -11,11 +11,9 @@ function PermissionRoutes(server) {
       options: {
         validate: {
           query: validate.permission.GET_req,
-          failAction: 'log',
         },
         response: {
           schema: validate.permission.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -44,11 +42,9 @@ function PermissionRoutes(server) {
       options: {
         validate: {
           payload: validate.permission.POST,
-          failAction: 'log',
         },
         response: {
           schema: validate.permission.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -78,7 +74,6 @@ function PermissionRoutes(server) {
         },
         response: {
           schema: validate.permission.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },

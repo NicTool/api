@@ -18,7 +18,6 @@ function SessionRoutes(server) {
       options: {
         response: {
           schema: validate.session.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -47,11 +46,9 @@ function SessionRoutes(server) {
         auth: { mode: 'try' },
         validate: {
           payload: validate.session.POST,
-          failAction: 'log',
         },
         response: {
           schema: validate.session.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -105,11 +102,9 @@ function SessionRoutes(server) {
       options: {
         validate: {
           query: validate.session.DELETE,
-          failAction: 'log',
         },
         response: {
           schema: validate.session.GET,
-          failAction: 'log',
         },
         tags: ['api'],
       },
