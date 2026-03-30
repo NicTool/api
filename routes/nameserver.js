@@ -66,6 +66,37 @@ function NameserverRoutes(server) {
       },
     },
     {
+      method: 'PUT',
+      path: '/nameserver/{id}',
+      options: {
+        validate: {
+          payload: validate.nameserver.PUT,
+        },
+        response: {
+          schema: validate.nameserver.GET_res,
+        },
+        tags: ['api'],
+      },
+      handler: async (request, h) => {
+        const id = parseInt(request.params.id, 10)
+        let nameservers = await Nameserver.get({ id })
+        if (nameservers.length === 0) nameservers = await Nameserver.get({ id, deleted: 1 })
+
+        if (nameservers.length === 0) {
+          return h
+            .response({ meta: { api: meta.api, msg: `I couldn't find that nameserver` } })
+            .code(404)
+        }
+
+        await Nameserver.put({ id, ...request.payload })
+
+        const updated = await Nameserver.get({ id })
+        return h
+          .response({ nameserver: updated, meta: { api: meta.api, msg: `the nameserver was updated` } })
+          .code(200)
+      },
+    },
+    {
       method: 'DELETE',
       path: '/nameserver/{id}',
       options: {

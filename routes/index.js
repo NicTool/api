@@ -62,7 +62,6 @@ async function setup() {
   })
 
   await server.register(Jwt)
-  await server.register(Inert)
   await server.register([
     Inert,
     Vision,
@@ -73,6 +72,12 @@ async function setup() {
           title: 'NicTool API Documentation',
           version: pkgJson.version,
         },
+        swagger: '2.0',
+        host: httpCfg.host ? `${httpCfg.host}:${httpCfg.port}` : `localhost:${httpCfg.port}`,
+        documentationPage: true,
+        swaggerUI: true,
+        debug: true,
+        grouping: 'tags',
       },
     },
   ])

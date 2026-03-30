@@ -91,6 +91,39 @@ function ZoneRecordRoutes(server) {
       },
     },
     {
+      method: 'PUT',
+      path: '/zone_record/{id}',
+      options: {
+        validate: {
+          payload: validate.zone_record.PUT,
+        },
+        response: {
+          schema: validate.zone_record.GET_res,
+        },
+        tags: ['api'],
+      },
+      handler: async (request, h) => {
+        const id = parseInt(request.params.id, 10)
+        const zrs = await ZoneRecord.get({ id })
+
+        if (zrs.length === 0) {
+          return h
+            .response({ meta: { api: meta.api, msg: `I couldn't find that zone record` } })
+            .code(404)
+        }
+
+        await ZoneRecord.put({ id, ...request.payload })
+
+        const updated = await ZoneRecord.get({ id })
+        return h
+          .response({
+            zone_record: updated,
+            meta: { api: meta.api, msg: `the zone record was updated` },
+          })
+          .code(200)
+      },
+    },
+    {
       method: 'DELETE',
       path: '/zone_record/{id}',
       options: {
