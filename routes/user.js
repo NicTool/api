@@ -23,6 +23,7 @@ function UserRoutes(server) {
         const getArgs = {
           gid: parseInt(gid, 10),
           deleted: request.query.deleted === true ? 1 : 0,
+          include_subgroups: request.query.include_subgroups === true,
         }
 
         const users = await User.get(getArgs)
