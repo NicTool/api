@@ -56,7 +56,7 @@
     "@hapi/hapi": "^21.4.8",
     "@hapi/hoek": "^11.0.7",
     "@hapi/inert": "^7.1.0",
-    "joi": "^18.1.2",
+    "joi": "^17.13.3",
     "@hapi/jwt": "^3.2.3",
     "@hapi/vision": "^7.0.3",
     "@nictool/dns-resource-record": "^1.6.0",
