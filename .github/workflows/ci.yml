@@ -92,17 +92,17 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Generate .env
-        run: ./generate-env.sh
+        run: ./docker/generate-env.sh
       - name: Build and start services
-        run: docker compose up --build -d --wait
+        run: docker compose -f docker/docker-compose.yml up --build -d --wait
       - name: Run tests
-        run: docker compose exec api npm test
+        run: docker compose -f docker/docker-compose.yml exec api npm test
       - name: Logs on failure
         if: failure()
-        run: docker compose logs
+        run: docker compose -f docker/docker-compose.yml logs
       - name: Tear down
         if: always()
-        run: docker compose down -v
+        run: docker compose -f docker/docker-compose.yml down -v
 
   test-win:
     needs: [ get-lts ]
