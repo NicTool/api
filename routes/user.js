@@ -22,7 +22,7 @@ function UserRoutes(server) {
         const gid = request.query.gid ?? group.id
         const getArgs = {
           gid: parseInt(gid, 10),
-          deleted: request.query.deleted === true ? 1 : 0,
+          deleted: request.query.deleted ?? false,
           include_subgroups: request.query.include_subgroups === true,
         }
 

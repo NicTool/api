@@ -1,4 +1,4 @@
-host      = "mattbook-m3.home.simerson.net"
+host      = "localhost"
 port      = 3000
 keepAlive = false
 group     = "NicTool"

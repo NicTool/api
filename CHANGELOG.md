@@ -8,12 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [3.0.0-alpha.11] - 2026-04-07
 
-#### Changed
-
-- v3.0.0-alpha.11
-
-#### Other
-
 - decorate user & group with permissions
 - add some missing PUT routes
 - better error handling validation errors
@@ -21,7 +15,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - zone record factory & subclasses
 - zone factory & subclasses
 - user factory, toml, mysql, mongodb, elastic classes
-
 
 ### [3.0.0-alpha.10] - 2026-03-25
 

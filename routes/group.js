@@ -143,7 +143,8 @@ function GroupRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const groups = await Group.get({ id: parseInt(request.params.id, 10) })
+        const id = parseInt(request.params.id, 10)
+        const groups = await Group.get({ id })
         /* c8 ignore next 10 */
         if (groups.length !== 1) {
           return h
@@ -154,6 +155,21 @@ function GroupRoutes(server) {
               },
             })
             .code(204)
+        }
+
+        const [zoneCount, userCount, subgroupCount] = await Promise.all([
+          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_zone WHERE nt_group_id = ? AND deleted = 0', [id]),
+          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_user WHERE nt_group_id = ? AND deleted = 0', [id]),
+          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_group WHERE parent_group_id = ? AND deleted = 0', [id]),
+        ])
+        if (zoneCount[0].count > 0) {
+          return h.response({ error: 'Cannot delete group: active zones still exist.' }).code(409)
+        }
+        if (userCount[0].count > 0) {
+          return h.response({ error: 'Cannot delete group: active users still exist.' }).code(409)
+        }
+        if (subgroupCount[0].count > 0) {
+          return h.response({ error: 'Cannot delete group: active subgroups still exist.' }).code(409)
         }
 
         await Group.delete({ id: groups[0].id })
