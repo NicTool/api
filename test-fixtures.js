@@ -2,8 +2,8 @@
 
 import path from 'node:path'
 
-import Group from './lib/group.js'
-import User from './lib/user.js'
+import Group from './lib/group/index.js'
+import User from './lib/user/index.js'
 import Session from './lib/session.js'
 import Permission from './lib/permission.js'
 import Nameserver from './lib/nameserver.js'

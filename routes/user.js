@@ -1,6 +1,6 @@
 import validate from '@nictool/validate'
 
-import User from '../lib/user.js'
+import User from '../lib/user/index.js'
 import { meta } from '../lib/util.js'
 
 function UserRoutes(server) {
@@ -11,28 +11,30 @@ function UserRoutes(server) {
       options: {
         validate: {
           query: validate.user.GET_req,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
       handler: async (request, h) => {
-        // get myself
-        const { user, group, session } = h.request.auth.credentials
+        const { group } = h.request.auth.credentials
+        const gid = request.query.gid ?? group.id
+        const getArgs = {
+          gid: parseInt(gid, 10),
+          deleted: request.query.deleted ?? false,
+          include_subgroups: request.query.include_subgroups === true,
+        }
 
-        const users = await User.get({ id: user.id })
-
-        delete users[0].gid
+        const users = await User.get(getArgs)
+        for (const u of users) delete u.gid
 
         return h
           .response({
             user: users,
             meta: {
               api: meta.api,
-              msg: `this is you`,
+              msg: `users in group`,
             },
           })
           .code(200)
@@ -44,11 +46,9 @@ function UserRoutes(server) {
       options: {
         validate: {
           query: validate.user.GET_req,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -90,11 +90,9 @@ function UserRoutes(server) {
       options: {
         validate: {
           payload: validate.user.POST,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -121,16 +119,53 @@ function UserRoutes(server) {
       },
     },
     {
+      method: 'PUT',
+      path: '/user/{id}',
+      options: {
+        validate: {
+          payload: validate.user.PUT,
+        },
+        response: {
+          schema: validate.user.GET_res,
+        },
+        tags: ['api'],
+      },
+      handler: async (request, h) => {
+        const id = parseInt(request.params.id, 10)
+        const args = { ...request.payload, id }
+
+        if (args.password) {
+          args.pass_salt = User.generateSalt()
+          args.password = await User.hashAuthPbkdf2(args.password, args.pass_salt)
+        }
+
+        await User.put(args)
+
+        const users = await User.get({ id })
+        if (!users.length) {
+          return h
+            .response({ meta: { api: meta.api, msg: `user not found` } })
+            .code(404)
+        }
+        delete users[0].gid
+
+        return h
+          .response({
+            user: users,
+            meta: { api: meta.api, msg: `user updated` },
+          })
+          .code(200)
+      },
+    },
+    {
       method: 'DELETE',
       path: '/user/{id}',
       options: {
         validate: {
           query: validate.user.DELETE,
-          failAction: 'log',
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },

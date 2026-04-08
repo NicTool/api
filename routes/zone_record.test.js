@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import { describe, it, before, after } from 'node:test'
 
 import { init } from './index.js'
-import Group from '../lib/group.js'
-import User from '../lib/user.js'
+import Group from '../lib/group/index.js'
+import User from '../lib/user/index.js'
 import Zone from '../lib/zone.js'
 import ZoneRecord from '../lib/zone_record.js'
 

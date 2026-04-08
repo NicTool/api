@@ -42,11 +42,26 @@ async function setup() {
       files: {
         relativeTo: path.join(path.dirname(url.fileURLToPath(import.meta.url)), 'html'),
       },
+      validate: {
+        failAction: async (request, h, err) => {
+          if (process.env.NODE_ENV === 'production') {
+            // In production, log detailed error internally, but send a generic one to the client
+            console.error('ValidationError:', err.message); 
+            throw h.boom.badRequest(`Invalid request payload input`);
+          } else {
+            // In development, return the full error details
+            console.error(err);
+            throw err; // Hapi/Boom handles this error object correctly
+          }
+        },
+        options: {
+          abortEarly: false,
+        },
+      }
     },
   })
 
   await server.register(Jwt)
-  await server.register(Inert)
   await server.register([
     Inert,
     Vision,
@@ -57,6 +72,12 @@ async function setup() {
           title: 'NicTool API Documentation',
           version: pkgJson.version,
         },
+        swagger: '2.0',
+        host: httpCfg.host ? `${httpCfg.host}:${httpCfg.port}` : `localhost:${httpCfg.port}`,
+        documentationPage: true,
+        swaggerUI: true,
+        debug: true,
+        grouping: 'tags',
       },
     },
   ])
@@ -110,7 +131,11 @@ async function setup() {
 
   server.events.on('request', (request, event, tags) => {
     if (tags.error) {
-      console.error(`Request ${event.request} error: ${event.error ? event.error.message : 'unknown'}`)
+      const err = event.error
+      const details = err?.details?.map((d) => `${d.path.join('.')}: ${d.message}`).join(', ')
+      console.error(
+        `Request ${event.request} error: ${err ? err.message : 'unknown'}${details ? ` [${details}]` : ''} | path=${request.path} query=${JSON.stringify(request.query)} tags=${JSON.stringify(tags)}`,
+      )
     }
   })
 
@@ -130,7 +155,7 @@ async function start() {
   await setup()
   /* c8 ignore next 3 */
   await server.start()
-  console.log(`Server running at: ${server.info.uri}`)
+  console.log(`API running at: ${server.info.uri}`)
   return server
 }
 

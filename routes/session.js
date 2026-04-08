@@ -3,7 +3,7 @@ import validate from '@nictool/validate'
 import Config from '../lib/config.js'
 import Jwt from '@hapi/jwt'
 
-import User from '../lib/user.js'
+import User from '../lib/user/index.js'
 import Session from '../lib/session.js'
 
 import { meta } from '../lib/util.js'
@@ -18,7 +18,6 @@ function SessionRoutes(server) {
       options: {
         response: {
           schema: validate.session.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -47,11 +46,9 @@ function SessionRoutes(server) {
         auth: { mode: 'try' },
         validate: {
           payload: validate.session.POST,
-          failAction: 'log',
         },
         response: {
           schema: validate.session.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -105,11 +102,9 @@ function SessionRoutes(server) {
       options: {
         validate: {
           query: validate.session.DELETE,
-          failAction: 'log',
         },
         response: {
           schema: validate.session.GET,
-          failAction: 'log',
         },
         tags: ['api'],
       },
