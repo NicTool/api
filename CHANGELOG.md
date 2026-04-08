@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [3.0.0-alpha.11] - 2026-04-07
+
+#### Changed
+
+- v3.0.0-alpha.11
+
+#### Other
+
+- decorate user & group with permissions
+- add some missing PUT routes
+- better error handling validation errors
+- constraining views by GID
+- zone record factory & subclasses
+- zone factory & subclasses
+- user factory, toml, mysql, mongodb, elastic classes
+
+
 ### [3.0.0-alpha.10] - 2026-03-25
 
 - config: replace .yaml with .toml
@@ -71,3 +88,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [3.0.0-alpha.8]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.8
 [3.0.0-alpha.9]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.9
 [3.0.0-alpha.10]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.10
+[3.0.0-alpha.11]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.11
