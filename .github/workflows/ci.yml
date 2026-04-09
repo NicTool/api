@@ -81,7 +81,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.get-lts.outputs.lts) }}
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
       fail-fast: false
     steps:
       - name: Install & Start MySQL
@@ -104,7 +104,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.get-lts.outputs.lts) }}
+        node-version: ${{ fromJson(needs.get-lts.outputs.active) }}
         experimental: [true]
       fail-fast: false
     steps:
