@@ -50,11 +50,16 @@ services:
       dockerfile: docker/Dockerfile
     hostname: localhost
     ports:
-      - "${SERVER_PORT:-8443}:443"
+      - "${SERVER_PORT:-8080}:${SERVER_CONTAINER_PORT:-8080}"
     depends_on:
       api:
         condition: service_healthy
+    volumes:
+      - ${NICTOOL_SERVER_PATH:-../../server}/index.js:/app/index.js:ro
+      - ${NICTOOL_SERVER_PATH:-../../server}/bin:/app/bin:ro
+      - ${NICTOOL_SERVER_PATH:-../../server}/html:/app/html:ro
     environment:
+      NICTOOL_TLS: ${NICTOOL_TLS:-auto}
       NICTOOL_DB_HOST: db
       NICTOOL_DB_USER: ${NICTOOL_DB_USER:-nictool}
       NICTOOL_DB_USER_PASSWORD: ${NICTOOL_DB_USER_PASSWORD}
