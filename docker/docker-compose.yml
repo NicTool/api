@@ -43,5 +43,25 @@ services:
       retries: 10
       start_period: 15s
 
+  server:
+    profiles: [ui, e2e]
+    build:
+      context: ${NICTOOL_SERVER_PATH:-../../server}
+      dockerfile: docker/Dockerfile
+    hostname: localhost
+    ports:
+      - "${SERVER_PORT:-8443}:443"
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NICTOOL_DB_HOST: db
+      NICTOOL_DB_USER: ${NICTOOL_DB_USER:-nictool}
+      NICTOOL_DB_USER_PASSWORD: ${NICTOOL_DB_USER_PASSWORD}
+      NICTOOL_DB_NAME: ${NICTOOL_DB_NAME:-nictool}
+      NICTOOL_API_HOST: api
+      NICTOOL_API_PORT: 3000
+      NICTOOL_BIND_HOST: "0.0.0.0"
+
 volumes:
   db-data:
