@@ -11,9 +11,13 @@ env:
 
 jobs:
   lint:
+    permissions:
+      contents: read
     uses: NicTool/.github/.github/workflows/lint.yml@main
 
   coverage:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Start MySQL
@@ -37,6 +41,8 @@ jobs:
           github-token: ${{ secrets.github_token }}
 
   get-lts:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - id: get
@@ -49,6 +55,8 @@ jobs:
       min: ${{ steps.get.outputs.min }}
 
   test:
+    permissions:
+      contents: read
     needs: [ get-lts ]
     runs-on: ${{ matrix.os }}
     strategy:
@@ -67,6 +75,8 @@ jobs:
       - run: npm test
 
   test-mac:
+    permissions:
+      contents: read
     needs: [ get-lts ]
     runs-on: macos-latest
     strategy:
@@ -88,6 +98,8 @@ jobs:
       - run: npm test
 
   test-win:
+    permissions:
+      contents: read
     needs: [ get-lts ]
     runs-on: windows-latest
     strategy:
