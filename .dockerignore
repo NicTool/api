@@ -1,0 +1,9 @@
+node_modules/
+.git/
+.github/
+dist/
+*.md
+.env
+.env.example
+.eslintrc*
+eslint.config*

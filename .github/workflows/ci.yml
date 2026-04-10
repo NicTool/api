@@ -97,6 +97,23 @@ jobs:
       - run: npm install
       - run: npm test
 
+  test-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Generate .env
+        run: ./docker/generate-env.sh
+      - name: Build and start services
+        run: docker compose -f docker/docker-compose.yml up --build -d --wait
+      - name: Run tests
+        run: docker compose -f docker/docker-compose.yml exec api npm test
+      - name: Logs on failure
+        if: failure()
+        run: docker compose -f docker/docker-compose.yml logs
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v
+
   test-win:
     permissions:
       contents: read
