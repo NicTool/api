@@ -44,6 +44,8 @@ fi
 
 $MYSQL_CMD -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;" || exit 1
 
+# In Docker, SQL_DIR is set via compose env (e.g. /sql).
+# Outside Docker, defaults to ./sql relative to CWD (typically the repo root).
 SQL_DIR="${SQL_DIR:-./sql}"
 
 for f in "$SQL_DIR"/*.sql;
