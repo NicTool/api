@@ -136,7 +136,7 @@ function UserRoutes(server) {
 
         if (args.password) {
           args.pass_salt = User.generateSalt()
-          args.password = await User.hashAuthPbkdf2(args.password, args.pass_salt)
+          args.password = await User.hashForStorage(args.password, args.pass_salt)
         }
 
         await User.put(args)
