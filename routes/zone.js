@@ -10,6 +10,7 @@ function ZoneRoutes(server) {
       method: 'GET',
       path: '/zone/{id?}',
       options: {
+        app: { permission: { resource: 'zone', action: 'read', idFrom: 'params.id' } },
         validate: {
           query: validate.zone.GET_req,
         },
@@ -19,10 +20,11 @@ function ZoneRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const deleted = request.query.deleted === true
         const getArgs = {
-          deleted,
           limit: Number.isInteger(request.query.limit) ? request.query.limit : 1000,
+        }
+        if (request.query.deleted !== undefined) {
+          getArgs.deleted = request.query.deleted === true
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
         if (request.query.gid != null) {
@@ -38,6 +40,7 @@ function ZoneRoutes(server) {
         if (request.query.sort_by) getArgs.sort_by = request.query.sort_by
         if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
 
+        const deleted = getArgs.deleted ?? false
         const countArgs = {
           deleted,
           ...(getArgs.id ? { id: getArgs.id } : {}),
@@ -74,6 +77,7 @@ function ZoneRoutes(server) {
       method: 'POST',
       path: '/zone',
       options: {
+        app: { permission: { resource: 'zone', action: 'create' } },
         validate: {
           payload: validate.zone.POST,
         },
@@ -102,8 +106,10 @@ function ZoneRoutes(server) {
       method: 'PUT',
       path: '/zone/{id}',
       options: {
+        app: { permission: { resource: 'zone', action: 'write', idFrom: 'params.id' } },
         validate: {
           payload: validate.zone.PUT,
+          options: { allowUnknown: true },
         },
         response: {
           schema: validate.zone.GET_res,
@@ -164,6 +170,7 @@ function ZoneRoutes(server) {
       method: 'DELETE',
       path: '/zone/{id}',
       options: {
+        app: { permission: { resource: 'zone', action: 'delete', idFrom: 'params.id' } },
         validate: {
           query: validate.zone.DELETE,
         },

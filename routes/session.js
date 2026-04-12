@@ -5,6 +5,7 @@ import Jwt from '@hapi/jwt'
 
 import User from '../lib/user/index.js'
 import Session from '../lib/session.js'
+import Permission from '../lib/permission.js'
 
 import { meta } from '../lib/util.js'
 
@@ -18,6 +19,7 @@ function SessionRoutes(server) {
       options: {
         response: {
           schema: validate.session.GET_res,
+          options: { allowUnknown: true },
         },
         tags: ['api'],
       },
@@ -26,11 +28,20 @@ function SessionRoutes(server) {
 
         Session.put({ id: session.id, last_access: true })
 
+        const perm = await Permission.getEffective(user.id)
+        const groupPerm = await Permission.getGroup({
+          uid: user.id, deleted: false,
+        })
+        if (perm && groupPerm) {
+          perm.nameserver.usable = groupPerm.nameserver?.usable ?? []
+        }
+
         return h
           .response({
             user: user,
             group: group,
             session: { id: session.id },
+            permissions: perm ?? {},
             meta: {
               api: meta.api,
               msg: `working on it`,
@@ -49,6 +60,7 @@ function SessionRoutes(server) {
         },
         response: {
           schema: validate.session.GET_res,
+          options: { allowUnknown: true },
         },
         tags: ['api'],
       },
@@ -83,11 +95,20 @@ function SessionRoutes(server) {
           },
         )
 
+        const perm = await Permission.getEffective(account.user.id)
+        const groupPerm = await Permission.getGroup({
+          uid: account.user.id, deleted: false,
+        })
+        if (perm && groupPerm) {
+          perm.nameserver.usable = groupPerm.nameserver?.usable ?? []
+        }
+
         return h
           .response({
             user: account.user,
             group: account.group,
             session: { id: sessId, token: token },
+            permissions: perm ?? {},
             meta: {
               api: meta.api,
               msg: `you are logged in`,

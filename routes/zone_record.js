@@ -33,6 +33,7 @@ function ZoneRecordRoutes(server) {
       method: 'GET',
       path: '/zone_record/{id?}',
       options: {
+        app: { permission: { resource: 'zonerecord', action: 'read', idFrom: 'params.id' } },
         validate: {
           query: validate.zone_record.GET_req,
         },
@@ -43,8 +44,9 @@ function ZoneRecordRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const getArgs = {
-          deleted: request.query.deleted === true ? 1 : 0,
+        const getArgs = {}
+        if (request.query.deleted !== undefined) {
+          getArgs.deleted = request.query.deleted === true
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
         if (request.query.zid) getArgs.zid = parseInt(request.query.zid, 10)
@@ -66,6 +68,7 @@ function ZoneRecordRoutes(server) {
       method: 'POST',
       path: '/zone_record',
       options: {
+        app: { permission: { resource: 'zonerecord', action: 'create' } },
         validate: {
           payload: validate.zone_record.POST,
         },
@@ -94,6 +97,7 @@ function ZoneRecordRoutes(server) {
       method: 'PUT',
       path: '/zone_record/{id}',
       options: {
+        app: { permission: { resource: 'zonerecord', action: 'write', idFrom: 'params.id' } },
         validate: {
           payload: validate.zone_record.PUT,
         },
@@ -127,6 +131,7 @@ function ZoneRecordRoutes(server) {
       method: 'DELETE',
       path: '/zone_record/{id}',
       options: {
+        app: { permission: { resource: 'zonerecord', action: 'delete', idFrom: 'params.id' } },
         validate: {
           query: validate.zone_record.DELETE,
         },
