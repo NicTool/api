@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import Group from './lib/group/index.js'
 import User from './lib/user/index.js'
-import Session from './lib/session.js'
+import Session from './lib/session/index.js'
 import Permission from './lib/permission/index.js'
 import Nameserver from './lib/nameserver/index.js'
 import Zone from './lib/zone/index.js'
