@@ -1,6 +1,6 @@
 import validate from '@nictool/validate'
 
-import Permission from '../lib/permission.js'
+import Permission from '../lib/permission/index.js'
 import { meta } from '../lib/util.js'
 
 function PermissionRoutes(server) {

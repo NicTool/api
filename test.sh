@@ -30,5 +30,5 @@ else
 		# npm i --no-save node-test-github-reporter
 		# $NODE --test --test-reporter=node-test-github-reporter
 	# fi
-	$NODE --test --test-reporter=spec lib/*.test.js lib/*/test.js routes/*.test.js
+	$NODE --test --test-reporter=spec lib/*/test/index.js lib/*.test.js routes/*.test.js
 fi

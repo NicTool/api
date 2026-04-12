@@ -4,7 +4,7 @@ import { describe, it, before, after } from 'node:test'
 import { init } from './index.js'
 import Group from '../lib/group/index.js'
 import User from '../lib/user/index.js'
-import Permission from '../lib/permission.js'
+import Permission from '../lib/permission/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
 import userCase from './test/user.json' with { type: 'json' }

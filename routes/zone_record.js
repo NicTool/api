@@ -1,7 +1,7 @@
 import validate from '@nictool/validate'
 
-import ZoneRecord from '../lib/zone_record.js'
-import Zone from '../lib/zone.js'
+import ZoneRecord from '../lib/zone_record/index.js'
+import Zone from '../lib/zone/index.js'
 import { meta } from '../lib/util.js'
 
 async function zoneRecordResponseFailAction(request, h, err) {
