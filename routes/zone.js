@@ -1,6 +1,6 @@
 import validate from '@nictool/validate'
 
-import Zone from '../lib/zone.js'
+import Zone from '../lib/zone/index.js'
 import Mysql from '../lib/mysql.js'
 import { meta } from '../lib/util.js'
 

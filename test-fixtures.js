@@ -5,15 +5,15 @@ import path from 'node:path'
 import Group from './lib/group/index.js'
 import User from './lib/user/index.js'
 import Session from './lib/session.js'
-import Permission from './lib/permission.js'
-import Nameserver from './lib/nameserver.js'
-import Zone from './lib/zone.js'
+import Permission from './lib/permission/index.js'
+import Nameserver from './lib/nameserver/index.js'
+import Zone from './lib/zone/index.js'
 // import ZoneRecord from './lib/zone_record.js'
 
-import groupCase from './lib/test/group.json' with { type: 'json' }
-import userCase from './lib/test/user.json' with { type: 'json' }
-import zoneCase from './lib/test/zone.json' with { type: 'json' }
-// import zrCase from './lib/test/zone_record.json' with { type: 'json' }
+import groupCase from './lib/group/test/group.json' with { type: 'json' }
+import userCase from './lib/user/test/user.json' with { type: 'json' }
+import zoneCase from './lib/zone/test/zone.json' with { type: 'json' }
+// import zrCase from './lib/zone_record/test/zone_record.json' with { type: 'json' }
 import groupCaseR from './routes/test/group.json' with { type: 'json' }
 import userCaseR from './routes/test/user.json' with { type: 'json' }
 import nsCaseR from './routes/test/nameserver.json' with { type: 'json' }

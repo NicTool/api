@@ -8,7 +8,7 @@ import permCase from './test/permission.json' with { type: 'json' }
 
 import User from '../lib/user/index.js'
 import Group from '../lib/group/index.js'
-import Permission from '../lib/permission.js'
+import Permission from '../lib/permission/index.js'
 
 let server
 

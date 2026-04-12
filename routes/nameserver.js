@@ -1,6 +1,6 @@
 import validate from '@nictool/validate'
 
-import Nameserver from '../lib/nameserver.js'
+import Nameserver from '../lib/nameserver/index.js'
 import { meta } from '../lib/util.js'
 
 function NameserverRoutes(server) {
