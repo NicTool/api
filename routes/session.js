@@ -4,7 +4,7 @@ import Config from '../lib/config.js'
 import Jwt from '@hapi/jwt'
 
 import User from '../lib/user/index.js'
-import Session from '../lib/session.js'
+import Session from '../lib/user/session.js'
 
 import { meta } from '../lib/util.js'
 
