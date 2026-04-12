@@ -65,6 +65,38 @@ function PermissionRoutes(server) {
       },
     },
     {
+      method: 'PUT',
+      path: '/permission/{id}',
+      options: {
+        validate: {
+          payload: validate.permission.POST,
+        },
+        response: {
+          schema: validate.permission.GET_res,
+        },
+        tags: ['api'],
+      },
+      handler: async (request, h) => {
+        const id = parseInt(request.params.id, 10)
+        const existing = await Permission.get({ id })
+        if (!existing) {
+          return h
+            .response({ meta: { api: meta.api, msg: `permission not found` } })
+            .code(404)
+        }
+
+        await Permission.put({ ...request.payload, id })
+        const permission = await Permission.get({ id })
+
+        return h
+          .response({
+            permission,
+            meta: { api: meta.api, msg: `permission updated` },
+          })
+          .code(200)
+      },
+    },
+    {
       method: 'DELETE',
       path: '/permission/{id}',
       options: {

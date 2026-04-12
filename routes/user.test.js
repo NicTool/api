@@ -6,6 +6,7 @@ import User from '../lib/user/index.js'
 import Group from '../lib/group/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
+import { grantGroupPermissions } from './test/permissions.js'
 import userCase from './test/user.json' with { type: 'json' }
 
 let server,
@@ -15,6 +16,7 @@ before(async () => {
   server = await init()
   await Group.create(groupCase)
   await User.create(userCase)
+  await grantGroupPermissions(groupCase.id)
 })
 
 const userId2 = 4094

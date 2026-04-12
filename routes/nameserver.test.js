@@ -7,6 +7,7 @@ import User from '../lib/user/index.js'
 import Nameserver from '../lib/nameserver/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
+import { grantGroupPermissions } from './test/permissions.js'
 import userCase from './test/user.json' with { type: 'json' }
 import nsCase from './test/nameserver.json' with { type: 'json' }
 
@@ -17,6 +18,7 @@ before(async () => {
   await Nameserver.destroy({ id: case2Id })
   await Group.create(groupCase)
   await User.create(userCase)
+  await grantGroupPermissions(groupCase.id)
   await Nameserver.create(nsCase)
   server = await init()
 })
