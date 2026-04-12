@@ -91,6 +91,8 @@ jobs:
 
   test-docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - name: Generate .env

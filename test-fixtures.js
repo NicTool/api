@@ -35,8 +35,8 @@ async function setup() {
   await User.create(userCase)
   await User.create(userCaseR)
   // await createTestSession()
-  await User.mysql.disconnect()
-  await Group.mysql.disconnect()
+  await User.disconnect()
+  await Group.disconnect()
   process.exit(0)
 }
 
@@ -60,7 +60,7 @@ async function teardown() {
   await User.destroy({ id: userCaseR.id })
   await Group.destroy({ id: groupCase.id })
   await Group.destroy({ id: groupCaseR.id })
-  await User.mysql.disconnect()
-  await Group.mysql.disconnect()
+  await User.disconnect()
+  await Group.disconnect()
   process.exit(0)
 }

@@ -139,9 +139,9 @@ async function setup() {
     }
   })
 
-  server.events.on('stop', () => {
-    if (User.mysql) User.mysql.disconnect()
-    if (Session.mysql) Session.mysql.disconnect()
+  server.events.on('stop', async () => {
+    await User.disconnect()
+    await Session.disconnect()
   })
 }
 
