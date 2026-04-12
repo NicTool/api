@@ -7,6 +7,7 @@ import User from '../lib/user/index.js'
 import Zone from '../lib/zone/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
+import { grantGroupPermissions } from './test/permissions.js'
 import userCase from './test/user.json' with { type: 'json' }
 import nsCase from './test/zone.json' with { type: 'json' }
 
@@ -25,7 +26,11 @@ before(async () => {
   // nt_group_subgroups closure row (and thus the include_subgroups query) empty.
   await Group.destroy({ id: subGroup.id })
   await Group.create(groupCase)
+  // POST /zone (case2Id) targets a zone in this group; authz requires it to
+  // exist inside the fixture user's group tree.
+  await Group.create({ id: case2Id, parent_gid: groupCase.id, name: 'route2.example.com' })
   await User.create(userCase)
+  await grantGroupPermissions(groupCase.id)
   await Zone.create(nsCase)
   await Group.create(subGroup)
   await Zone.create(subZone)
@@ -35,6 +40,7 @@ before(async () => {
 after(async () => {
   await Zone.destroy({ id: subZone.id })
   await Group.destroy({ id: subGroup.id })
+  await Group.destroy({ id: case2Id })
   await server.stop()
 })
 

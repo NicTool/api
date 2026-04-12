@@ -2,6 +2,7 @@ import validate from '@nictool/validate'
 
 import ZoneRecord from '../lib/zone_record/index.js'
 import Zone from '../lib/zone/index.js'
+import Authz from '../lib/authz.js'
 import { meta } from '../lib/util.js'
 
 async function zoneRecordResponseFailAction(request, h, err) {
@@ -33,6 +34,14 @@ function ZoneRecordRoutes(server) {
       method: 'GET',
       path: '/zone_record/{id?}',
       options: {
+        app: {
+          permission: {
+            resource: 'zonerecord',
+            action: 'read',
+            idFrom: 'params.id',
+            list: { resource: 'zone', idFrom: 'query.zid' },
+          },
+        },
         validate: {
           query: validate.zone_record.GET_req,
         },
@@ -55,7 +64,18 @@ function ZoneRecordRoutes(server) {
         if (request.query.sort_by) getArgs.sort_by = request.query.sort_by
         if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
 
-        const scope = getArgs.id ? { id: getArgs.id } : getArgs.zid ? { zid: getArgs.zid } : {}
+        if (!getArgs.id && getArgs.zid) {
+          const ids = await Authz.getZoneRecordReadScope(
+            request.auth.credentials.group.id, getArgs.zid,
+          )
+          if (ids !== null) getArgs.ids = ids
+        }
+
+        const scope = getArgs.id
+          ? { id: getArgs.id }
+          : getArgs.zid
+            ? { zid: getArgs.zid, ...(getArgs.ids ? { ids: getArgs.ids } : {}) }
+            : {}
         const countArgs = {
           deleted,
           ...scope,
@@ -90,6 +110,7 @@ function ZoneRecordRoutes(server) {
       method: 'POST',
       path: '/zone_record',
       options: {
+        app: { permission: { resource: 'zonerecord', action: 'create' } },
         validate: {
           payload: validate.zone_record.POST,
         },
@@ -118,6 +139,14 @@ function ZoneRecordRoutes(server) {
       method: 'PUT',
       path: '/zone_record/{id}',
       options: {
+        app: {
+          permission: {
+            resource: 'zonerecord',
+            action: 'write',
+            idFrom: 'params.id',
+            targetCreateResource: 'zonerecord',
+          },
+        },
         validate: {
           payload: validate.zone_record.PUT,
         },
@@ -149,6 +178,7 @@ function ZoneRecordRoutes(server) {
       method: 'DELETE',
       path: '/zone_record/{id}',
       options: {
+        app: { permission: { resource: 'zonerecord', action: 'delete', idFrom: 'params.id' } },
         validate: {
           query: validate.zone_record.DELETE,
         },

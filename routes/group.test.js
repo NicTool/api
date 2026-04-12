@@ -6,6 +6,7 @@ import Group from '../lib/group/index.js'
 import User from '../lib/user/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
+import { grantGroupPermissions } from './test/permissions.js'
 import userCase from './test/user.json' with { type: 'json' }
 
 let server
@@ -15,6 +16,7 @@ before(async () => {
   server = await init()
   await Group.create(groupCase)
   await User.create(userCase)
+  await grantGroupPermissions(groupCase.id)
 })
 
 after(async () => {
@@ -53,6 +55,9 @@ describe('group routes', () => {
     const testCase = JSON.parse(JSON.stringify(groupCase))
     testCase.id = case2Id // make it unique
     testCase.name = `example2.com`
+    // create it inside the fixture user's group tree, like a real user would;
+    // a top-level group is only visible to the root admin
+    testCase.parent_gid = groupCase.id
     delete testCase.deleted
 
     const res = await server.inject({

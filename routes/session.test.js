@@ -66,9 +66,16 @@ describe('session routes', () => {
       })
       // console.log(res.result)
       assert.equal(res.statusCode, 200)
+
+      const revoked = await server.inject({
+        method: 'GET',
+        url: '/session',
+        headers: auth.headers,
+      })
+      assert.equal(revoked.statusCode, 401)
     })
 
-    const routes = [{ GET: '/' }, { GET: '/session' }, { DELETE: '/session' }]
+    const routes = [{ GET: '/' }, { GET: '/session' }]
 
     for (const r of routes) {
       const key = Object.keys(r)[0]

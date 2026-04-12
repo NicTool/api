@@ -8,6 +8,7 @@ import Zone from '../lib/zone/index.js'
 import ZoneRecord from '../lib/zone_record/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
+import { grantGroupPermissions } from './test/permissions.js'
 import userCase from './test/user.json' with { type: 'json' }
 import zoneCase from './test/zone.json' with { type: 'json' }
 
@@ -49,6 +50,7 @@ before(async () => {
 
   await Group.create(testGroup)
   await User.create(testUser)
+  await grantGroupPermissions(testGroup.id)
   await Zone.create(testZone)
   await ZoneRecord.create(testZoneRecord)
 

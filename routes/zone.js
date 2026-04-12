@@ -2,8 +2,14 @@ import validate from '@nictool/validate'
 
 import Zone from '../lib/zone/index.js'
 import Group from '../lib/group/index.js'
+import Authz from '../lib/authz.js'
 import Mysql from '../lib/mysql.js'
 import { meta } from '../lib/util.js'
+
+const ZONE_PUT_FIELDS = new Set([
+  'description', 'mailaddr', 'serial', 'ttl', 'refresh', 'retry', 'expire', 'minimum',
+  'deleted',
+])
 
 function ZoneRoutes(server) {
   server.route([
@@ -11,6 +17,14 @@ function ZoneRoutes(server) {
       method: 'GET',
       path: '/zone/{id?}',
       options: {
+        app: {
+          permission: {
+            resource: 'zone',
+            action: 'read',
+            idFrom: 'params.id',
+            list: { resource: 'group', idFrom: 'query.gid', defaultToGroup: true },
+          },
+        },
         validate: {
           query: validate.zone.GET_req,
         },
@@ -20,12 +34,16 @@ function ZoneRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const deleted = request.query.deleted === true
         const getArgs = {
-          deleted,
           limit: Number.isInteger(request.query.limit) ? request.query.limit : 1000,
         }
+        if (request.query.deleted !== undefined) {
+          getArgs.deleted = request.query.deleted === true
+        }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
+        if (!request.params.id && request.query.gid == null) {
+          getArgs.gid = request.auth.credentials.group.id
+        }
         if (request.query.gid != null) {
           const gid = Number.isInteger(request.query.gid)
             ? request.query.gid
@@ -43,19 +61,31 @@ function ZoneRoutes(server) {
           getArgs.gid = await Group.subgroupGids(getArgs.gid)
         }
 
+        if (!getArgs.id && getArgs.gid !== undefined) {
+          getArgs.accessible_ids = await Authz.getDelegatedZoneIds(getArgs.gid)
+        }
+
+        const deleted = getArgs.deleted ?? false
         const countArgs = {
           deleted,
           ...(getArgs.id ? { id: getArgs.id } : {}),
           ...(getArgs.gid ? { gid: getArgs.gid } : {}),
+          ...(getArgs.accessible_ids ? { accessible_ids: getArgs.accessible_ids } : {}),
           ...(getArgs.search ? { search: getArgs.search } : {}),
           ...(getArgs.zone_like ? { zone_like: getArgs.zone_like } : {}),
           ...(getArgs.description_like ? { description_like: getArgs.description_like } : {}),
+        }
+        const totalArgs = {
+          deleted,
+          ...(getArgs.id ? { id: getArgs.id } : {}),
+          ...(getArgs.gid ? { gid: getArgs.gid } : {}),
+          ...(getArgs.accessible_ids ? { accessible_ids: getArgs.accessible_ids } : {}),
         }
 
         const [zones, filtered, total] = await Promise.all([
           Zone.get(getArgs),
           Zone.count(countArgs),
-          Zone.count(getArgs.id ? { deleted, id: getArgs.id } : { deleted }),
+          Zone.count(totalArgs),
         ])
 
         return h
@@ -79,6 +109,7 @@ function ZoneRoutes(server) {
       method: 'POST',
       path: '/zone',
       options: {
+        app: { permission: { resource: 'zone', action: 'create' } },
         validate: {
           payload: validate.zone.POST,
         },
@@ -107,8 +138,10 @@ function ZoneRoutes(server) {
       method: 'PUT',
       path: '/zone/{id}',
       options: {
+        app: { permission: { resource: 'zone', action: 'write', idFrom: 'params.id' } },
         validate: {
           payload: validate.zone.PUT,
+          options: { allowUnknown: true },
         },
         response: {
           schema: validate.zone.GET_res,
@@ -124,7 +157,10 @@ function ZoneRoutes(server) {
           return h.response({ meta: { api: meta.api, msg: `I couldn't find that zone` } }).code(404)
         }
 
-        await Zone.put({ id, ...request.payload })
+        const payload = Object.fromEntries(
+          Object.entries(request.payload).filter(([key]) => ZONE_PUT_FIELDS.has(key)),
+        )
+        await Zone.put({ id, ...payload })
 
         const updated = await Zone.get({ id })
         return h.response({ zone: updated, meta: { api: meta.api, msg: `the zone was updated` } }).code(200)
@@ -134,6 +170,7 @@ function ZoneRoutes(server) {
       method: 'GET',
       path: '/zone/{id}/ns',
       options: {
+        app: { permission: { resource: 'zone', action: 'read', idFrom: 'params.id' } },
         response: {
           schema: validate.zone.GET_ns_res,
         },
@@ -165,6 +202,7 @@ function ZoneRoutes(server) {
       method: 'DELETE',
       path: '/zone/{id}',
       options: {
+        app: { permission: { resource: 'zone', action: 'delete', idFrom: 'params.id' } },
         validate: {
           query: validate.zone.DELETE,
         },
