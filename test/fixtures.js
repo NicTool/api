@@ -2,21 +2,21 @@
 
 import path from 'node:path'
 
-import Group from './lib/group/index.js'
-import User from './lib/user/index.js'
-import Session from './lib/session/index.js'
-import Permission from './lib/permission/index.js'
-import Nameserver from './lib/nameserver/index.js'
-import Zone from './lib/zone/index.js'
+import Group from '../lib/group/index.js'
+import User from '../lib/user/index.js'
+import Session from '../lib/session/index.js'
+import Permission from '../lib/permission/index.js'
+import Nameserver from '../lib/nameserver/index.js'
+import Zone from '../lib/zone/index.js'
 // import ZoneRecord from './lib/zone_record.js'
 
-import groupCase from './lib/group/test/group.json' with { type: 'json' }
-import userCase from './lib/user/test/user.json' with { type: 'json' }
-import zoneCase from './lib/zone/test/zone.json' with { type: 'json' }
-// import zrCase from './lib/zone_record/test/zone_record.json' with { type: 'json' }
-import groupCaseR from './routes/test/group.json' with { type: 'json' }
-import userCaseR from './routes/test/user.json' with { type: 'json' }
-import nsCaseR from './routes/test/nameserver.json' with { type: 'json' }
+import groupCase from '../lib/group/test/group.json' with { type: 'json' }
+import userCase from '../lib/user/test/user.json' with { type: 'json' }
+import zoneCase from '../lib/zone/test/zone.json' with { type: 'json' }
+// import zrCase from '../lib/zone_record/test/zone_record.json' with { type: 'json' }
+import groupCaseR from '../routes/test/group.json' with { type: 'json' }
+import userCaseR from '../routes/test/user.json' with { type: 'json' }
+import nsCaseR from '../routes/test/nameserver.json' with { type: 'json' }
 
 switch (process.argv[2]) {
   case 'setup':
@@ -35,8 +35,8 @@ async function setup() {
   await User.create(userCase)
   await User.create(userCaseR)
   // await createTestSession()
-  await User.mysql.disconnect()
-  await Group.mysql.disconnect()
+  await User.disconnect()
+  await Group.disconnect()
   process.exit(0)
 }
 
@@ -60,7 +60,7 @@ async function teardown() {
   await User.destroy({ id: userCaseR.id })
   await Group.destroy({ id: groupCase.id })
   await Group.destroy({ id: groupCaseR.id })
-  await User.mysql.disconnect()
-  await Group.mysql.disconnect()
+  await User.disconnect()
+  await Group.disconnect()
   process.exit(0)
 }

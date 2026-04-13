@@ -143,9 +143,7 @@ function UserRoutes(server) {
 
         const users = await User.get({ id })
         if (!users.length) {
-          return h
-            .response({ meta: { api: meta.api, msg: `user not found` } })
-            .code(404)
+          return h.response({ meta: { api: meta.api, msg: `user not found` } }).code(404)
         }
         delete users[0].gid
 
@@ -170,7 +168,7 @@ function UserRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const users = await User.get(request.params)
+        const users = await User.get({ id: parseInt(request.params.id, 10) })
         if (users.length !== 1) {
           /* c8 ignore next 8 */
           return h

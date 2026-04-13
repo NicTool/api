@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+- move mysql teardown/disconnect into mysql classes
+- fix: don't log sensitive information
+- add: TOML stores for group, nameserver, permission, session
+
 ### [3.0.0-alpha.11] - 2026-04-07
 
 - decorate user & group with permissions

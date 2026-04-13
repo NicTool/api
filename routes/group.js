@@ -1,6 +1,8 @@
 import validate from '@nictool/validate'
 
 import Group from '../lib/group/index.js'
+import User from '../lib/user/index.js'
+import Zone from '../lib/zone/index.js'
 import { meta } from '../lib/util.js'
 
 function GroupRoutes(server) {
@@ -23,13 +25,11 @@ function GroupRoutes(server) {
           include_subgroups: request.query.include_subgroups === true,
         }
         if (request.query.parent_gid !== undefined) getArgs.parent_gid = request.query.parent_gid
-        if (request.query.name     !== undefined) getArgs.name       = request.query.name
+        if (request.query.name !== undefined) getArgs.name = request.query.name
 
         const groups = await Group.get(getArgs)
 
-        return h
-          .response({ group: groups, meta: { api: meta.api, msg: `here are your groups` } })
-          .code(200)
+        return h.response({ group: groups, meta: { api: meta.api, msg: `here are your groups` } }).code(200)
       },
     },
     {
@@ -157,18 +157,18 @@ function GroupRoutes(server) {
             .code(204)
         }
 
-        const [zoneCount, userCount, subgroupCount] = await Promise.all([
-          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_zone WHERE nt_group_id = ? AND deleted = 0', [id]),
-          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_user WHERE nt_group_id = ? AND deleted = 0', [id]),
-          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_group WHERE parent_group_id = ? AND deleted = 0', [id]),
+        const [zoneCount, userCount, subgroups] = await Promise.all([
+          Zone.count({ gid: id }),
+          User.count({ gid: id }),
+          Group.get({ parent_gid: id }),
         ])
-        if (zoneCount[0].count > 0) {
+        if (zoneCount > 0) {
           return h.response({ error: 'Cannot delete group: active zones still exist.' }).code(409)
         }
-        if (userCount[0].count > 0) {
+        if (userCount > 0) {
           return h.response({ error: 'Cannot delete group: active users still exist.' }).code(409)
         }
-        if (subgroupCount[0].count > 0) {
+        if (subgroups.length > 0) {
           return h.response({ error: 'Cannot delete group: active subgroups still exist.' }).code(409)
         }
 
