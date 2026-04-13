@@ -13,7 +13,7 @@
 - Run formatting check: `npm run prettier`
 - Run coverage: `npm run test:coverage`
 
-Local tests expect MySQL plus the NicTool schema. CI initializes it with `sh sql/init-mysql.sh`, and `test.sh` recreates fixtures before each run.
+Local tests expect MySQL plus the NicTool schema. CI initializes it with `sh sql/init-mysql.sh`, and `test/run.sh` recreates fixtures before each run.
 
 ## Architecture
 
@@ -38,5 +38,5 @@ Local tests expect MySQL plus the NicTool schema. CI initializes it with `sh sql
 - Reuse the legacy-schema mapping helpers instead of hand-rolling field conversions. Most repos convert booleans, nested permission/export objects, and short API names into the older DB layout before writing and normalize them again on read.
 - When changing group or user behavior, check permission side effects too. Group creation/update touches permission rows, and user reads/write paths may change `inherit_group_permissions` handling.
 - Route tests use `init()` plus `server.inject()` instead of booting a live server. They usually establish auth by calling `POST /session` and then pass `Authorization: Bearer <token>` to protected routes.
-- The test entrypoint is `test.sh`, not raw `node --test`, when you need DB-backed behavior. It tears fixtures down, recreates them, and then runs the requested test target.
+- The test entrypoint is `test/run.sh`, not raw `node --test`, when you need DB-backed behavior. It tears fixtures down, recreates them, and then runs the requested test target.
 - Zone-record changes must preserve the existing record-field translation logic. Special cases like zero `weight`/`priority` retention for `SRV`, `URI`, `HTTPS`, and `SVCB` are intentional.

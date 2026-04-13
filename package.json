@@ -23,10 +23,10 @@
     "server": "node ./server.js",
     "start": "node ./server.js",
     "develop": "node --watch server.js ./server",
-    "test": "./test.sh",
+    "test": "./test/run.sh",
     "versions": "npx npm-dep-mgr check",
     "versions:fix": "npx npm-dep-mgr update",
-    "watch": "./test.sh watch",
+    "watch": "./test/run.sh watch",
     "test:coverage": "npx c8 --reporter=text --reporter=text-summary npm test"
   },
   "repository": {
