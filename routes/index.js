@@ -46,18 +46,18 @@ async function setup() {
         failAction: async (request, h, err) => {
           if (process.env.NODE_ENV === 'production') {
             // In production, log detailed error internally, but send a generic one to the client
-            console.error('ValidationError:', err.message); 
-            throw h.boom.badRequest(`Invalid request payload input`);
+            console.error('ValidationError:', err.message)
+            throw h.boom.badRequest(`Invalid request payload input`)
           } else {
             // In development, return the full error details
-            console.error(err);
-            throw err; // Hapi/Boom handles this error object correctly
+            console.error(err)
+            throw err // Hapi/Boom handles this error object correctly
           }
         },
         options: {
           abortEarly: false,
         },
-      }
+      },
     },
   })
 

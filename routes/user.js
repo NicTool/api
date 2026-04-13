@@ -143,9 +143,7 @@ function UserRoutes(server) {
 
         const users = await User.get({ id })
         if (!users.length) {
-          return h
-            .response({ meta: { api: meta.api, msg: `user not found` } })
-            .code(404)
+          return h.response({ meta: { api: meta.api, msg: `user not found` } }).code(404)
         }
         delete users[0].gid
 

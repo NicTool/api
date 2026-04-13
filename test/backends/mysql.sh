@@ -18,5 +18,9 @@ cleanup() {
 }
 
 run_tests() {
-	$NODE --test --test-reporter=spec lib/*/test/index.js lib/*.test.js routes/*.test.js
+	$NODE --test --test-reporter=spec \
+		lib/*/test/index.js \
+		lib/*/test/mysql.js \
+		lib/*.test.js \
+		routes/*.test.js
 }

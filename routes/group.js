@@ -25,13 +25,11 @@ function GroupRoutes(server) {
           include_subgroups: request.query.include_subgroups === true,
         }
         if (request.query.parent_gid !== undefined) getArgs.parent_gid = request.query.parent_gid
-        if (request.query.name     !== undefined) getArgs.name       = request.query.name
+        if (request.query.name !== undefined) getArgs.name = request.query.name
 
         const groups = await Group.get(getArgs)
 
-        return h
-          .response({ group: groups, meta: { api: meta.api, msg: `here are your groups` } })
-          .code(200)
+        return h.response({ group: groups, meta: { api: meta.api, msg: `here are your groups` } }).code(200)
       },
     },
     {

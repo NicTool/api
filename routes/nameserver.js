@@ -83,9 +83,7 @@ function NameserverRoutes(server) {
         if (nameservers.length === 0) nameservers = await Nameserver.get({ id, deleted: 1 })
 
         if (nameservers.length === 0) {
-          return h
-            .response({ meta: { api: meta.api, msg: `I couldn't find that nameserver` } })
-            .code(404)
+          return h.response({ meta: { api: meta.api, msg: `I couldn't find that nameserver` } }).code(404)
         }
 
         await Nameserver.put({ id, ...request.payload })

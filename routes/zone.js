@@ -116,17 +116,13 @@ function ZoneRoutes(server) {
         if (zones.length === 0) zones = await Zone.get({ id, deleted: 1 })
 
         if (zones.length === 0) {
-          return h
-            .response({ meta: { api: meta.api, msg: `I couldn't find that zone` } })
-            .code(404)
+          return h.response({ meta: { api: meta.api, msg: `I couldn't find that zone` } }).code(404)
         }
 
         await Zone.put({ id, ...request.payload })
 
         const updated = await Zone.get({ id })
-        return h
-          .response({ zone: updated, meta: { api: meta.api, msg: `the zone was updated` } })
-          .code(200)
+        return h.response({ zone: updated, meta: { api: meta.api, msg: `the zone was updated` } }).code(200)
       },
     },
     {
@@ -153,7 +149,7 @@ function ZoneRoutes(server) {
 
         const ns = nsRows.map((row) => {
           const zoneFqdn = row.zone.endsWith('.') ? row.zone : `${row.zone}.`
-          const dname    = row.name.endsWith('.') ? row.name : `${row.name}.`
+          const dname = row.name.endsWith('.') ? row.name : `${row.name}.`
           return { owner: zoneFqdn, ttl: row.ttl, dname }
         })
 

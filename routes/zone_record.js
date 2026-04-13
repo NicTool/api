@@ -107,9 +107,7 @@ function ZoneRecordRoutes(server) {
         const zrs = await ZoneRecord.get({ id })
 
         if (zrs.length === 0) {
-          return h
-            .response({ meta: { api: meta.api, msg: `I couldn't find that zone record` } })
-            .code(404)
+          return h.response({ meta: { api: meta.api, msg: `I couldn't find that zone record` } }).code(404)
         }
 
         await ZoneRecord.put({ id, ...request.payload })
