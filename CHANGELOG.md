@@ -8,26 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [3.0.0-alpha.12] - 2026-04-13
 
-#### Added
-
 - toml backend (#49)
-- docker compose support + env var config overrides (#40)
-
-#### Changed
-
-- remove local codeql config (#43)
-- update permissions to be explicit (#42)
-
-#### Other
-
-- add: TOML stores for group, nameserver, permission, session (#47)
-- routes file organization (#46)
-- group factories (#44)
-
-
-- move mysql teardown/disconnect into mysql classes
+  - add: TOML stores for group, nameserver, permission, session (#47)
+  - move mysql teardown/disconnect into mysql classes
 - fix: don't log sensitive information
-- add: TOML stores for group, nameserver, permission, session
+- routes file reorg (#46)
+- factories for groups (#44)
+- ci: remove local codeql config (#43)
+- ci: update permissions to be explicit (#42)
+- docker compose support + env var config overrides (#40)
 
 ### [3.0.0-alpha.11] - 2026-04-07
 
