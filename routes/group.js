@@ -1,6 +1,8 @@
 import validate from '@nictool/validate'
 
 import Group from '../lib/group/index.js'
+import User from '../lib/user/index.js'
+import Zone from '../lib/zone/index.js'
 import { meta } from '../lib/util.js'
 
 function GroupRoutes(server) {
@@ -157,18 +159,18 @@ function GroupRoutes(server) {
             .code(204)
         }
 
-        const [zoneCount, userCount, subgroupCount] = await Promise.all([
-          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_zone WHERE nt_group_id = ? AND deleted = 0', [id]),
-          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_user WHERE nt_group_id = ? AND deleted = 0', [id]),
-          Group.mysql.execute('SELECT COUNT(*) AS count FROM nt_group WHERE parent_group_id = ? AND deleted = 0', [id]),
+        const [zoneCount, userCount, subgroups] = await Promise.all([
+          Zone.count({ gid: id }),
+          User.count({ gid: id }),
+          Group.get({ parent_gid: id }),
         ])
-        if (zoneCount[0].count > 0) {
+        if (zoneCount > 0) {
           return h.response({ error: 'Cannot delete group: active zones still exist.' }).code(409)
         }
-        if (userCount[0].count > 0) {
+        if (userCount > 0) {
           return h.response({ error: 'Cannot delete group: active users still exist.' }).code(409)
         }
-        if (subgroupCount[0].count > 0) {
+        if (subgroups.length > 0) {
           return h.response({ error: 'Cannot delete group: active subgroups still exist.' }).code(409)
         }
 

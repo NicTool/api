@@ -2,21 +2,18 @@
 
 set -eu
 
-# set up test database connection for CI (GitHub Actions)
-if [ "${CI:-}" = "true" ]; then
-	sed -i.bak 's/^user[[:space:]]*=.*/user = "root"/' conf.d/mysql.toml
-	sed -i.bak 's/^password[[:space:]]*=.*/password = "root"/' conf.d/mysql.toml
-fi
-
 NODE="node --no-warnings=ExperimentalWarning"
-$NODE test/fixtures.js teardown
-$NODE test/fixtures.js setup
+BACKEND="${NICTOOL_DATA_STORE:-mysql}"
 
-cleanup() {
-	echo "cleaning DB objects"
-	$NODE test/fixtures.js teardown
-}
+case "$BACKEND" in
+	toml|mysql) ;;
+	*) echo "Unknown NICTOOL_DATA_STORE: $BACKEND" >&2; exit 1 ;;
+esac
 
+# shellcheck source=backends/mysql.sh
+. "$(dirname "$0")/backends/${BACKEND}.sh"
+
+setup
 trap cleanup EXIT 1 2 3 6
 
 if [ $# -ge 1 ]; then
@@ -26,9 +23,5 @@ if [ $# -ge 1 ]; then
 		$NODE --test --test-reporter=spec "$1"
 	fi
 else
-	# if [ -n "$GITHUB_WORKFLOW" ]; then
-		# npm i --no-save node-test-github-reporter
-		# $NODE --test --test-reporter=node-test-github-reporter
-	# fi
-	$NODE --test --test-reporter=spec lib/*/test/index.js lib/*.test.js routes/*.test.js
+	run_tests
 fi
