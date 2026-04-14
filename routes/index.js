@@ -8,7 +8,7 @@ import Hapi from '@hapi/hapi'
 // import Cookie from '@hapi/cookie'
 import Inert from '@hapi/inert'
 import Vision from '@hapi/vision'
-import HapiSwagger from 'hapi-swagger'
+import HapiSwagger from '@msimerson/hapi-openapi'
 // import Hoek from '@hapi/hoek'
 
 import qs from 'qs'

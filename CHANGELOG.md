@@ -6,9 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
-- move mysql teardown/disconnect into mysql classes
+### [3.0.0-alpha.12] - 2026-04-13
+
+- toml backend (#49)
+  - add: TOML stores for group, nameserver, permission, session (#47)
+  - move mysql teardown/disconnect into mysql classes
 - fix: don't log sensitive information
-- add: TOML stores for group, nameserver, permission, session
+- routes file reorg (#46)
+- factories for groups (#44)
+- ci: remove local codeql config (#43)
+- ci: update permissions to be explicit (#42)
+- docker compose support + env var config overrides (#40)
 
 ### [3.0.0-alpha.11] - 2026-04-07
 
@@ -86,3 +94,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [3.0.0-alpha.9]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.9
 [3.0.0-alpha.10]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.10
 [3.0.0-alpha.11]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.11
+[3.0.0-alpha.12]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.12
