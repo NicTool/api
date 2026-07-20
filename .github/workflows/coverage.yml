@@ -1,0 +1,35 @@
+name: Coverage
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    permissions:
+      contents: read
+    uses: NicTool/.github/.github/workflows/lint.yml@main
+
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Start MySQL
+        run: sudo /etc/init.d/mysql start
+      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - run: npm install
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - run: npm run test:coverage:lcov
+        env:
+          NODE_ENV: cov
+      - name: codecov
+        uses: codecov/codecov-action@v2
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}

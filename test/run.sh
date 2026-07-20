@@ -19,6 +19,11 @@ trap cleanup EXIT 1 2 3 6
 if [ $# -ge 1 ]; then
 	if [ "$1" = "watch" ]; then
 		$NODE --test --watch
+	elif [ "$1" = "coverage" ]; then
+		$NODE --test --experimental-test-coverage
+	elif [ "$1" = "coverage:lcov" ]; then
+		mkdir -p coverage
+		$NODE --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info
 	else
 		$NODE --test --test-reporter=spec "$1"
 	fi

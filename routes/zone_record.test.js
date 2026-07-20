@@ -127,6 +127,39 @@ describe('zone_record routes', () => {
     createdZoneRecordIds.push(res.result.zone_record[0].id)
   })
 
+  it('GET /zone_record paginates and returns meta.pagination', async () => {
+    const token = 'pgtest'
+    for (let i = 0; i < 3; i++) {
+      const res = await server.inject({
+        method: 'POST',
+        url: '/zone_record',
+        headers: auth.headers,
+        payload: {
+          zid: testZoneId,
+          owner: `${token}${i}.route-zr-delete.example.com.`,
+          ttl: 300,
+          type: 'A',
+          address: `203.0.113.${20 + i}`,
+        },
+      })
+      createdZoneRecordIds.push(res.result.zone_record[0].id)
+    }
+
+    const res = await server.inject({
+      method: 'GET',
+      url: `/zone_record?zid=${testZoneId}&search=${token}&limit=2&sort_by=owner&sort_dir=asc`,
+      headers: auth.headers,
+    })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.zone_record.length, 2)
+    assert.equal(res.result.zone_record[0].owner, `${token}0.route-zr-delete.example.com.`)
+    assert.equal(res.result.meta.pagination.filtered, 3)
+    assert.equal(res.result.meta.pagination.limit, 2)
+    assert.equal(res.result.meta.pagination.offset, 0)
+    assert.ok(res.result.meta.pagination.total >= 3)
+  })
+
   it(`DELETE /zone_record/${testZoneRecordId} soft-deletes record`, async () => {
     const res = await server.inject({
       method: 'DELETE',

@@ -43,13 +43,31 @@ function ZoneRecordRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
+        const deleted = request.query.deleted === true ? 1 : 0
         const getArgs = {
-          deleted: request.query.deleted === true ? 1 : 0,
+          deleted,
+          limit: Number.isInteger(request.query.limit) ? request.query.limit : 1000,
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
         if (request.query.zid) getArgs.zid = parseInt(request.query.zid, 10)
+        if (request.query.search) getArgs.search = request.query.search
+        if (Number.isInteger(request.query.offset)) getArgs.offset = request.query.offset
+        if (request.query.sort_by) getArgs.sort_by = request.query.sort_by
+        if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
 
-        const zrs = await ZoneRecord.get(getArgs)
+        const scope = getArgs.id ? { id: getArgs.id } : getArgs.zid ? { zid: getArgs.zid } : {}
+        const countArgs = {
+          deleted,
+          ...scope,
+          ...(getArgs.search ? { search: getArgs.search } : {}),
+        }
+        const totalArgs = { deleted, ...scope }
+
+        const [zrs, filtered, total] = await Promise.all([
+          ZoneRecord.get(getArgs),
+          ZoneRecord.count(countArgs),
+          ZoneRecord.count(totalArgs),
+        ])
 
         return h
           .response({
@@ -57,6 +75,12 @@ function ZoneRecordRoutes(server) {
             meta: {
               api: meta.api,
               msg: `here's your zone record(s)`,
+              pagination: {
+                total,
+                filtered,
+                limit: getArgs.limit,
+                offset: getArgs.offset ?? 0,
+              },
             },
           })
           .code(200)

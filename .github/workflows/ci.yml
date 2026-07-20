@@ -10,29 +10,6 @@ jobs:
       contents: read
     uses: NicTool/.github/.github/workflows/lint.yml@main
 
-  coverage:
-    permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    steps:
-      - name: Start MySQL
-        run: sudo /etc/init.d/mysql start
-      - uses: actions/setup-node@v4
-      - uses: actions/checkout@v6
-      - run: npm install
-      - name: Initialize MySQL
-        run: sh sql/init-mysql.sh
-      - name: run coverage
-        run: npx -y c8 --reporter=lcov npm test
-        env:
-          NODE_ENV: cov
-      - name: codecov
-        uses: codecov/codecov-action@v2
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
-
   get-lts:
     permissions:
       contents: read
