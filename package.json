@@ -61,7 +61,7 @@
     "@hapi/vision": "^7.0.3",
     "@msimerson/hapi-openapi": "^18.0.0",
     "@nictool/dns-resource-record": "^1.8.0",
-    "@nictool/validate": "file:../validate",
+    "@nictool/validate": "^0.9.0",
     "joi": "^18.2.3",
     "mysql2": "^3.23.1",
     "qs": "^6.15.3",
