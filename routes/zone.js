@@ -1,6 +1,7 @@
 import validate from '@nictool/validate'
 
 import Zone from '../lib/zone/index.js'
+import Group from '../lib/group/index.js'
 import Mysql from '../lib/mysql.js'
 import { meta } from '../lib/util.js'
 
@@ -37,6 +38,10 @@ function ZoneRoutes(server) {
         if (request.query.description_like) getArgs.description_like = request.query.description_like
         if (request.query.sort_by) getArgs.sort_by = request.query.sort_by
         if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
+
+        if (request.query.include_subgroups === true && getArgs.gid) {
+          getArgs.gid = await Group.subgroupGids(getArgs.gid)
+        }
 
         const countArgs = {
           deleted,

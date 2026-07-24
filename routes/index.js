@@ -153,6 +153,12 @@ async function init() {
 
 async function start() {
   await setup()
+  // Fail fast on an unhandled rejection when running as the server. Not
+  // installed by tests
+  process.on('unhandledRejection', (err) => {
+    console.error(err)
+    process.exit(1)
+  })
   /* c8 ignore next 3 */
   await server.start()
   console.log(`API running at: ${server.info.uri}`)
@@ -160,11 +166,6 @@ async function start() {
 }
 
 export { init, start }
-
-process.on('unhandledRejection', (err) => {
-  console.error(err)
-  process.exit(1)
-})
 
 /*
   server.route({

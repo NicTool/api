@@ -6,10 +6,11 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
-    permissions:
-      contents: read
     uses: NicTool/.github/.github/workflows/lint.yml@main
 
   get-lts:
@@ -27,8 +28,6 @@ jobs:
       min: ${{ steps.get.outputs.min }}
 
   test:
-    permissions:
-      contents: read
     needs: [ get-lts ]
     runs-on: ${{ matrix.os }}
     strategy:
@@ -47,8 +46,6 @@ jobs:
       - run: npm test
 
   test-mac:
-    permissions:
-      contents: read
     needs: [ get-lts ]
     runs-on: macos-latest
     strategy:
@@ -70,8 +67,6 @@ jobs:
 
   test-docker:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v6
       - name: Generate .env
@@ -88,8 +83,6 @@ jobs:
         run: docker compose -f docker/docker-compose.yml down -v
 
   test-win:
-    permissions:
-      contents: read
     needs: [ get-lts ]
     runs-on: windows-latest
     strategy:

@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
-### [3.0.0-alpha.12] - 2026-04-13
+### [3.0.0-alpha.13] - 2026-07-24
+
+- fix(sql): quote mysql 8 keyword rank
+- fix: subgroup searching
+- feat: paginate zone records (#53)
+
+### [3.0.0-alpha.12] - 2026-04-14
 
 - toml backend (#49)
   - add: TOML stores for group, nameserver, permission, session (#47)
