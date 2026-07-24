@@ -152,6 +152,16 @@ describe('zone_record routes', () => {
     })
 
     assert.equal(res.statusCode, 200)
+    if (res.result.zone_record.length !== 2) {
+      const all = await ZoneRecord.get({ zid: testZoneId })
+      console.error('DIAGZR createdIds=', JSON.stringify(createdZoneRecordIds))
+      console.error('DIAGZR limit-query result=', JSON.stringify(res.result.zone_record))
+      console.error('DIAGZR filtered=', res.result.meta.pagination.filtered)
+      console.error(
+        'DIAGZR all-records-for-zid=',
+        JSON.stringify(all.map((r) => ({ id: r.id, zid: r.zid, owner: r.owner, deleted: r.deleted }))),
+      )
+    }
     assert.equal(res.result.zone_record.length, 2)
     assert.equal(res.result.zone_record[0].owner, `${token}0.route-zr-delete.example.com.`)
     assert.equal(res.result.meta.pagination.filtered, 3)
