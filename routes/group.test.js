@@ -19,7 +19,7 @@ before(async () => {
 
 after(async () => {
   await Group.destroy({ id: case2Id })
-  server.stop()
+  await server.stop()
 })
 
 describe('group routes', () => {

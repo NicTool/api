@@ -16,6 +16,7 @@ import zoneCase from '../lib/zone/test/zone.json' with { type: 'json' }
 // import zrCase from '../lib/zone_record/test/zone_record.json' with { type: 'json' }
 import groupCaseR from '../routes/test/group.json' with { type: 'json' }
 import userCaseR from '../routes/test/user.json' with { type: 'json' }
+import permCaseR from '../routes/test/permission.json' with { type: 'json' }
 import nsCaseR from '../routes/test/nameserver.json' with { type: 'json' }
 
 switch (process.argv[2]) {
@@ -34,7 +35,12 @@ async function setup() {
   await Group.create(groupCaseR)
   await User.create(userCase)
   await User.create(userCaseR)
+  // Seed the shared route permission so the permission and session suites,
+  // which both create it in their before hooks, early-return instead of racing
+  // two concurrent INSERTs of the same explicit id.
+  await Permission.create(permCaseR)
   // await createTestSession()
+  await Permission.disconnect()
   await User.disconnect()
   await Group.disconnect()
   process.exit(0)
@@ -55,6 +61,7 @@ async function teardown() {
   await Nameserver.destroy({ id: nsCaseR.id - 1 })
   await Permission.destroy({ id: userCase.id })
   await Permission.destroy({ id: userCase.id - 1 })
+  await Permission.destroy({ id: permCaseR.id })
   await Session.delete({ nt_user_id: userCase.id })
   await User.destroy({ id: userCase.id })
   await User.destroy({ id: userCaseR.id })

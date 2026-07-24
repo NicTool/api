@@ -23,7 +23,7 @@ before(async () => {
 
 after(async () => {
   await Nameserver.destroy({ id: case2Id })
-  server.stop()
+  await server.stop()
 })
 
 describe('nameserver routes', () => {

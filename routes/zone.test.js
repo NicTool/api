@@ -20,6 +20,10 @@ before(async () => {
   await Zone.destroy({ id: nsCase.id })
   await Zone.destroy({ id: case2Id })
   await Zone.destroy({ id: subZone.id })
+  // Destroy the subgroup before recreating it: a lingering row would make
+  // Group.create early-return and skip addToSubgroups, leaving the
+  // nt_group_subgroups closure row (and thus the include_subgroups query) empty.
+  await Group.destroy({ id: subGroup.id })
   await Group.create(groupCase)
   await User.create(userCase)
   await Zone.create(nsCase)
@@ -31,7 +35,7 @@ before(async () => {
 after(async () => {
   await Zone.destroy({ id: subZone.id })
   await Group.destroy({ id: subGroup.id })
-  server.stop()
+  await server.stop()
 })
 
 describe('zone routes', () => {

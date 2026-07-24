@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [3.0.0-alpha.13] - 2026-07-24
 
+- fix(sql): quote mysql 8 keyword rank
 - fix: subgroup searching
 - feat: paginate zone records (#53)
 
