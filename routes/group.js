@@ -51,23 +51,14 @@ function GroupRoutes(server) {
           include_subgroups: request.query.include_subgroups === true,
         })
 
-        if (groups.length !== 1 && !request.query.include_subgroups) {
-          return h
-            .response({
-              meta: {
-                api: meta.api,
-                msg: `No unique group match`,
-              },
-            })
-            .code(204)
-        }
-
+        // Return an array like the other object types (zone/nameserver/user/
+        // zone_record) rather than a bare object, for a consistent API contract.
         return h
           .response({
-            group: request.query.include_subgroups ? groups : groups[0],
+            group: groups,
             meta: {
               api: meta.api,
-              msg: `here's your group`,
+              msg: `here's your group(s)`,
             },
           })
           .code(200)
@@ -92,7 +83,7 @@ function GroupRoutes(server) {
 
         return h
           .response({
-            group: groups[0],
+            group: groups,
             meta: {
               api: meta.api,
               msg: `I created this group`,
@@ -121,7 +112,7 @@ function GroupRoutes(server) {
 
         return h
           .response({
-            group: groups[0],
+            group: groups,
             meta: {
               api: meta.api,
               msg: `I updated this group`,
@@ -177,7 +168,7 @@ function GroupRoutes(server) {
 
         return h
           .response({
-            group: groups[0],
+            group: groups,
             meta: {
               api: meta.api,
               msg: `I deleted that group`,

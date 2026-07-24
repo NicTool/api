@@ -1,8 +1,31 @@
 import validate from '@nictool/validate'
 
 import Zone from '../lib/zone/index.js'
+import Group from '../lib/group/index.js'
 import Mysql from '../lib/mysql.js'
 import { meta } from '../lib/util.js'
+
+// Expand a group id to itself plus every descendant subgroup id, so a zone
+// query with include_subgroups spans the whole branch.
+async function subgroupGids(rootGid) {
+  const groups = await Group.get({ deleted: 0 })
+  const childrenOf = new Map()
+  for (const g of groups) {
+    if (!childrenOf.has(g.parent_gid)) childrenOf.set(g.parent_gid, [])
+    childrenOf.get(g.parent_gid).push(g.id)
+  }
+  const gids = []
+  const seen = new Set()
+  const stack = [rootGid]
+  while (stack.length) {
+    const gid = stack.pop()
+    if (seen.has(gid)) continue
+    seen.add(gid)
+    gids.push(gid)
+    for (const child of childrenOf.get(gid) ?? []) stack.push(child)
+  }
+  return gids
+}
 
 function ZoneRoutes(server) {
   server.route([
@@ -37,6 +60,10 @@ function ZoneRoutes(server) {
         if (request.query.description_like) getArgs.description_like = request.query.description_like
         if (request.query.sort_by) getArgs.sort_by = request.query.sort_by
         if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
+
+        if (request.query.include_subgroups === true && getArgs.gid) {
+          getArgs.gid = await subgroupGids(getArgs.gid)
+        }
 
         const countArgs = {
           deleted,

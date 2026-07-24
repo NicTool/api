@@ -6,8 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
-### [3.0.0-alpha.12] - 2026-04-13
+### [3.0.0-alpha.12] - 2026-07-24
 
+- fix: subgroup searching
 - toml backend (#49)
   - add: TOML stores for group, nameserver, permission, session (#47)
   - move mysql teardown/disconnect into mysql classes

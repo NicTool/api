@@ -45,7 +45,8 @@ describe('group routes', () => {
       url: `/group/${groupCase.id}`,
       headers: auth.headers,
     })
-    assert.ok([200, 204].includes(res.statusCode))
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.group[0].id, groupCase.id)
   })
 
   it('POST /group', async () => {
@@ -69,7 +70,8 @@ describe('group routes', () => {
       url: `/group/${case2Id}`,
       headers: auth.headers,
     })
-    assert.ok([200, 204].includes(res.statusCode))
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.group[0].id, case2Id)
   })
 
   it(`DELETE /group/${case2Id}`, async () => {
@@ -81,13 +83,14 @@ describe('group routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it(`GET /group/${case2Id}`, async () => {
+  it(`GET /group/${case2Id} (soft-deleted → empty array)`, async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/group/${case2Id}`,
       headers: auth.headers,
     })
-    assert.equal(res.statusCode, 204)
+    assert.equal(res.statusCode, 200)
+    assert.deepEqual(res.result.group, [])
   })
 
   it(`GET /group/${case2Id} (deleted)`, async () => {
@@ -96,7 +99,8 @@ describe('group routes', () => {
       url: `/group/${case2Id}?deleted=true`,
       headers: auth.headers,
     })
-    assert.ok([200, 204].includes(res.statusCode))
+    assert.equal(res.statusCode, 200)
+    assert.ok(Array.isArray(res.result.group))
   })
 
   it('DELETE /session', async () => {
