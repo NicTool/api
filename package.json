@@ -1,6 +1,6 @@
 {
   "name": "@nictool/api",
-  "version": "3.0.0-alpha.13",
+  "version": "3.0.0",
   "description": "NicTool API",
   "main": "index.js",
   "type": "module",
@@ -48,7 +48,7 @@
   "homepage": "https://github.com/NicTool/api#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.7.0"
   },
@@ -59,8 +59,8 @@
     "@hapi/inert": "^7.1.2",
     "@hapi/jwt": "^3.2.4",
     "@hapi/vision": "^7.0.3",
-    "@msimerson/hapi-openapi": "^18.0.0",
-    "@nictool/dns-resource-record": "^1.8.0",
+    "@msimerson/hapi-openapi": "^18.0.3",
+    "@nictool/dns-resource-record": "^1.8.1",
     "@nictool/validate": "^0.9.1",
     "joi": "^18.2.3",
     "mysql2": "^3.23.1",

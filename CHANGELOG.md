@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [3.0.0] - 2026-07-25
+
+- release 3.0.0
+
 ### [3.0.0-alpha.13] - 2026-07-24
 
 - fix(sql): quote mysql 8 keyword rank
