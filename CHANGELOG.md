@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [3.0.0] - 2026-07-25
+
+- release 3.0.0
+- dep(rr): bump version
+
 ### [3.0.0-alpha.13] - 2026-07-24
 
 - fix(sql): quote mysql 8 keyword rank
@@ -87,7 +92,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - lib/group.get: convert booleans
 - lib/user.get: convert booleans
 
-
 [3.0.0-alpha.0]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.0
 [3.0.0-alpha.1]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.1
 [3.0.0-alpha.2]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.2
@@ -101,3 +105,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [3.0.0-alpha.10]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.10
 [3.0.0-alpha.11]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.11
 [3.0.0-alpha.12]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.12
+[3.0.0-alpha.13]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.13
+[3.0.0]: https://github.com/NicTool/api/releases/tag/v3.0.0
