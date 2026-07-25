@@ -105,5 +105,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [3.0.0-alpha.10]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.10
 [3.0.0-alpha.11]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.11
 [3.0.0-alpha.12]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.12
-[3.0.2]: https://github.com/NicTool/api/releases/tag/v3.0.2
 [3.0.0-alpha.13]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.13
+[3.0.0]: https://github.com/NicTool/api/releases/tag/v3.0.0
