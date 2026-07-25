@@ -1,6 +1,7 @@
 import validate from '@nictool/validate'
 
 import User from '../lib/user/index.js'
+import Credentials from '../lib/user/credentials.js'
 import { meta } from '../lib/util.js'
 
 function UserRoutes(server) {
@@ -134,9 +135,9 @@ function UserRoutes(server) {
         const id = parseInt(request.params.id, 10)
         const args = { ...request.payload, id }
 
+        // no salt passed: a password change always gets a fresh one
         if (args.password) {
-          args.pass_salt = User.generateSalt()
-          args.password = await User.hashAuthPbkdf2(args.password, args.pass_salt)
+          Object.assign(args, await Credentials.forStorage(args.password))
         }
 
         await User.put(args)
