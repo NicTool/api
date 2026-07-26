@@ -131,5 +131,5 @@ dist
 
 package-lock.json
 .release/
-conf.d/*.pem
+conf.d/
 CLAUDE.md
