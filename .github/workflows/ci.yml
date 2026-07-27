@@ -28,7 +28,7 @@ jobs:
       min: ${{ steps.get.outputs.min }}
 
   test:
-    needs: [ get-lts ]
+    needs: [get-lts]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -46,7 +46,7 @@ jobs:
       - run: npm test
 
   test-mac:
-    needs: [ get-lts ]
+    needs: [get-lts]
     runs-on: macos-latest
     strategy:
       matrix:
@@ -83,7 +83,7 @@ jobs:
         run: docker compose -f docker/docker-compose.yml down -v
 
   test-win:
-    needs: [ get-lts ]
+    needs: [get-lts]
     runs-on: windows-latest
     strategy:
       matrix:

@@ -1,5 +1,5 @@
 #!/bin/sh
-# TOML backend lifecycle for test/run.sh
+# JSON backend lifecycle for test/run.sh
 
 setup() {
 	export NICTOOL_DATA_STORE_PATH="./test/conf.d"
@@ -8,12 +8,12 @@ setup() {
 }
 
 cleanup() {
-	echo "cleaning TOML test store"
-	rm -f test/conf.d/*.toml
+	echo "cleaning JSON test store"
+	rm -f test/conf.d/*.json
 }
 
 run_tests() {
-	# Run serially: TOML uses shared files; parallel workers cause concurrent-write corruption
+	# Run serially: the file store uses shared files; parallel workers cause concurrent-write corruption
 	for f in \
 		lib/group/test/index.js \
 		lib/nameserver/test/index.js \

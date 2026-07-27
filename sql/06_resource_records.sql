@@ -1,7 +1,6 @@
 # Copyright 2004-2024 The Network People, Inc.
 
-DROP TABLE IF EXISTS resource_record_type;
-CREATE TABLE resource_record_type (
+CREATE TABLE IF NOT EXISTS resource_record_type (
     id              smallint(2) unsigned NOT NULL,
     name            varchar(10) NOT NULL,
     description     varchar(55) NULL DEFAULT NULL,
@@ -12,7 +11,7 @@ CREATE TABLE resource_record_type (
     UNIQUE `name` (`name`)
 ) DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `resource_record_type` (`id`, `name`, `description`, `reverse`, `forward`, `obsolete`)
+INSERT IGNORE INTO `resource_record_type` (`id`, `name`, `description`, `reverse`, `forward`, `obsolete`)
 VALUES
     (1,'A','Address',1,1,0),
     (2,'NS','Name Server',1,1,0),

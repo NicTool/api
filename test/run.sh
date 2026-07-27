@@ -6,7 +6,7 @@ NODE="node --no-warnings=ExperimentalWarning"
 BACKEND="${NICTOOL_DATA_STORE:-mysql}"
 
 case "$BACKEND" in
-	toml|mysql) ;;
+	json|toml|mysql) ;;
 	*) echo "Unknown NICTOOL_DATA_STORE: $BACKEND" >&2; exit 1 ;;
 esac
 

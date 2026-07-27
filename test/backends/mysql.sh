@@ -21,6 +21,9 @@ run_tests() {
 	$NODE --test --test-reporter=spec \
 		lib/*/test/index.js \
 		lib/*/test/mysql.js \
+		lib/*/test/runtime.js \
 		lib/*.test.js \
+		lib/store/*.test.js \
+		sql/*.test.js \
 		routes/*.test.js
 }

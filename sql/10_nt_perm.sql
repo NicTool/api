@@ -15,8 +15,7 @@
 # Suite 225, San Francisco, CA 94107, USA
 #
 
-DROP TABLE IF EXISTS nt_perm;
-CREATE TABLE nt_perm(
+CREATE TABLE IF NOT EXISTS nt_perm(
     nt_perm_id          INT UNSIGNED AUTO_INCREMENT NOT NULL,
     nt_group_id         INT UNSIGNED DEFAULT NULL,
     nt_user_id          INT UNSIGNED DEFAULT NULL,
@@ -57,10 +56,9 @@ CREATE TABLE nt_perm(
     KEY `nt_perm_idx2` (`nt_user_id`)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-INSERT into nt_perm VALUES(1,1,0,NULL,NULL,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,0);
+INSERT IGNORE INTO nt_perm VALUES(1,1,0,NULL,NULL,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,0);
 
-DROP TABLE IF EXISTS nt_delegate;
-CREATE TABLE nt_delegate(
+CREATE TABLE IF NOT EXISTS nt_delegate(
     #nt_delegate_id      INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
     nt_group_id         INT UNSIGNED NOT NULL,
     nt_object_id        INT UNSIGNED NOT NULL,
@@ -97,13 +95,12 @@ CREATE TABLE nt_delegate(
 
     deleted             TINYINT(1) UNSIGNED DEFAULT 0 NOT NULL,
     KEY `nt_delegate_idx1` (`nt_group_id`,`nt_object_id`,`nt_object_type`),
-    KEY `nt_delegate_idx2` (`nt_object_id`,`nt_object_type`)
-    /* CONSTRAINT `nt_delegate_ibfk_1` FOREIGN KEY (`nt_group_id`) REFERENCES `nt_group` (`nt_group_id`) ON DELETE CASCADE ON UPDATE CASCADE */
+    KEY `nt_delegate_idx2` (`nt_object_id`,`nt_object_type`),
+    CONSTRAINT `nt_delegate_ibfk_1` FOREIGN KEY (`nt_group_id`) REFERENCES `nt_group` (`nt_group_id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
-DROP TABLE IF EXISTS nt_delegate_log;
-CREATE TABLE nt_delegate_log(
+CREATE TABLE IF NOT EXISTS nt_delegate_log(
     nt_delegate_log_id              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     nt_user_id                      INT UNSIGNED NOT NULL,
     nt_user_name                    VARCHAR(50),

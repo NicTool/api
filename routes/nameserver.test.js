@@ -56,7 +56,6 @@ describe('nameserver routes', () => {
   it(`POST /nameserver (${case2Id})`, async () => {
     const testCase = JSON.parse(JSON.stringify(nsCase))
     testCase.id = case2Id // make it unique
-    testCase.gid = case2Id
     testCase.name = 'c.ns.example.com.'
 
     const res = await server.inject({

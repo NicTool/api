@@ -10,7 +10,6 @@ A RESTful JSON web service that exposes DNS management functions to users.
 1. Install [Node.js](https://nodejs.org/en/download/)
 2. Download the NicTool v3 API
 
-
 ```
 mkdir nictool && cd nictool
 git clone https://github.com/NicTool/api.git
@@ -36,7 +35,6 @@ or
 
 will start up the HTTP service on the port specified in `conf.d/http.yml`. The default URL for the service is [http://localhost:3000](http://localhost:3000) and the API methods have documentation at [http://localhost:3000/documentation#/](http://localhost:3000/documentation#/).
 
-
 ## Using the API service
 
 Until the NicTool 3.0 HTTP client is written, using a web browser (in Developer mode) or a CLI HTTP utility like curl can be used. Here's a quick tutorial:
@@ -46,7 +44,7 @@ Until the NicTool 3.0 HTTP client is written, using a web browser (in Developer 
 `curl -X POST http://localhost:3000/session`
 
 ```json
-{"statusCode":400,"error":"Bad Request","message":"Invalid request payload input"}
+{ "statusCode": 400, "error": "Bad Request", "message": "Invalid request payload input" }
 ```
 
 The request was rejected because it's missing the required parameters, as shown in the documentation. Create a file called nt-auth.json and store the credentials of a NicTool user therein. Then try the auth request again:
@@ -63,26 +61,26 @@ That's not the easiest to read so lets pipe it through `json_pp`:
 
 ```json
 {
-   "group" : {
-      "id" : 4096,
-      "name" : "example.com"
-   },
-   "meta" : {
-      "api" : {
-         "version" : "3.0.0"
-      },
-      "msg" : "you are logged in"
-   },
-   "session" : {
-      "id" : 162
-   },
-   "user" : {
-      "email" : "unit-test@example.com",
-      "first_name" : "Unit",
-      "id" : 4096,
-      "last_name" : "Test",
-      "username" : "unit-test"
-   }
+  "group": {
+    "id": 4096,
+    "name": "example.com"
+  },
+  "meta": {
+    "api": {
+      "version": "3.0.0"
+    },
+    "msg": "you are logged in"
+  },
+  "session": {
+    "id": 162
+  },
+  "user": {
+    "email": "unit-test@example.com",
+    "first_name": "Unit",
+    "id": 4096,
+    "last_name": "Test",
+    "username": "unit-test"
+  }
 }
 ```
 
@@ -143,4 +141,3 @@ curl -b nt-session -X GET http://localhost:3000/user/4096 --header "Content-Type
    }
 }
 ```
-
