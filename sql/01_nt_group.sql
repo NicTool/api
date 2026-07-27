@@ -2,8 +2,7 @@
 # Copyright 2001 Dajoba, LLC - <info@dajoba.com>
 # Copyright 2004-2024 The Network People, Inc.
 
-DROP TABLE IF EXISTS nt_group;
-CREATE TABLE `nt_group` (
+CREATE TABLE IF NOT EXISTS `nt_group` (
     nt_group_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
     parent_group_id   INT UNSIGNED NOT NULL DEFAULT 0,
     name              varchar(255) NOT NULL,
@@ -15,8 +14,7 @@ CREATE TABLE `nt_group` (
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 
-DROP TABLE IF EXISTS nt_group_log;
-CREATE TABLE nt_group_log(
+CREATE TABLE IF NOT EXISTS nt_group_log(
     nt_group_log_id     INT UNSIGNED NOT NULL AUTO_INCREMENT,
     nt_group_id         INT UNSIGNED NOT NULL,
     nt_user_id          INT UNSIGNED NOT NULL,
@@ -27,24 +25,23 @@ CREATE TABLE nt_group_log(
     name                VARCHAR(255),
     PRIMARY KEY (`nt_group_log_id`),
     KEY `nt_group_log_idx1` (`nt_group_id`),
-    KEY `nt_group_log_idx2` (`timestamp`)
-    /* CONSTRAINT `nt_group_log_ibfk_1` FOREIGN KEY (`nt_group_id`) REFERENCES `nt_group` (`nt_group_id`) ON DELETE CASCADE ON UPDATE CASCADE */
+    KEY `nt_group_log_idx2` (`timestamp`),
+    CONSTRAINT `nt_group_log_ibfk_1` FOREIGN KEY (`nt_group_id`) REFERENCES `nt_group` (`nt_group_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 
-DROP TABLE IF EXISTS nt_group_subgroups;
-CREATE TABLE nt_group_subgroups(
+CREATE TABLE IF NOT EXISTS nt_group_subgroups(
     nt_group_id         INT UNSIGNED NOT NULL,
     nt_subgroup_id      INT UNSIGNED NOT NULL,
     `rank`              INT UNSIGNED NOT NULL,
     KEY `nt_group_subgroups_idx1` (`nt_group_id`),
-    KEY `nt_group_subgroups_idx2` (`nt_subgroup_id`)
-    /* CONSTRAINT `nt_group_subgroups_ibfk_1` FOREIGN KEY (`nt_group_id`) REFERENCES `nt_group` (`nt_group_id`) ON DELETE CASCADE ON UPDATE CASCADE */
+    KEY `nt_group_subgroups_idx2` (`nt_subgroup_id`),
+    CONSTRAINT `nt_group_subgroups_ibfk_1` FOREIGN KEY (`nt_group_id`) REFERENCES `nt_group` (`nt_group_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-INSERT INTO `nt_group` (`nt_group_id`, `parent_group_id`, `name`)
+INSERT IGNORE INTO `nt_group` (`nt_group_id`, `parent_group_id`, `name`)
 VALUES
     (1,0,'NicTool');
-INSERT INTO nt_group_log(nt_group_id, nt_user_id, action, timestamp, modified_group_id, parent_group_id)
+INSERT IGNORE INTO nt_group_log(nt_group_id, nt_user_id, action, timestamp, modified_group_id, parent_group_id)
 VALUES
     (1, 1, 'added', UNIX_TIMESTAMP(), 1, 0);

@@ -16,8 +16,7 @@
 #
 
 
-DROP TABLE IF EXISTS nt_zone;
-CREATE TABLE nt_zone(
+CREATE TABLE IF NOT EXISTS nt_zone(
     nt_zone_id          INT UNSIGNED AUTO_INCREMENT NOT NULL,
     nt_group_id         INT UNSIGNED NOT NULL,
     zone                VARCHAR(255) NOT NULL,
@@ -40,8 +39,7 @@ CREATE TABLE nt_zone(
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 
-DROP TABLE IF EXISTS nt_zone_log;
-CREATE TABLE nt_zone_log(
+CREATE TABLE IF NOT EXISTS nt_zone_log(
     nt_zone_log_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
     nt_group_id         INT UNSIGNED NOT NULL,
     nt_user_id          INT UNSIGNED NOT NULL,
@@ -63,14 +61,14 @@ CREATE TABLE nt_zone_log(
     KEY `nt_zone_log_idx2` (`nt_zone_id`),
     KEY `nt_zone_log_idx3` (`action`),
     KEY `nt_group_id` (`nt_group_id`),
-    KEY `nt_user_id` (`nt_user_id`)
-    /* CONSTRAINT `nt_zone_log_ibfk_3` FOREIGN KEY (`nt_user_id`) REFERENCES `nt_user` (`nt_user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-    ** CONSTRAINT `nt_zone_log_ibfk_1` FOREIGN KEY (`nt_zone_id`) REFERENCES `nt_zone` (`nt_zone_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-    ** CONSTRAINT `nt_zone_log_ibfk_2` FOREIGN KEY (`nt_group_id`) REFERENCES `nt_group` (`nt_group_id`) ON DELETE CASCADE ON UPDATE CASCADE */
+    KEY `nt_user_id` (`nt_user_id`),
+    CONSTRAINT `nt_zone_log_ibfk_1` FOREIGN KEY (`nt_zone_id`) REFERENCES `nt_zone` (`nt_zone_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `nt_zone_log_ibfk_2` FOREIGN KEY (`nt_group_id`) REFERENCES `nt_group` (`nt_group_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `nt_zone_log_ibfk_3` FOREIGN KEY (`nt_user_id`) REFERENCES `nt_user` (`nt_user_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 
-CREATE TABLE nt_zone_nameserver (
+CREATE TABLE IF NOT EXISTS nt_zone_nameserver (
     nt_zone_id           int(10) unsigned NOT NULL,
     nt_nameserver_id     smallint(5) unsigned NOT NULL,
     UNIQUE KEY `zone_ns_id` (`nt_zone_id`,`nt_nameserver_id`)

@@ -13,7 +13,7 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        ...globals.node
+        ...globals.node,
       },
     },
     rules: {

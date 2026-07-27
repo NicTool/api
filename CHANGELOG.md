@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [3.0.3] - 2026-07-27
+
+- many updates for data stores and NS backends
+- feat(mysql): new NS columns: engine, listen, publisher, transport, dnssec
+- change: */store/toml -> */store/file
+- change(sql/*.sql): made setup non-destructive
+- feat: self describing password hashes (#56)
+
 ### [3.0.2] - 2026-07-25
 
 - dep(rr): bump version
@@ -93,3 +101,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - lib/user.get: convert booleans
 
 [3.0.2]: https://github.com/NicTool/api/releases/tag/v3.0.2
+[3.0.3]: https://github.com/NicTool/api/releases/tag/v3.0.3
+[3.0.0-alpha.0]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.0
+[3.0.0-alpha.1]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.1
+[3.0.0-alpha.2]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.2
+[3.0.0-alpha.3]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.3
+[3.0.0-alpha.4]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.4
+[3.0.0-alpha.5]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.5
+[3.0.0-alpha.6]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.6
+[3.0.0-alpha.9]: https://github.com/NicTool/api/releases/tag/3.0.0-alpha.9
+[3.0.0]: https://github.com/NicTool/api/releases/tag/v3.0.0
+[3.0.0-alpha.10]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.10
+[3.0.0-alpha.11]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.11
+[3.0.0-alpha.12]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.12
+[3.0.0-alpha.13]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.13
+[3.0.0-alpha.7]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.7
+[3.0.0-alpha.8]: https://github.com/NicTool/api/releases/tag/v3.0.0-alpha.8
