@@ -1,10 +1,7 @@
 // Applies sql/*.sql the way the configurator's /nt/init-schema does.
 //
-// Regression guard for two things that were silently broken: the files hold
-// many statements per file (so the connection needs multipleStatements), and
-// they must be idempotent — re-applying them must not error or duplicate seed
-// rows. Being idempotent is what lets this run against a populated database
-// without a scratch schema, since the test user cannot CREATE DATABASE.
+// Regression guard for two things: the files hold many statements per file 
+// (so the connection needs multipleStatements), and they must be idempotent
 //
 // Skips when MySQL is unreachable.
 import assert from 'node:assert/strict'
