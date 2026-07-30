@@ -7,7 +7,6 @@
 # errors with ER_DUP_FIELDNAME. That is safe to ignore.
 
 ALTER TABLE nt_nameserver
-    ADD COLUMN engine    VARCHAR(32) NULL DEFAULT NULL,
     ADD COLUMN listen    JSON NULL DEFAULT NULL,
     ADD COLUMN publisher JSON NULL DEFAULT NULL,
     ADD COLUMN transport JSON NULL DEFAULT NULL,
