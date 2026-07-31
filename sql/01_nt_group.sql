@@ -42,6 +42,10 @@ CREATE TABLE IF NOT EXISTS nt_group_subgroups(
 INSERT IGNORE INTO `nt_group` (`nt_group_id`, `parent_group_id`, `name`)
 VALUES
     (1,0,'NicTool');
-INSERT IGNORE INTO nt_group_log(nt_group_id, nt_user_id, action, timestamp, modified_group_id, parent_group_id)
-VALUES
-    (1, 1, 'added', UNIX_TIMESTAMP(), 1, 0);
+
+# The log row carries no explicit id and nt_group_log has no unique key over
+# these columns, guard on the row already being there.
+INSERT INTO nt_group_log(nt_group_id, nt_user_id, action, timestamp, modified_group_id, parent_group_id)
+SELECT 1, 1, 'added', UNIX_TIMESTAMP(), 1, 0
+FROM DUAL WHERE NOT EXISTS
+    (SELECT 1 FROM nt_group_log WHERE modified_group_id=1 AND action='added');
