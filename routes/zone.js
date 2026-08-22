@@ -120,6 +120,18 @@ function ZoneRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
+        const bare = request.payload.zone.replace(/\.$/, '')
+        const spellings = [...new Set([bare, `${bare}.`])]
+        const existing = await Promise.all(spellings.map((zone) => Zone.get({ zone })))
+        if (existing.some((zones) => zones.length > 0)) {
+          return h
+            .response({
+              zone: [],
+              meta: { api: meta.api, msg: `Zone is already taken` },
+            })
+            .code(409)
+        }
+
         const id = await Zone.create(request.payload)
 
         const zones = await Zone.get({ id })
