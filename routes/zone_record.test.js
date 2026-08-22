@@ -183,6 +183,15 @@ describe('zone_record routes', () => {
     assert.ok(Array.isArray(res.result.zone_record))
     assert.equal(res.result.zone_record[0].id, testZoneRecordId)
     assert.equal(res.result.zone_record[0].deleted, true)
+
+    const log = await server.inject({
+      method: 'GET',
+      url: `/log/zone_record?zid=${testZoneId}&search=www.route-zr-delete`,
+      headers: auth.headers,
+    })
+    assert.equal(log.statusCode, 200)
+    assert.equal(log.result.log[0].action, 'deleted')
+    assert.equal(log.result.log[0].owner, testZoneRecord.owner)
   })
 
   it(`GET /zone_record/${testZoneRecordId} hides deleted by default`, async () => {

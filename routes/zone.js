@@ -4,6 +4,7 @@ import Zone from '../lib/zone/index.js'
 import Group from '../lib/group/index.js'
 import Authz from '../lib/authz.js'
 import Mysql from '../lib/mysql.js'
+import Audit from '../lib/audit.js'
 import { meta } from '../lib/util.js'
 
 const ZONE_PUT_FIELDS = new Set([
@@ -122,6 +123,7 @@ function ZoneRoutes(server) {
         const id = await Zone.create(request.payload)
 
         const zones = await Zone.get({ id })
+        await Audit.logZone(request.auth.credentials.user, 'added', zones[0])
 
         return h
           .response({
@@ -169,7 +171,14 @@ function ZoneRoutes(server) {
         )
         await Zone.put({ id, ...payload })
 
-        const updated = await Zone.get({ id })
+        let updated = await Zone.get({ id })
+        if (updated.length === 0) updated = await Zone.get({ id, deleted: true })
+        await Audit.logZone(
+          request.auth.credentials.user,
+          zoneAuditAction(zones[0], payload),
+          updated[0],
+          zones[0],
+        )
         return h.response({ zone: updated, meta: { api: meta.api, msg: `the zone was updated` } }).code(200)
       },
     },
@@ -239,6 +248,7 @@ function ZoneRoutes(server) {
           id: zones[0].id,
           deleted: 1,
         })
+        await Audit.logZone(request.auth.credentials.user, 'deleted', zones[0])
 
         return h
           .response({
@@ -252,6 +262,13 @@ function ZoneRoutes(server) {
       },
     },
   ])
+}
+
+function zoneAuditAction(previous, payload) {
+  if (payload.deleted === true && previous.deleted !== true) return 'deleted'
+  if (payload.deleted === false && previous.deleted === true) return 'recovered'
+  if (payload.gid !== undefined && payload.gid !== previous.gid) return 'moved'
+  return 'modified'
 }
 
 export default ZoneRoutes

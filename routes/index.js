@@ -25,6 +25,7 @@ import { NameserverRoutes } from './nameserver.js'
 import { ZoneRoutes } from './zone.js'
 import { ZoneRecordRoutes } from './zone_record.js'
 import { DelegationRoutes } from './delegation.js'
+import { LogRoutes } from './log.js'
 import authzPlugin from '../lib/authz-plugin.js'
 
 let server
@@ -125,6 +126,7 @@ async function setup() {
   ZoneRoutes(server)
   ZoneRecordRoutes(server)
   DelegationRoutes(server)
+  LogRoutes(server)
 
   server.route({
     method: '*',

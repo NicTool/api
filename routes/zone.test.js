@@ -116,6 +116,14 @@ describe('zone routes', () => {
     // console.log(res.result)
     assert.equal(res.statusCode, 201)
     assert.ok(res.result.zone[0].gid)
+
+    const log = await server.inject({
+      method: 'GET',
+      url: `/log/zone?gid=${case2Id}&search=route2.example.com.`,
+      headers: auth.headers,
+    })
+    assert.equal(log.statusCode, 200)
+    assert.equal(log.result.log[0].action, 'added')
   })
 
   it(`GET /zone/${case2Id}`, async () => {
@@ -137,6 +145,24 @@ describe('zone routes', () => {
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 200)
+
+    const log = await server.inject({
+      method: 'GET',
+      url: `/log/zone?gid=${case2Id}&search=route2.example.com.`,
+      headers: auth.headers,
+    })
+    assert.equal(log.statusCode, 200)
+    assert.equal(log.result.log[0].action, 'deleted')
+  })
+
+  it('GET /log/global includes subgroup activity', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/log/global?gid=${groupCase.id}&include_subgroups=true&search=route2.example.com.`,
+      headers: auth.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    assert.ok(res.result.log.some((row) => row.title === 'route2.example.com.'))
   })
 
   it(`DELETE /zone/${case2Id}`, async () => {

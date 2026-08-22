@@ -317,6 +317,24 @@ describe('authz plugin - zone routes', () => {
     assert.equal(res.statusCode, 403)
   })
 
+  it('403 for zone logs scoped outside the caller tree', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/log/zone?gid=${G_OUTSIDE.id}`,
+      headers: authFull.headers,
+    })
+    assert.equal(res.statusCode, 403)
+  })
+
+  it('403 for record logs on a zone outside the caller tree', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/log/zone_record?zid=${Z_INTREE.id}`,
+      headers: authLimited.headers,
+    })
+    assert.equal(res.statusCode, 403)
+  })
+
   it('403 for POST /zone when user lacks zone.create', async () => {
     const res = await server.inject({
       method: 'POST',

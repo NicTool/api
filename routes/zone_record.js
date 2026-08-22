@@ -3,6 +3,7 @@ import validate from '@nictool/validate'
 import ZoneRecord from '../lib/zone_record/index.js'
 import Zone from '../lib/zone/index.js'
 import Authz from '../lib/authz.js'
+import Audit from '../lib/audit.js'
 import { meta } from '../lib/util.js'
 
 async function zoneRecordResponseFailAction(request, h, err) {
@@ -123,6 +124,13 @@ function ZoneRecordRoutes(server) {
         const id = await ZoneRecord.create(request.payload)
 
         const zrs = await ZoneRecord.get({ id })
+        const zones = await Zone.get({ id: zrs[0].zid })
+        await Audit.logZoneRecord(
+          request.auth.credentials.user,
+          'added',
+          zrs[0],
+          zones[0],
+        )
 
         return h
           .response({
@@ -166,6 +174,14 @@ function ZoneRecordRoutes(server) {
         await ZoneRecord.put({ id, ...request.payload })
 
         const updated = await ZoneRecord.get({ id })
+        const zones = await Zone.get({ id: updated[0].zid })
+        await Audit.logZoneRecord(
+          request.auth.credentials.user,
+          'modified',
+          updated[0],
+          zones[0],
+          zrs[0],
+        )
         return h
           .response({
             zone_record: updated,
@@ -208,6 +224,13 @@ function ZoneRecordRoutes(server) {
           id: zrs[0].id,
           deleted: 1,
         })
+        const zones = await Zone.get({ id: zrs[0].zid })
+        await Audit.logZoneRecord(
+          request.auth.credentials.user,
+          'deleted',
+          zrs[0],
+          zones[0],
+        )
 
         const deletedZrs = await ZoneRecord.get({
           id: zrs[0].id,
