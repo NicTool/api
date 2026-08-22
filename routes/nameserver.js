@@ -85,7 +85,14 @@ function NameserverRoutes(server) {
       method: 'PUT',
       path: '/nameserver/{id}',
       options: {
-        app: { permission: { resource: 'nameserver', action: 'write', idFrom: 'params.id' } },
+        app: {
+          permission: {
+            resource: 'nameserver',
+            action: 'write',
+            idFrom: 'params.id',
+            targetGroupFrom: 'payload.gid',
+          },
+        },
         validate: {
           payload: validate.nameserver.PUT,
         },

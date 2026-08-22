@@ -81,6 +81,26 @@ describe('zone routes', () => {
     assert.ok(res.result.zone.some((z) => z.zone === nsCase.zone))
   })
 
+  it(`PUT /zone/${nsCase.id} moves it to another group`, async () => {
+    const moved = await server.inject({
+      method: 'PUT',
+      url: `/zone/${nsCase.id}`,
+      headers: auth.headers,
+      payload: { gid: case2Id },
+    })
+    assert.equal(moved.statusCode, 200)
+    assert.equal(moved.result.zone[0].gid, case2Id)
+
+    const restored = await server.inject({
+      method: 'PUT',
+      url: `/zone/${nsCase.id}`,
+      headers: auth.headers,
+      payload: { gid: groupCase.id },
+    })
+    assert.equal(restored.statusCode, 200)
+    assert.equal(restored.result.zone[0].gid, groupCase.id)
+  })
+
   it(`POST /zone (${case2Id})`, async () => {
     const testCase = JSON.parse(JSON.stringify(nsCase))
     testCase.id = case2Id // make it unique

@@ -347,17 +347,29 @@ describe('authz plugin - zone routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it('does not pass unknown fields or gid changes to the zone store', async () => {
+  it('403 when moving a zone outside the caller tree', async () => {
     const res = await server.inject({
       method: 'PUT',
       url: `/zone/${Z_INTREE.id}`,
       headers: authFull.headers,
-      payload: { ttl: 7201, serial: 7, gid: G_OUTSIDE.id, malicious: 'not-a-column' },
+      payload: { gid: G_OUTSIDE.id },
+    })
+    assert.equal(res.statusCode, 403)
+
+    const [zone] = await Zone.get({ id: Z_INTREE.id })
+    assert.equal(zone.gid, G_ROOT.id)
+  })
+
+  it('does not pass unknown fields to the zone store', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${Z_INTREE.id}`,
+      headers: authFull.headers,
+      payload: { ttl: 7201, serial: 7, malicious: 'not-a-column' },
     })
     assert.equal(res.statusCode, 200)
 
     const [zone] = await Zone.get({ id: Z_INTREE.id })
-    assert.equal(zone.gid, G_ROOT.id)
     assert.equal(zone.ttl, 7201)
     assert.equal(zone.serial, 7)
   })
@@ -401,7 +413,19 @@ describe('authz plugin - zone routes', () => {
 })
 
 describe('authz plugin - user self-ops', () => {
-  it('does not pass unknown fields, gid changes, or is_admin through self-write', async () => {
+  it('403 when moving yourself to another group', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/user/${U_FULL.id}`,
+      headers: authFull.headers,
+      payload: { gid: G_CHILD.id },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /Cannot move yourself/)
+    assert.equal((await User.get({ id: U_FULL.id }))[0].gid, G_ROOT.id)
+  })
+
+  it('does not pass unknown fields or is_admin through self-write', async () => {
     const [before] = await Mysql.execute(
       'SELECT is_admin FROM nt_user WHERE nt_user_id = ?',
       [U_FULL.id],
@@ -412,7 +436,6 @@ describe('authz plugin - user self-ops', () => {
       headers: authFull.headers,
       payload: {
         first_name: 'Still Full',
-        gid: G_OUTSIDE.id,
         is_admin: true,
         malicious: 'not-a-column',
       },

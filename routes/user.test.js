@@ -15,14 +15,17 @@ let server,
 before(async () => {
   server = await init()
   await Group.create(groupCase)
+  await Group.create(moveGroup)
   await User.create(userCase)
   await grantGroupPermissions(groupCase.id)
 })
 
 const userId2 = 4094
+const moveGroup = { id: 4090, parent_gid: groupCase.id, name: 'user-move.route.example.com' }
 
 after(async () => {
   User.destroy({ id: userId2 })
+  await Group.destroy({ id: moveGroup.id })
   await server.stop()
 })
 
@@ -85,6 +88,26 @@ describe('user routes', () => {
     assert.equal(res.result.meta.pagination.filtered, 1)
     assert.equal(res.result.meta.pagination.limit, 10)
     assert.equal(res.result.meta.pagination.offset, 0)
+  })
+
+  it(`PUT /user/${userId2} moves it to another group`, async () => {
+    const moved = await server.inject({
+      method: 'PUT',
+      url: `/user/${userId2}`,
+      headers: auth.headers,
+      payload: { gid: moveGroup.id },
+    })
+    assert.equal(moved.statusCode, 200)
+    assert.equal((await User.get({ id: userId2 }))[0].gid, moveGroup.id)
+
+    const restored = await server.inject({
+      method: 'PUT',
+      url: `/user/${userId2}`,
+      headers: auth.headers,
+      payload: { gid: groupCase.id },
+    })
+    assert.equal(restored.statusCode, 200)
+    assert.equal((await User.get({ id: userId2 }))[0].gid, groupCase.id)
   })
 
   it(`GET /user/${userId2}`, async () => {

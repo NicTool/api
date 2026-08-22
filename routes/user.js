@@ -21,7 +21,7 @@ const USER_POST_FIELDS = new Set([
 ])
 
 const USER_PUT_FIELDS = new Set([
-  'first_name', 'last_name', 'username', 'email', 'password',
+  'gid', 'first_name', 'last_name', 'username', 'email', 'password',
   'deleted', 'inherit_group_permissions',
 ])
 
@@ -214,7 +214,14 @@ function UserRoutes(server) {
       method: 'PUT',
       path: '/user/{id}',
       options: {
-        app: { permission: { resource: 'user', action: 'write', idFrom: 'params.id' } },
+        app: {
+          permission: {
+            resource: 'user',
+            action: 'write',
+            idFrom: 'params.id',
+            targetGroupFrom: 'payload.gid',
+          },
+        },
         validate: {
           payload: validate.user.PUT,
           options: { allowUnknown: true },

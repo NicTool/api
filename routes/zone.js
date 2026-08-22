@@ -7,7 +7,7 @@ import Mysql from '../lib/mysql.js'
 import { meta } from '../lib/util.js'
 
 const ZONE_PUT_FIELDS = new Set([
-  'description', 'mailaddr', 'serial', 'ttl', 'refresh', 'retry', 'expire', 'minimum',
+  'gid', 'description', 'mailaddr', 'serial', 'ttl', 'refresh', 'retry', 'expire', 'minimum',
   'deleted',
 ])
 
@@ -138,7 +138,14 @@ function ZoneRoutes(server) {
       method: 'PUT',
       path: '/zone/{id}',
       options: {
-        app: { permission: { resource: 'zone', action: 'write', idFrom: 'params.id' } },
+        app: {
+          permission: {
+            resource: 'zone',
+            action: 'write',
+            idFrom: 'params.id',
+            targetGroupFrom: 'payload.gid',
+          },
+        },
         validate: {
           payload: validate.zone.PUT,
           options: { allowUnknown: true },
