@@ -52,14 +52,8 @@ describe('permission routes', () => {
     assert.equal(res.result.permission.nameserver.create, false)
   })
 
-  it(`POST /permission (${case2Id})`, async () => {
+  it('POST /permission cannot create your own permissions', async () => {
     const testCase = JSON.parse(JSON.stringify(permCase))
-    testCase.id = case2Id // make it unique
-    testCase.user.id = case2Id
-    testCase.group.id = case2Id
-    testCase.name = `Route Test Permission 2`
-    delete testCase.deleted
-    // console.log(testCase)
 
     const res = await server.inject({
       method: 'POST',
@@ -67,64 +61,29 @@ describe('permission routes', () => {
       headers: auth.headers,
       payload: testCase,
     })
-    // console.log(res.result)
-    assert.equal(res.statusCode, 201)
-    assert.equal(res.result.permission.zone.create, true)
-    assert.equal(res.result.permission.nameserver.create, false)
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /own permissions/)
   })
 
-  it(`GET /permission/${case2Id}`, async () => {
+  it(`PUT /permission/${userCase.id} cannot change your own permissions`, async () => {
     const res = await server.inject({
-      method: 'GET',
-      url: `/permission/${case2Id}`,
+      method: 'PUT',
+      url: `/permission/${userCase.id}`,
       headers: auth.headers,
+      payload: permCase,
     })
-    // console.log(res.result)
-    assert.equal(res.statusCode, 200)
-    assert.equal(res.result.permission.zone.create, true)
-    assert.equal(res.result.permission.nameserver.create, false)
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /own permissions/)
   })
 
-  it(`DELETE /permission/${case2Id}`, async () => {
+  it(`DELETE /permission/${userCase.id} cannot delete your own permissions`, async () => {
     const res = await server.inject({
       method: 'DELETE',
-      url: `/permission/${case2Id}`,
+      url: `/permission/${userCase.id}`,
       headers: auth.headers,
     })
-    // console.log(res.result)
-    assert.equal(res.statusCode, 200)
-  })
-
-  it(`DELETE /permission/${case2Id}`, async () => {
-    const res = await server.inject({
-      method: 'DELETE',
-      url: `/permission/${case2Id}`,
-      headers: auth.headers,
-    })
-    // console.log(res.result)
-    assert.equal(res.statusCode, 404)
-  })
-
-  it(`GET /permission/${case2Id}`, async () => {
-    const res = await server.inject({
-      method: 'GET',
-      url: `/permission/${case2Id}`,
-      headers: auth.headers,
-    })
-    // console.log(res.result)
-    // assert.equal(res.statusCode, 200)
-    assert.equal(res.result.permission, undefined)
-  })
-
-  it(`GET /permission/${case2Id} (deleted)`, async () => {
-    const res = await server.inject({
-      method: 'GET',
-      url: `/permission/${case2Id}?deleted=true`,
-      headers: auth.headers,
-    })
-    // console.log(res.result)
-    assert.equal(res.statusCode, 200)
-    assert.ok(res.result.permission)
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /own permissions/)
   })
 
   it('DELETE /session', async () => {

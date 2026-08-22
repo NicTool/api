@@ -1,5 +1,6 @@
 import validate from '@nictool/validate'
 
+import Authz from '../lib/authz.js'
 import Permission from '../lib/permission/index.js'
 import { meta } from '../lib/util.js'
 
@@ -9,6 +10,7 @@ function PermissionRoutes(server) {
       method: 'GET',
       path: '/permission/{id}',
       options: {
+        app: { permission: { resource: 'permission', action: 'read', idFrom: 'params.id' } },
         validate: {
           query: validate.permission.GET_req,
         },
@@ -40,6 +42,7 @@ function PermissionRoutes(server) {
       method: 'POST',
       path: '/permission',
       options: {
+        app: { permission: { resource: 'permission', action: 'create' } },
         validate: {
           payload: validate.permission.POST,
         },
@@ -49,6 +52,20 @@ function PermissionRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
+        const userPerm = await Permission.getEffective(request.auth.credentials.user.id)
+        const uid = request.payload.user?.id
+        if (uid !== undefined && request.payload.group?.id == null) {
+          const gid = await Authz.getObjectGroupId('user', uid)
+          request.payload.group = { ...request.payload.group, id: gid }
+        }
+        const currentPerm = uid === undefined ? null : await Permission.getEffective(uid)
+        request.payload = Authz.capPermissions(userPerm, request.payload, currentPerm)
+        if (uid !== undefined && request.payload.inherit !== true) {
+          request.payload = Authz.preserveUnmanagedPermissions(
+            userPerm, request.payload, currentPerm,
+          )
+        }
+        delete request.payload.id
         const pid = await Permission.create(request.payload)
 
         const permission = await Permission.get({ id: pid })
@@ -68,6 +85,7 @@ function PermissionRoutes(server) {
       method: 'PUT',
       path: '/permission/{id}',
       options: {
+        app: { permission: { resource: 'permission', action: 'write', idFrom: 'params.id' } },
         validate: {
           payload: validate.permission.POST,
         },
@@ -85,7 +103,26 @@ function PermissionRoutes(server) {
             .code(404)
         }
 
-        await Permission.put({ ...request.payload, id })
+        const userPerm = await Permission.getEffective(request.auth.credentials.user.id)
+        const payload = Authz.capPermissions(userPerm, request.payload, existing)
+        if (payload.inherit !== undefined) {
+          const uid = existing.user?.id
+          if (uid === undefined || uid === null) {
+            delete payload.inherit
+          } else {
+            const gid = await Authz.getObjectGroupId('user', uid)
+            const groupPerm = gid === null ? null : await Permission.get({ gid })
+            const before = existing.inherit === false ? existing : groupPerm
+            const after = payload.inherit ? groupPerm : existing
+            if (!Authz.canTransitionPermissions(userPerm, before, after)) {
+              delete payload.inherit
+            }
+          }
+        }
+        delete payload.id
+        delete payload.user
+        delete payload.group
+        await Permission.put({ ...payload, id })
         const permission = await Permission.get({ id })
 
         return h
@@ -100,6 +137,7 @@ function PermissionRoutes(server) {
       method: 'DELETE',
       path: '/permission/{id}',
       options: {
+        app: { permission: { resource: 'permission', action: 'delete', idFrom: 'params.id' } },
         validate: {
           query: validate.permission.DELETE,
           failAction: 'log',

@@ -15,6 +15,16 @@ const PERM_FIELDS = new Set([
   'self_write', 'usable_ns',
 ])
 
+const USER_POST_FIELDS = new Set([
+  'id', 'gid', 'first_name', 'last_name', 'username', 'email', 'password',
+  'inherit_group_permissions',
+])
+
+const USER_PUT_FIELDS = new Set([
+  'first_name', 'last_name', 'username', 'email', 'password',
+  'deleted', 'inherit_group_permissions',
+])
+
 function extractPermFields(payload) {
   const permFields = {}
   for (const key of Object.keys(payload)) {
@@ -26,12 +36,32 @@ function extractPermFields(payload) {
   return permFields
 }
 
+function pickFields(payload, fields) {
+  return Object.fromEntries(Object.entries(payload).filter(([key]) => fields.has(key)))
+}
+
+function prepareUserResponse(user) {
+  const gid = parseInt(user.gid, 10)
+  delete user.gid
+  if (user.permissions?.group && user.permissions.group.id == null) {
+    delete user.permissions.group.id
+  }
+  return gid
+}
+
 function UserRoutes(server) {
   server.route([
     {
       method: 'GET',
       path: '/user',
       options: {
+        app: {
+          permission: {
+            resource: 'user',
+            action: 'read',
+            list: { resource: 'group', idFrom: 'query.gid', defaultToGroup: true },
+          },
+        },
         validate: {
           query: validate.user.GET_req,
         },
@@ -50,7 +80,7 @@ function UserRoutes(server) {
         }
 
         const users = await User.get(getArgs)
-        for (const u of users) delete u.gid
+        for (const u of users) prepareUserResponse(u)
 
         return h
           .response({
@@ -73,7 +103,6 @@ function UserRoutes(server) {
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -95,23 +124,18 @@ function UserRoutes(server) {
             .code(204)
         }
 
-        const uid = getArgs.id
-        const gid = parseInt(users[0].gid, 10)
-        delete users[0].gid
-
-        const perm = await Permission.getEffective(uid)
+        const gid = prepareUserResponse(users[0])
         const groupPerm = await Permission.getGroup({
-          uid, deleted: false,
+          uid: getArgs.id, deleted: false,
         })
-        if (perm && groupPerm) {
-          perm.nameserver.usable = groupPerm.nameserver?.usable ?? []
+        if (users[0].permissions && groupPerm) {
+          users[0].permissions.nameserver.usable = groupPerm.nameserver?.usable ?? []
         }
 
         return h
           .response({
             user: users,
             group: { id: gid },
-            permissions: perm ?? {},
             meta: {
               api: meta.api,
               msg: `here's your user`,
@@ -131,7 +155,6 @@ function UserRoutes(server) {
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -141,7 +164,7 @@ function UserRoutes(server) {
         request.payload = Authz.capPermissions(userPerm, request.payload)
 
         const permFields = extractPermFields(request.payload)
-        const uid = await User.create(request.payload)
+        const uid = await User.create(pickFields(request.payload, USER_POST_FIELDS))
 
         if (Object.keys(permFields).length > 0) {
           const perm = await Permission.get({ uid })
@@ -149,8 +172,7 @@ function UserRoutes(server) {
         }
 
         const users = await User.get({ id: uid })
-        const group = { id: users[0].gid }
-        delete users[0].gid
+        const group = { id: prepareUserResponse(users[0]) }
 
         return h
           .response({
@@ -175,7 +197,6 @@ function UserRoutes(server) {
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -183,9 +204,40 @@ function UserRoutes(server) {
         const id = parseInt(request.params.id, 10)
         const { user } = request.auth.credentials
         const userPerm = await Permission.getEffective(user.id)
-        request.payload = Authz.capPermissions(userPerm, request.payload)
+        const existingPerm = await Permission.get({ uid: id })
+        const gid = await Authz.getObjectGroupId('user', id)
+        const groupPerm = gid === null ? null : await Permission.get({ gid })
+        const effectivePerm = existingPerm?.inherit === false ? existingPerm : groupPerm
+        request.payload = Authz.capPermissions(userPerm, request.payload, existingPerm)
+
+        const hasPermFields = Object.keys(request.payload).some((field) => PERM_FIELDS.has(field))
+        if (
+          request.payload.inherit_group_permissions === false
+          || (!existingPerm && hasPermFields)
+        ) {
+          request.payload = Authz.preserveUnmanagedPermissions(
+            userPerm, request.payload, effectivePerm,
+          )
+        }
 
         const permFields = extractPermFields(request.payload)
+
+        request.payload = pickFields(request.payload, USER_PUT_FIELDS)
+
+        // switching yourself back to inherited permissions adopts the group's,
+        // which capPermissions can't cap because it isn't a permission field
+        if (id === user.id) delete request.payload.inherit_group_permissions
+
+        if (request.payload.inherit_group_permissions !== undefined) {
+          const after = request.payload.inherit_group_permissions
+            ? groupPerm
+            : existingPerm ?? {}
+          if (!Authz.canTransitionPermissions(userPerm, effectivePerm, after)) {
+            delete request.payload.inherit_group_permissions
+          } else if (request.payload.inherit_group_permissions === true) {
+            for (const field of Object.keys(permFields)) delete permFields[field]
+          }
+        }
 
         const args = { ...request.payload, id }
 
@@ -215,7 +267,7 @@ function UserRoutes(server) {
         if (!users.length) {
           return h.response({ meta: { api: meta.api, msg: `user not found` } }).code(404)
         }
-        delete users[0].gid
+        prepareUserResponse(users[0])
 
         return h
           .response({
@@ -235,7 +287,6 @@ function UserRoutes(server) {
         },
         response: {
           schema: validate.user.GET_res,
-          failAction: 'log',
         },
         tags: ['api'],
       },
@@ -255,7 +306,7 @@ function UserRoutes(server) {
 
         await User.delete({ id: users[0].id })
 
-        delete users[0].gid
+        prepareUserResponse(users[0])
 
         return h
           .response({

@@ -49,6 +49,16 @@ const U_LIMITED = {
   last_name: 'Perm',
   inherit_group_permissions: false,
 }
+const U_CREATED = {
+  id: 4211,
+  gid: 4201,
+  username: 'authz-created',
+  email: 'authz-created@example.com',
+  password: PASSWORD,
+  first_name: 'Created',
+  last_name: 'User',
+  inherit_group_permissions: false,
+}
 
 const Z_INTREE = {
   id: 4200,
@@ -92,6 +102,24 @@ const ZR_OUTSIDE = {
   ttl: 3600,
 }
 
+const ZR_INTREE_OTHER = {
+  id: 4203,
+  zid: 4200,
+  owner: 'other.authz.example.com.',
+  type: 'A',
+  address: '192.0.2.3',
+  ttl: 3600,
+}
+
+const ZR_DELEGATED_CREATE = {
+  id: 4210,
+  zid: 4201,
+  owner: 'created.authz-out.example.com.',
+  type: 'A',
+  address: '192.0.2.10',
+  ttl: 3600,
+}
+
 const NS = {
   id: 4200,
   gid: 4200,
@@ -110,7 +138,12 @@ before(async () => {
   // Clean up stale data from prior crashed runs
   try { await Delegation.delete({ gid: 4200, oid: 4201, type: 'ZONE' }) }
   catch { /* ignore */ }
-  for (const id of [4200, 4201]) {
+  try { await Delegation.delete({ gid: 4201, oid: 4200, type: 'ZONE' }) }
+  catch { /* ignore */ }
+  try { await Delegation.delete({ gid: 4201, oid: 4201, type: 'ZONE' }) }
+  catch { /* ignore */ }
+  await ZoneRecord.destroy({ id: ZR_DELEGATED_CREATE.id })
+  for (const id of [4200, 4201, ZR_INTREE_OTHER.id, U_CREATED.id]) {
     await ZoneRecord.destroy({ id })
     await Zone.destroy({ id })
   }
@@ -164,6 +197,7 @@ before(async () => {
   await Zone.create(Z_INTREE)
   await Zone.create(Z_OUTSIDE)
   await ZoneRecord.create(ZR_INTREE)
+  await ZoneRecord.create(ZR_INTREE_OTHER)
   await ZoneRecord.create(ZR_OUTSIDE)
   await Nameserver.create(NS)
 
@@ -207,8 +241,12 @@ before(async () => {
 after(async () => {
   await server.stop()
   await Delegation.delete({ gid: 4200, oid: 4201, type: 'ZONE' })
+  await Delegation.delete({ gid: 4201, oid: 4200, type: 'ZONE' })
+  await Delegation.delete({ gid: 4201, oid: 4201, type: 'ZONE' })
+  await ZoneRecord.destroy({ id: ZR_DELEGATED_CREATE.id })
   await Nameserver.destroy({ id: NS.id })
   await ZoneRecord.destroy({ id: ZR_OUTSIDE.id })
+  await ZoneRecord.destroy({ id: ZR_INTREE_OTHER.id })
   await ZoneRecord.destroy({ id: ZR_INTREE.id })
   await Zone.destroy({ id: Z_OUTSIDE.id })
   await Zone.destroy({ id: Z_INTREE.id })
@@ -217,6 +255,9 @@ after(async () => {
     if (p) await Permission.destroy({ id: p.id })
     await User.destroy({ id: u.id })
   }
+  const createdPerm = await Permission.get({ uid: U_CREATED.id })
+  if (createdPerm) await Permission.destroy({ id: createdPerm.id })
+  await User.destroy({ id: U_CREATED.id })
   for (const g of [G_CHILD, G_OUTSIDE, G_ROOT]) {
     await Group.destroy({ id: g.id })
   }
@@ -256,13 +297,24 @@ describe('authz plugin - zone routes', () => {
     assert.ok(res.result.error_code)
   })
 
-  it('200 for GET /zone (list, no per-object check)', async () => {
+  it('GET /zone defaults to the caller group', async () => {
     const res = await server.inject({
       method: 'GET',
       url: '/zone',
-      headers: authFull.headers,
+      headers: authLimited.headers,
     })
     assert.equal(res.statusCode, 200)
+    assert.deepEqual(res.result.zone.map((z) => z.id), [Z_OUTSIDE.id])
+    assert.equal(res.result.meta.pagination.total, 1)
+  })
+
+  it('403 for GET /zone scoped outside the caller tree', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/zone?gid=${G_OUTSIDE.id}`,
+      headers: authFull.headers,
+    })
+    assert.equal(res.statusCode, 403)
   })
 
   it('403 for POST /zone when user lacks zone.create', async () => {
@@ -295,6 +347,49 @@ describe('authz plugin - zone routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
+  it('does not pass unknown fields or gid changes to the zone store', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${Z_INTREE.id}`,
+      headers: authFull.headers,
+      payload: { ttl: 7201, serial: 7, gid: G_OUTSIDE.id, malicious: 'not-a-column' },
+    })
+    assert.equal(res.statusCode, 200)
+
+    const [zone] = await Zone.get({ id: Z_INTREE.id })
+    assert.equal(zone.gid, G_ROOT.id)
+    assert.equal(zone.ttl, 7201)
+    assert.equal(zone.serial, 7)
+  })
+
+  it('403 for POST /zone when the requested id already exists', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/zone',
+      headers: authFull.headers,
+      payload: { ...Z_OUTSIDE, gid: G_ROOT.id },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /already exists/)
+  })
+
+  it('requires delete permission when PUT changes deleted state', async () => {
+    const perm = await Permission.get({ uid: U_FULL.id })
+    await Permission.put({ id: perm.id, zone_delete: false })
+    try {
+      const res = await server.inject({
+        method: 'PUT',
+        url: `/zone/${Z_INTREE.id}`,
+        headers: authFull.headers,
+        payload: { deleted: true },
+      })
+      assert.equal(res.statusCode, 403)
+      assert.equal((await Zone.get({ id: Z_INTREE.id })).length, 1)
+    } finally {
+      await Permission.put({ id: perm.id, zone_delete: true })
+    }
+  })
+
   it('403 for DELETE /zone/{id} with delegated perm_delete=0', async () => {
     const res = await server.inject({
       method: 'DELETE',
@@ -306,6 +401,34 @@ describe('authz plugin - zone routes', () => {
 })
 
 describe('authz plugin - user self-ops', () => {
+  it('does not pass unknown fields, gid changes, or is_admin through self-write', async () => {
+    const [before] = await Mysql.execute(
+      'SELECT is_admin FROM nt_user WHERE nt_user_id = ?',
+      [U_FULL.id],
+    )
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/user/${U_FULL.id}`,
+      headers: authFull.headers,
+      payload: {
+        first_name: 'Still Full',
+        gid: G_OUTSIDE.id,
+        is_admin: true,
+        malicious: 'not-a-column',
+      },
+    })
+    assert.equal(res.statusCode, 200)
+
+    const [user] = await User.get({ id: U_FULL.id })
+    const [stored] = await Mysql.execute(
+      'SELECT nt_group_id AS gid, is_admin FROM nt_user WHERE nt_user_id = ?',
+      [U_FULL.id],
+    )
+    assert.equal(stored.gid, G_ROOT.id)
+    assert.equal(stored.is_admin, before.is_admin)
+    assert.equal(user.first_name, 'Still Full')
+  })
+
   it('403 for DELETE /user/{self}', async () => {
     const res = await server.inject({
       method: 'DELETE',
@@ -325,6 +448,22 @@ describe('authz plugin - user self-ops', () => {
     })
     assert.equal(res.statusCode, 403)
     assert.match(res.result.error_msg, /Not allowed to modify self/)
+  })
+
+  it('does not allow user creation to set is_admin', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/user',
+      headers: authFull.headers,
+      payload: { ...U_CREATED, is_admin: true },
+    })
+    assert.equal(res.statusCode, 201)
+
+    const [stored] = await Mysql.execute(
+      'SELECT is_admin FROM nt_user WHERE nt_user_id = ?',
+      [U_CREATED.id],
+    )
+    assert.equal(stored.is_admin, null)
   })
 })
 
@@ -352,6 +491,17 @@ describe('authz plugin - group self-ops', () => {
       /Not allowed to delete your own group/,
     )
   })
+
+  it('403 when moving a group beneath itself', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/group/${G_CHILD.id}`,
+      headers: authFull.headers,
+      payload: { parent_gid: G_CHILD.id },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /cannot contain itself/)
+  })
 })
 
 describe('authz plugin - zone record delegation', () => {
@@ -371,5 +521,520 @@ describe('authz plugin - zone record delegation', () => {
       headers: authLimited.headers,
     })
     assert.equal(res.statusCode, 403)
+  })
+
+  it('403 for an unscoped zone record collection', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: '/zone_record',
+      headers: authFull.headers,
+    })
+    assert.equal(res.statusCode, 403)
+  })
+
+  it('403 when moving an in-tree record into a delegated zone without add permission', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${ZR_INTREE.id}`,
+      headers: authFull.headers,
+      payload: { zid: Z_OUTSIDE.id },
+    })
+    assert.equal(res.statusCode, 403)
+
+    const [record] = await ZoneRecord.get({ id: ZR_INTREE.id })
+    assert.equal(record.zid, Z_INTREE.id)
+  })
+
+  it('does not require create permission when an edit repeats the current zone id', async () => {
+    const perm = await Permission.get({ uid: U_FULL.id })
+    await Permission.put({ id: perm.id, zonerecord_create: false })
+    try {
+      const res = await server.inject({
+        method: 'PUT',
+        url: `/zone_record/${ZR_INTREE.id}`,
+        headers: authFull.headers,
+        payload: { zid: Z_INTREE.id, ttl: 3601 },
+      })
+      assert.equal(res.statusCode, 200)
+    } finally {
+      await Permission.put({ id: perm.id, zonerecord_create: true })
+      await ZoneRecord.put({ id: ZR_INTREE.id, ttl: ZR_INTREE.ttl })
+    }
+  })
+
+  it('enforces add/delete-record flags on a delegated zone', async () => {
+    let res = await server.inject({
+      method: 'POST',
+      url: '/zone_record',
+      headers: authFull.headers,
+      payload: ZR_DELEGATED_CREATE,
+    })
+    assert.equal(res.statusCode, 403)
+
+    await Delegation.put({
+      gid: G_ROOT.id,
+      oid: Z_OUTSIDE.id,
+      type: 'ZONE',
+      zone_perm_add_records: true,
+      zone_perm_delete_records: true,
+    })
+
+    res = await server.inject({
+      method: 'POST',
+      url: '/zone_record',
+      headers: authFull.headers,
+      payload: ZR_DELEGATED_CREATE,
+    })
+    assert.equal(res.statusCode, 201)
+
+    res = await server.inject({
+      method: 'DELETE',
+      url: `/zone_record/${ZR_DELEGATED_CREATE.id}`,
+      headers: authFull.headers,
+    })
+    assert.equal(res.statusCode, 200)
+
+    await Delegation.put({
+      gid: G_ROOT.id,
+      oid: Z_OUTSIDE.id,
+      type: 'ZONE',
+      zone_perm_add_records: false,
+      zone_perm_delete_records: false,
+    })
+  })
+})
+
+describe('authz plugin - delegation routes', () => {
+  it('creates a fail-closed delegation and records the authenticated actor', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/delegation',
+      headers: authFull.headers,
+      payload: {
+        gid: G_CHILD.id,
+        oid: Z_INTREE.id,
+        type: 'ZONE',
+        delegated_by_id: U_LIMITED.id,
+        delegated_by_name: U_LIMITED.username,
+      },
+    })
+    assert.equal(res.statusCode, 201)
+    assert.equal(res.result.delegation.length, 1)
+    assert.equal(res.result.delegation[0].delegate_write, 0)
+    assert.equal(res.result.delegation[0].delegate_delete, 0)
+    assert.equal(res.result.delegation[0].delegate_delegate, 0)
+    assert.equal(res.result.delegation[0].delegated_by_id, U_FULL.id)
+    assert.equal(res.result.delegation[0].delegated_by_name, U_FULL.username)
+  })
+
+  it('GET with gid and oid returns only that delegation', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/delegation?gid=${G_CHILD.id}&oid=${Z_INTREE.id}&type=ZONE`,
+      headers: authFull.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.delegation.length, 1)
+    assert.equal(res.result.delegation[0].nt_group_id, G_CHILD.id)
+  })
+
+  it('cannot delegate an object back to your own group', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/delegation',
+      headers: authFull.headers,
+      payload: { gid: G_ROOT.id, oid: Z_INTREE.id, type: 'ZONE' },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /own group/)
+  })
+
+  it('caps a re-delegation at the permissions on its source delegation', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/delegation',
+      headers: authFull.headers,
+      payload: {
+        gid: G_CHILD.id,
+        oid: Z_OUTSIDE.id,
+        type: 'ZONE',
+        perm_write: true,
+        perm_delete: true,
+        perm_delegate: true,
+        zone_perm_add_records: true,
+        zone_perm_delete_records: true,
+      },
+    })
+    assert.equal(res.statusCode, 201)
+    const [delegation] = res.result.delegation
+    assert.equal(delegation.delegate_write, 1)
+    assert.equal(delegation.delegate_delete, 1)
+    assert.equal(delegation.delegate_delegate, 1)
+    assert.equal(delegation.delegate_add_records, 0)
+    assert.equal(delegation.delegate_delete_records, 0)
+  })
+
+  it('cannot edit a delegation when the source object is itself delegated', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: '/delegation',
+      headers: authFull.headers,
+      payload: {
+        gid: G_CHILD.id,
+        oid: Z_OUTSIDE.id,
+        type: 'ZONE',
+        perm_write: false,
+      },
+    })
+    assert.equal(res.statusCode, 403)
+  })
+
+  it('perm_delete permits removal, never deletion of the delegated zone', async () => {
+    await Delegation.put({
+      gid: G_ROOT.id, oid: Z_OUTSIDE.id, type: 'ZONE', perm_delete: true,
+    })
+    const res = await server.inject({
+      method: 'DELETE',
+      url: `/zone/${Z_OUTSIDE.id}`,
+      headers: authFull.headers,
+    })
+    assert.equal(res.statusCode, 403)
+    await Delegation.put({
+      gid: G_ROOT.id, oid: Z_OUTSIDE.id, type: 'ZONE', perm_delete: false,
+    })
+  })
+})
+
+describe('authz plugin - create target resolution', () => {
+  const G_PLANTED = 4212
+
+  after(async () => {
+    await Group.destroy({ id: G_PLANTED })
+    await Mysql.execute('DELETE FROM nt_group_subgroups WHERE nt_subgroup_id = ?', [G_PLANTED])
+  })
+
+  it('authorizes the group a new group is actually filed under', async () => {
+    // gid is not the key Group.create reads; authorizing it would let
+    // parent_gid point anywhere
+    const res = await server.inject({
+      method: 'POST',
+      url: '/group',
+      headers: authFull.headers,
+      payload: {
+        id: G_PLANTED,
+        name: 'authz-planted',
+        gid: G_ROOT.id,
+        parent_gid: G_OUTSIDE.id,
+      },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.equal((await Group.get({ id: G_PLANTED })).length, 0)
+  })
+
+  it('403 for POST /group with no parent group', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/group',
+      headers: authFull.headers,
+      payload: { id: G_PLANTED, name: 'authz-rootless', gid: G_ROOT.id },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /No target group/)
+    assert.equal((await Group.get({ id: G_PLANTED })).length, 0)
+  })
+
+  it('201 for POST /group inside the caller tree', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/group',
+      headers: authFull.headers,
+      payload: { id: G_PLANTED, name: 'authz-planted', parent_gid: G_ROOT.id },
+    })
+    assert.equal(res.statusCode, 201)
+    const [created] = await Group.get({ id: G_PLANTED })
+    assert.equal(created.parent_gid, G_ROOT.id)
+  })
+})
+
+describe('authz plugin - nameserver reads', () => {
+  const NS_CHILD = {
+    id: 4201,
+    gid: G_CHILD.id,
+    name: 'ns2.authz.example.com.',
+    ttl: 3600,
+    address: '192.0.2.11',
+    export: { type: 'bind', interval: 0, serials: 0 },
+  }
+
+  before(async () => {
+    await Nameserver.destroy({ id: NS_CHILD.id })
+    await Nameserver.create(NS_CHILD)
+  })
+
+  after(async () => {
+    await Nameserver.destroy({ id: NS_CHILD.id })
+  })
+
+  it('returns a subgroup nameserver fetched by id', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/nameserver/${NS_CHILD.id}`,
+      headers: authFull.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.nameserver.length, 1)
+    assert.equal(res.result.nameserver[0].id, NS_CHILD.id)
+  })
+
+  it('returns an active nameserver outside the caller tree', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/nameserver/${NS_CHILD.id}`,
+      headers: authLimited.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.nameserver[0].id, NS_CHILD.id)
+  })
+
+  it('still scopes an unqualified collection to the caller group', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: '/nameserver',
+      headers: authFull.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    assert.ok(res.result.nameserver.every((n) => n.gid === G_ROOT.id))
+  })
+})
+
+describe('authz plugin - permission records', () => {
+  it('PUT /permission/{id} stores the permissions it was given', async () => {
+    const perm = await Permission.get({ gid: G_CHILD.id })
+    assert.ok(perm, 'the child group has a permission row')
+
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/permission/${perm.id}`,
+      headers: authFull.headers,
+      payload: { zone: { create: true, write: true }, self_write: true },
+    })
+    assert.equal(res.statusCode, 200)
+
+    const after = await Permission.get({ id: perm.id })
+    assert.equal(after.zone.create, true)
+    assert.equal(after.zone.write, true)
+    assert.equal(after.self_write, true)
+    // untouched fields survive a partial update
+    assert.equal(after.gid ?? after.group.id, G_CHILD.id)
+
+    await Permission.put({
+      id: perm.id, zone_create: 0, zone_write: 0, self_write: 0,
+    })
+  })
+
+  // an in-tree target, so the only thing that can deny is the gid mismatch
+  const U_TARGET = {
+    id: 4213,
+    gid: G_CHILD.id,
+    username: 'authz-permtarget',
+    email: 'authz-permtarget@example.com',
+    password: PASSWORD,
+    first_name: 'Perm',
+    last_name: 'Target',
+    inherit_group_permissions: true,
+  }
+
+  // direct SQL: Permission.get throws when a crashed run left two rows behind
+  const clearTarget = () =>
+    Mysql.execute('DELETE FROM nt_perm WHERE nt_user_id = ?', [U_TARGET.id])
+
+  before(async () => {
+    await clearTarget()
+    await User.destroy({ id: U_TARGET.id })
+    await User.create(U_TARGET)
+  })
+
+  after(async () => {
+    await clearTarget()
+    await User.destroy({ id: U_TARGET.id })
+  })
+
+  it('403 for a permission whose user and group disagree', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/permission',
+      headers: authFull.headers,
+      payload: {
+        name: 'mismatched',
+        user: { id: U_TARGET.id },
+        group: { id: G_ROOT.id },
+      },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /does not belong to that group/)
+  })
+
+  it('201 for a permission naming the target user own group', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/permission',
+      headers: authFull.headers,
+      payload: {
+        name: 'matched',
+        user: { id: U_TARGET.id },
+        group: { id: G_CHILD.id },
+      },
+    })
+    assert.equal(res.statusCode, 201)
+  })
+
+  it('does not grant a permission by switching another user to inheritance', async () => {
+    const actorPerm = await Permission.get({ uid: U_FULL.id })
+    const groupPerm = await Permission.get({ gid: G_CHILD.id })
+    await Permission.put({ id: actorPerm.id, zone_delete: false })
+    await Permission.put({ id: groupPerm.id, zone_delete: true })
+    try {
+      const res = await server.inject({
+        method: 'PUT',
+        url: `/user/${U_TARGET.id}`,
+        headers: authFull.headers,
+        payload: { inherit_group_permissions: true },
+      })
+      assert.equal(res.statusCode, 200)
+
+      const explicit = await Permission.get({ uid: U_TARGET.id })
+      assert.ok(explicit)
+      assert.equal((await Permission.getEffective(U_TARGET.id)).zone.delete, false)
+    } finally {
+      await Permission.put({ id: actorPerm.id, zone_delete: true })
+      await Permission.put({ id: groupPerm.id, zone_delete: false })
+    }
+  })
+
+  it('does not revoke unmanaged permissions when creating an explicit row', async () => {
+    const actorPerm = await Permission.get({ uid: U_FULL.id })
+    const groupPerm = await Permission.get({ gid: G_CHILD.id })
+    const explicit = await Permission.get({ uid: U_TARGET.id })
+    if (explicit) await Permission.destroy({ id: explicit.id })
+    await Permission.put({ id: actorPerm.id, zone_delete: false })
+    await Permission.put({ id: groupPerm.id, zone_delete: true })
+    try {
+      const res = await server.inject({
+        method: 'POST',
+        url: '/permission',
+        headers: authFull.headers,
+        payload: {
+          name: 'preserved',
+          inherit: false,
+          user: { id: U_TARGET.id },
+        },
+      })
+      assert.equal(res.statusCode, 201)
+      assert.equal((await Permission.getEffective(U_TARGET.id)).zone.delete, true)
+    } finally {
+      await Permission.put({ id: actorPerm.id, zone_delete: true })
+      await Permission.put({ id: groupPerm.id, zone_delete: false })
+    }
+  })
+})
+
+describe('authz plugin - delegation type and pseudo access', () => {
+  it('refuses to delegate an object type with no permission cap', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/delegation',
+      headers: authFull.headers,
+      payload: {
+        gid: G_CHILD.id,
+        oid: NS.id,
+        type: 'NAMESERVER',
+        perm_write: true,
+      },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /cannot be delegated/)
+  })
+
+  it('grants read on a zone holding a record delegated to the caller', async () => {
+    // limited user's group has no access to zone 4200, only to one record in it
+    await Delegation.create({
+      gid: G_OUTSIDE.id, oid: ZR_INTREE.id, type: 'ZONERECORD',
+      perm_write: false, perm_delete: false, perm_delegate: false,
+    })
+    try {
+      const res = await server.inject({
+        method: 'GET',
+        url: `/zone/${Z_INTREE.id}`,
+        headers: authLimited.headers,
+      })
+      assert.equal(res.statusCode, 200)
+
+      const zones = await server.inject({
+        method: 'GET',
+        url: '/zone',
+        headers: authLimited.headers,
+      })
+      assert.equal(zones.statusCode, 200)
+      assert.deepEqual(
+        zones.result.zone.map((zone) => zone.id).sort((a, b) => a - b),
+        [Z_INTREE.id, Z_OUTSIDE.id],
+      )
+
+      const records = await server.inject({
+        method: 'GET',
+        url: `/zone_record?zid=${Z_INTREE.id}`,
+        headers: authLimited.headers,
+      })
+      assert.equal(records.statusCode, 200)
+      assert.deepEqual(records.result.zone_record.map((record) => record.id), [ZR_INTREE.id])
+      assert.equal(records.result.meta.pagination.total, 1)
+
+      const write = await server.inject({
+        method: 'PUT',
+        url: `/zone/${Z_INTREE.id}`,
+        headers: authLimited.headers,
+        payload: { ttl: 7200 },
+      })
+      assert.equal(write.statusCode, 403)
+    } finally {
+      await Delegation.delete({
+        gid: G_OUTSIDE.id, oid: ZR_INTREE.id, type: 'ZONERECORD',
+      })
+    }
+  })
+})
+
+describe('authz plugin - deleted-state transitions', () => {
+  it('does not require delete permission when deleted is unchanged', async () => {
+    const perm = await Permission.get({ uid: U_FULL.id })
+    await Permission.put({ id: perm.id, zone_delete: false })
+    try {
+      const res = await server.inject({
+        method: 'PUT',
+        url: `/zone/${Z_INTREE.id}`,
+        headers: authFull.headers,
+        payload: { deleted: false, ttl: 3600 },
+      })
+      assert.equal(res.statusCode, 200)
+    } finally {
+      await Permission.put({ id: perm.id, zone_delete: true })
+    }
+  })
+})
+
+describe('authz plugin - self permission inheritance', () => {
+  it('ignores inherit_group_permissions on a self edit', async () => {
+    const before = await Permission.get({ uid: U_FULL.id })
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/user/${U_FULL.id}`,
+      headers: authFull.headers,
+      payload: { inherit_group_permissions: true },
+    })
+    assert.equal(res.statusCode, 200)
+
+    const after = await Permission.get({ uid: U_FULL.id })
+    assert.ok(after, 'the explicit permission row survives')
+    assert.equal(after.id, before.id)
   })
 })

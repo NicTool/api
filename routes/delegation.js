@@ -1,30 +1,37 @@
 import validate from '@nictool/validate'
 
+import Authz from '../lib/authz.js'
 import Delegation from '../lib/delegation.js'
 import Permission from '../lib/permission/index.js'
 import { meta } from '../lib/util.js'
 
+const DELEGABLE_RESOURCE = {
+  ZONE: 'zone',
+  ZONERECORD: 'zonerecord',
+}
+
 const DELEG_PERM_CAP = {
   ZONE: {
     perm_write: ['zone', 'write'],
-    perm_delete: ['zone', 'delete'],
     perm_delegate: ['zone', 'delegate'],
     zone_perm_add_records: ['zonerecord', 'create'],
     zone_perm_delete_records: ['zonerecord', 'delete'],
   },
   ZONERECORD: {
     perm_write: ['zonerecord', 'write'],
-    perm_delete: ['zonerecord', 'delete'],
     perm_delegate: ['zonerecord', 'delegate'],
   },
 }
 
-function capDelegationPerms(payload, perm, mode) {
+function capDelegationPerms(payload, perm, sourceDelegation, mode) {
   const capMap = DELEG_PERM_CAP[payload.type]
   if (!capMap) return
   for (const [field, [resource, action]] of Object.entries(capMap)) {
     if (payload[field] === undefined) continue
-    if (perm[resource]?.[action] !== true) {
+    if (
+      perm[resource]?.[action] !== true
+      || (sourceDelegation && sourceDelegation[field] !== 1)
+    ) {
       if (mode === 'create') payload[field] = false
       else delete payload[field]
     }
@@ -37,6 +44,7 @@ function DelegationRoutes(server) {
       method: 'GET',
       path: '/delegation',
       options: {
+        app: { permission: { resource: 'zone', action: 'readDelegation' } },
         validate: {
           query: validate.delegation.GET_req,
         },
@@ -71,6 +79,7 @@ function DelegationRoutes(server) {
         app: { permission: { resource: 'zone', action: 'delegate', idFrom: 'payload.oid' } },
         validate: {
           payload: validate.delegation.POST,
+          options: { noDefaults: true },
         },
         response: {
           schema: validate.delegation.GET_res,
@@ -80,7 +89,9 @@ function DelegationRoutes(server) {
       handler: async (request, h) => {
         const { user } = request.auth.credentials
         const perm = await Permission.getEffective(user.id)
-        capDelegationPerms(request.payload, perm, 'create')
+        const sourceDelegation = await sourceDelegationFor(request)
+        capDelegationPerms(request.payload, perm, sourceDelegation, 'create')
+        setActor(request)
 
         const result = await Delegation.create(request.payload)
 
@@ -117,7 +128,7 @@ function DelegationRoutes(server) {
       method: 'PUT',
       path: '/delegation',
       options: {
-        app: { permission: { resource: 'zone', action: 'delegate', idFrom: 'payload.oid' } },
+        app: { permission: { resource: 'zone', action: 'editDelegation', idFrom: 'payload.oid' } },
         validate: {
           payload: validate.delegation.PUT,
         },
@@ -129,7 +140,8 @@ function DelegationRoutes(server) {
       handler: async (request, h) => {
         const { user } = request.auth.credentials
         const perm = await Permission.getEffective(user.id)
-        capDelegationPerms(request.payload, perm, 'edit')
+        capDelegationPerms(request.payload, perm, null, 'edit')
+        setActor(request)
 
         const result = await Delegation.put(request.payload)
 
@@ -166,10 +178,9 @@ function DelegationRoutes(server) {
       method: 'DELETE',
       path: '/delegation',
       options: {
-        app: { permission: { resource: 'zone', action: 'delegate', idFrom: 'query.oid' } },
+        app: { permission: { resource: 'zone', action: 'deleteDelegation', idFrom: 'query.oid' } },
         validate: {
           query: validate.delegation.DELETE,
-          failAction: 'log',
         },
         response: {
           schema: validate.delegation.GET_res,
@@ -181,6 +192,8 @@ function DelegationRoutes(server) {
           gid: request.query.gid,
           oid: request.query.oid,
           type: request.query.type,
+          delegated_by_id: request.auth.credentials.user.id,
+          delegated_by_name: request.auth.credentials.user.username,
         }
 
         const result = await Delegation.delete(args)
@@ -209,6 +222,25 @@ function DelegationRoutes(server) {
       },
     },
   ])
+}
+
+function setActor(request) {
+  request.payload.delegated_by_id = request.auth.credentials.user.id
+  request.payload.delegated_by_name = request.auth.credentials.user.username
+}
+
+async function sourceDelegationFor(request) {
+  const resource = DELEGABLE_RESOURCE[request.payload.type]
+  if (!resource) return null
+  const gid = await Authz.getObjectGroupId(resource, request.payload.oid)
+  if (gid !== null && await Authz.isInGroupTree(request.auth.credentials.group.id, gid)) {
+    return null
+  }
+  return Authz.getDelegateAccess(
+    request.auth.credentials.group.id,
+    request.payload.oid,
+    resource,
+  )
 }
 
 export default DelegationRoutes

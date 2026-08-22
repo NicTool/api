@@ -16,6 +16,14 @@ const PERM_FIELDS = new Set([
   'self_write', 'usable_ns',
 ])
 
+const GROUP_POST_FIELDS = new Set([
+  'id', 'name', 'parent_gid', 'deleted', 'usable_ns',
+])
+
+const GROUP_PUT_FIELDS = new Set([
+  'name', 'parent_gid', 'deleted', 'usable_ns',
+])
+
 function extractPermFields(payload) {
   const permFields = {}
   for (const key of Object.keys(payload)) {
@@ -27,12 +35,23 @@ function extractPermFields(payload) {
   return permFields
 }
 
+function pickFields(payload, fields) {
+  return Object.fromEntries(Object.entries(payload).filter(([key]) => fields.has(key)))
+}
+
 function GroupRoutes(server) {
   server.route([
     {
       method: 'GET',
       path: '/group',
       options: {
+        app: {
+          permission: {
+            resource: 'group',
+            action: 'read',
+            list: { resource: 'group', idFrom: 'query.parent_gid', defaultToGroup: true },
+          },
+        },
         validate: {
           query: validate.group.GET_list_req,
         },
@@ -46,7 +65,7 @@ function GroupRoutes(server) {
           deleted: request.query.deleted === true ? 1 : 0,
           include_subgroups: request.query.include_subgroups === true,
         }
-        if (request.query.parent_gid !== undefined) getArgs.parent_gid = request.query.parent_gid
+        getArgs.parent_gid = request.query.parent_gid ?? request.auth.credentials.group.id
         if (request.query.name !== undefined) getArgs.name = request.query.name
 
         const groups = await Group.get(getArgs)
@@ -112,7 +131,7 @@ function GroupRoutes(server) {
         request.payload = Authz.capPermissions(userPerm, request.payload)
 
         const permFields = extractPermFields(request.payload)
-        const gid = await Group.create(request.payload)
+        const gid = await Group.create(pickFields(request.payload, GROUP_POST_FIELDS))
 
         if (Object.keys(permFields).length > 0) {
           const perm = await Permission.get({ gid })
@@ -136,7 +155,14 @@ function GroupRoutes(server) {
       method: 'PUT',
       path: '/group/{id}',
       options: {
-        app: { permission: { resource: 'group', action: 'write', idFrom: 'params.id' } },
+        app: {
+          permission: {
+            resource: 'group',
+            action: 'write',
+            idFrom: 'params.id',
+            targetGroupFrom: 'payload.parent_gid',
+          },
+        },
         validate: {
           payload: validate.group.PUT,
           options: { allowUnknown: true },
@@ -151,15 +177,15 @@ function GroupRoutes(server) {
         const id = parseInt(request.params.id, 10)
         const { user } = request.auth.credentials
         const userPerm = await Permission.getEffective(user.id)
-        request.payload = Authz.capPermissions(userPerm, request.payload)
+        const existingPerm = await Permission.get({ gid: id })
+        request.payload = Authz.capPermissions(userPerm, request.payload, existingPerm)
 
         const permFields = extractPermFields(request.payload)
         if (Object.keys(permFields).length > 0) {
-          const perm = await Permission.get({ gid: id })
-          if (perm) await Permission.put({ id: perm.id, ...permFields })
+          if (existingPerm) await Permission.put({ id: existingPerm.id, ...permFields })
         }
 
-        await Group.put({ ...request.payload, id })
+        await Group.put({ ...pickFields(request.payload, GROUP_PUT_FIELDS), id })
 
         const groups = await Group.get({ id })
 
