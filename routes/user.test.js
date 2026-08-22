@@ -74,6 +74,19 @@ describe('user routes', () => {
     assert.equal(res.statusCode, 201)
   })
 
+  it('GET /user searches and paginates', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/user?gid=${userCase.gid}&search=${userCase.username}2&exact_match=true&limit=10&offset=0&sort_by=username&sort_dir=desc`,
+      headers: auth.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    assert.deepEqual(res.result.user.map((u) => u.username), [`${userCase.username}2`])
+    assert.equal(res.result.meta.pagination.filtered, 1)
+    assert.equal(res.result.meta.pagination.limit, 10)
+    assert.equal(res.result.meta.pagination.offset, 0)
+  })
+
   it(`GET /user/${userId2}`, async () => {
     const res = await server.inject({
       method: 'GET',

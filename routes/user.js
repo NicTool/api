@@ -77,9 +77,27 @@ function UserRoutes(server) {
           gid: parseInt(gid, 10),
           deleted: request.query.deleted ?? false,
           include_subgroups: request.query.include_subgroups === true,
+          limit: Number.isInteger(request.query.limit) ? request.query.limit : 1000,
         }
 
-        const users = await User.get(getArgs)
+        if (request.query.search) getArgs.search = request.query.search
+        if (request.query.exact_match === true) getArgs.exact_match = true
+        if (Number.isInteger(request.query.offset)) getArgs.offset = request.query.offset
+        if (request.query.sort_by) getArgs.sort_by = request.query.sort_by
+        if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
+
+        const countArgs = {
+          gid: getArgs.gid,
+          deleted: getArgs.deleted,
+          ...(getArgs.search ? { search: getArgs.search } : {}),
+          ...(getArgs.exact_match ? { exact_match: true } : {}),
+        }
+        const totalArgs = { gid: getArgs.gid, deleted: getArgs.deleted }
+        const [users, filtered, total] = await Promise.all([
+          User.get(getArgs),
+          User.count(countArgs),
+          User.count(totalArgs),
+        ])
         for (const u of users) prepareUserResponse(u)
 
         return h
@@ -88,6 +106,12 @@ function UserRoutes(server) {
             meta: {
               api: meta.api,
               msg: `users in group`,
+              pagination: {
+                total,
+                filtered,
+                limit: getArgs.limit,
+                offset: getArgs.offset ?? 0,
+              },
             },
           })
           .code(200)
