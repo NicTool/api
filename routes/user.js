@@ -2,8 +2,9 @@ import validate from '@nictool/validate'
 
 import User from '../lib/user/index.js'
 import Credentials from '../lib/user/credentials.js'
-import Authz from '../lib/authz.js'
+import Authz from '../lib/authz/index.js'
 import Permission from '../lib/permission/index.js'
+import { pageLimit } from '../lib/page.js'
 import { meta } from '../lib/util.js'
 
 const PERM_FIELDS = new Set([
@@ -77,7 +78,7 @@ function UserRoutes(server) {
           gid: parseInt(gid, 10),
           deleted: request.query.deleted ?? false,
           include_subgroups: request.query.include_subgroups === true,
-          limit: Number.isInteger(request.query.limit) ? request.query.limit : 1000,
+          limit: await pageLimit(request.query.limit),
         }
 
         if (request.query.search) getArgs.search = request.query.search

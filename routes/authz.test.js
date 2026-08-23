@@ -8,7 +8,7 @@ import Zone from '../lib/zone/index.js'
 import ZoneRecord from '../lib/zone_record/index.js'
 import Nameserver from '../lib/nameserver/index.js'
 import Permission from '../lib/permission/index.js'
-import Delegation from '../lib/delegation.js'
+import Delegation from '../lib/delegation/index.js'
 import Mysql from '../lib/mysql.js'
 
 const G_ROOT = {

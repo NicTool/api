@@ -2,8 +2,9 @@ import validate from '@nictool/validate'
 
 import ZoneRecord from '../lib/zone_record/index.js'
 import Zone from '../lib/zone/index.js'
-import Authz from '../lib/authz.js'
-import Audit from '../lib/audit.js'
+import Authz from '../lib/authz/index.js'
+import Audit from '../lib/audit/index.js'
+import { pageLimit } from '../lib/page.js'
 import { meta } from '../lib/util.js'
 
 async function zoneRecordResponseFailAction(request, h, err) {
@@ -56,7 +57,7 @@ function ZoneRecordRoutes(server) {
         const deleted = request.query.deleted === true ? 1 : 0
         const getArgs = {
           deleted,
-          limit: Number.isInteger(request.query.limit) ? request.query.limit : 1000,
+          limit: await pageLimit(request.query.limit),
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
         if (request.query.zid) getArgs.zid = parseInt(request.query.zid, 10)

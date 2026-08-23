@@ -1,7 +1,7 @@
 import validate from '@nictool/validate'
 
-import Authz from '../lib/authz.js'
-import Delegation from '../lib/delegation.js'
+import Authz from '../lib/authz/index.js'
+import Delegation from '../lib/delegation/index.js'
 import Permission from '../lib/permission/index.js'
 import { meta } from '../lib/util.js'
 

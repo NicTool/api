@@ -1,6 +1,6 @@
 import validate from '@nictool/validate'
 
-import Authz from '../lib/authz.js'
+import Authz from '../lib/authz/index.js'
 import Permission from '../lib/permission/index.js'
 import { meta } from '../lib/util.js'
 

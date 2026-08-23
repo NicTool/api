@@ -1,6 +1,6 @@
 import validate from '@nictool/validate'
 
-import Audit from '../lib/audit.js'
+import Audit from '../lib/audit/index.js'
 import Group from '../lib/group/index.js'
 import { meta } from '../lib/util.js'
 

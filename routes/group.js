@@ -3,7 +3,7 @@ import validate from '@nictool/validate'
 import Group from '../lib/group/index.js'
 import User from '../lib/user/index.js'
 import Zone from '../lib/zone/index.js'
-import Authz from '../lib/authz.js'
+import Authz from '../lib/authz/index.js'
 import Permission from '../lib/permission/index.js'
 import { meta } from '../lib/util.js'
 
