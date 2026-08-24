@@ -221,11 +221,16 @@ function ZoneRecordRoutes(server) {
             .code(404)
         }
 
+        let zones = await Zone.get({ id: zrs[0].zid })
+        if (zones.length === 0) zones = await Zone.get({ id: zrs[0].zid, deleted: true })
+        if (zones.length === 0) {
+          return h.response({ meta: { api: meta.api, msg: `I couldn't find that zone` } }).code(404)
+        }
+
         await ZoneRecord.delete({
           id: zrs[0].id,
           deleted: 1,
         })
-        const zones = await Zone.get({ id: zrs[0].zid })
         await Audit.logZoneRecord(
           request.auth.credentials.user,
           'deleted',

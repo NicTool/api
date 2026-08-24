@@ -6,6 +6,7 @@ import Group from '../lib/group/index.js'
 import User from '../lib/user/index.js'
 import Zone from '../lib/zone/index.js'
 import ZoneRecord from '../lib/zone_record/index.js'
+import Delegation from '../lib/delegation/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
 import { grantGroupPermissions } from './test/permissions.js'
@@ -18,6 +19,11 @@ const createdZoneRecordIds = []
 const testGroupId = 5094
 const testZoneId = 5095
 const testZoneRecordId = 5096
+const deletedParentRecordId = 5097
+const delegatedGroupId = 5098
+const delegatedZoneId = 5099
+const delegatedRecordId = 5100
+const hiddenRecordId = 5101
 
 const testZone = {
   ...zoneCase,
@@ -35,8 +41,40 @@ const testZoneRecord = {
   address: '203.0.113.6',
 }
 
+const deletedParentRecord = {
+  ...testZoneRecord,
+  id: deletedParentRecordId,
+  owner: 'deleted-parent.route-zr-delete.example.com.',
+}
+
+const delegatedZone = {
+  ...zoneCase,
+  id: delegatedZoneId,
+  gid: delegatedGroupId,
+  zone: 'delegated-scope.route.example.com',
+}
+
+const delegatedRecord = {
+  ...testZoneRecord,
+  id: delegatedRecordId,
+  zid: delegatedZoneId,
+  owner: 'allowed.delegated-scope.route.example.com.',
+}
+
+const hiddenRecord = {
+  ...delegatedRecord,
+  id: hiddenRecordId,
+  owner: 'hidden.delegated-scope.route.example.com.',
+}
+
 before(async () => {
+  await Delegation.delete({ gid: testGroupId, oid: delegatedRecordId, type: 'ZONERECORD' })
+  await ZoneRecord.destroy({ id: delegatedRecordId })
+  await ZoneRecord.destroy({ id: hiddenRecordId })
+  await Zone.destroy({ id: delegatedZoneId })
+  await Group.destroy({ id: delegatedGroupId })
   await ZoneRecord.destroy({ id: testZoneRecordId })
+  await ZoneRecord.destroy({ id: deletedParentRecordId })
   await Zone.destroy({ id: testZoneId })
 
   const testGroup = { ...groupCase, id: testGroupId }
@@ -53,17 +91,39 @@ before(async () => {
   await grantGroupPermissions(testGroup.id)
   await Zone.create(testZone)
   await ZoneRecord.create(testZoneRecord)
+  await ZoneRecord.create(deletedParentRecord)
+  await Group.create({
+    ...groupCase,
+    id: delegatedGroupId,
+    name: 'delegated-owner',
+  })
+  await Zone.create(delegatedZone)
+  await ZoneRecord.create(delegatedRecord)
+  await ZoneRecord.create(hiddenRecord)
+  await Delegation.create({
+    gid: testGroupId,
+    oid: delegatedRecordId,
+    type: 'ZONERECORD',
+    delegated_by_id: testGroupId,
+    delegated_by_name: `route-zr-delete-${testGroupId}`,
+  })
 
   server = await init()
 })
 
 after(async () => {
+  await Delegation.delete({ gid: testGroupId, oid: delegatedRecordId, type: 'ZONERECORD' })
+  await ZoneRecord.destroy({ id: delegatedRecordId })
+  await ZoneRecord.destroy({ id: hiddenRecordId })
+  await Zone.destroy({ id: delegatedZoneId })
+  await Group.destroy({ id: delegatedGroupId })
   for (const id of createdZoneRecordIds) {
     await ZoneRecord.destroy({ id })
   }
   await ZoneRecord.destroy({ id: testZoneRecordId })
+  await ZoneRecord.destroy({ id: deletedParentRecordId })
   await Zone.destroy({ id: testZoneId })
-  await server.stop()
+  if (server) await server.stop()
 })
 
 describe('zone_record routes', () => {
@@ -105,6 +165,28 @@ describe('zone_record routes', () => {
     assert.equal(res.result.zone_record[0].owner, 'new.route-zr-delete.example.com.')
 
     createdZoneRecordIds.push(res.result.zone_record[0].id)
+  })
+
+  it('limits a delegated zone collection to delegated records', async () => {
+    const zones = await server.inject({
+      method: 'GET',
+      url: `/zone?gid=${testGroupId}&search=delegated-scope`,
+      headers: auth.headers,
+    })
+    assert.equal(zones.statusCode, 200)
+    assert.deepEqual(zones.result.zone.map((zone) => zone.id), [delegatedZoneId])
+    assert.equal(zones.result.meta.pagination.total, 2)
+    assert.equal(zones.result.meta.pagination.filtered, 1)
+
+    const records = await server.inject({
+      method: 'GET',
+      url: `/zone_record?zid=${delegatedZoneId}`,
+      headers: auth.headers,
+    })
+    assert.equal(records.statusCode, 200)
+    assert.deepEqual(records.result.zone_record.map((record) => record.id), [delegatedRecordId])
+    assert.equal(records.result.meta.pagination.total, 1)
+    assert.equal(records.result.meta.pagination.filtered, 1)
   })
 
   it('POST /zone_record accepts omitted ttl and stores 0', async () => {
@@ -154,16 +236,6 @@ describe('zone_record routes', () => {
     })
 
     assert.equal(res.statusCode, 200)
-    if (res.result.zone_record.length !== 2) {
-      const all = await ZoneRecord.get({ zid: testZoneId })
-      console.error('DIAGZR createdIds=', JSON.stringify(createdZoneRecordIds))
-      console.error('DIAGZR limit-query result=', JSON.stringify(res.result.zone_record))
-      console.error('DIAGZR filtered=', res.result.meta.pagination.filtered)
-      console.error(
-        'DIAGZR all-records-for-zid=',
-        JSON.stringify(all.map((r) => ({ id: r.id, zid: r.zid, owner: r.owner, deleted: r.deleted }))),
-      )
-    }
     assert.equal(res.result.zone_record.length, 2)
     assert.equal(res.result.zone_record[0].owner, `${token}0.route-zr-delete.example.com.`)
     assert.equal(res.result.meta.pagination.filtered, 3)
@@ -225,6 +297,24 @@ describe('zone_record routes', () => {
     })
 
     assert.equal(res.statusCode, 404)
+  })
+
+  it('DELETE /zone_record logs against a soft-deleted parent zone', async () => {
+    await Zone.delete({ id: testZoneId, deleted: true })
+    let res
+    try {
+      res = await server.inject({
+        method: 'DELETE',
+        url: `/zone_record/${deletedParentRecordId}`,
+        headers: auth.headers,
+      })
+    } finally {
+      await Zone.delete({ id: testZoneId, deleted: false })
+    }
+
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.zone_record[0].id, deletedParentRecordId)
+    assert.equal(res.result.zone_record[0].deleted, true)
   })
 
   it('DELETE /session', async () => {
