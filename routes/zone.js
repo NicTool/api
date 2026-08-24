@@ -1,6 +1,7 @@
 import validate from '@nictool/validate'
 
 import Zone from '../lib/zone/index.js'
+import { ZoneNameConflictError } from '../lib/zone/store/base.js'
 import Group from '../lib/group/index.js'
 import Authz from '../lib/authz/index.js'
 import Audit from '../lib/audit/index.js'
@@ -120,19 +121,13 @@ function ZoneRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const bare = request.payload.zone.replace(/\.$/, '')
-        const spellings = [...new Set([bare, `${bare}.`])]
-        const existing = await Promise.all(spellings.map((zone) => Zone.get({ zone })))
-        if (existing.some((zones) => zones.length > 0)) {
-          return h
-            .response({
-              zone: [],
-              meta: { api: meta.api, msg: `Zone is already taken` },
-            })
-            .code(409)
+        let id
+        try {
+          id = await Zone.create(request.payload)
+        } catch (err) {
+          if (err instanceof ZoneNameConflictError) return zoneNameConflict(h)
+          throw err
         }
-
-        const id = await Zone.create(request.payload)
 
         const zones = await Zone.get({ id })
         await Audit.logZone(request.auth.credentials.user, 'added', zones[0])
@@ -181,7 +176,12 @@ function ZoneRoutes(server) {
         const payload = Object.fromEntries(
           Object.entries(request.payload).filter(([key]) => ZONE_PUT_FIELDS.has(key)),
         )
-        await Zone.put({ id, ...payload })
+        try {
+          await Zone.put({ id, ...payload })
+        } catch (err) {
+          if (err instanceof ZoneNameConflictError) return zoneNameConflict(h)
+          throw err
+        }
 
         let updated = await Zone.get({ id })
         if (updated.length === 0) updated = await Zone.get({ id, deleted: true })
@@ -273,6 +273,13 @@ function zoneAuditAction(previous, payload) {
   if (payload.deleted === false && previous.deleted === true) return 'recovered'
   if (payload.gid !== undefined && payload.gid !== previous.gid) return 'moved'
   return 'modified'
+}
+
+function zoneNameConflict(h) {
+  return h.response({
+    zone: [],
+    meta: { api: meta.api, msg: `Zone is already taken` },
+  }).code(409)
 }
 
 export default ZoneRoutes

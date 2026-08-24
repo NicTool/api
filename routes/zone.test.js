@@ -14,6 +14,9 @@ import nsCase from './test/zone.json' with { type: 'json' }
 let server
 let case2Id = 4094
 const duplicateId = 4092
+const duplicateCaseId = 4089
+const concurrentDuplicateIds = [4087, 4088]
+const recoveryDuplicateId = 4086
 
 const subGroup = { id: 4090, parent_gid: groupCase.id, name: 'sub.route.example.com' }
 const subZone = { ...nsCase, id: 4091, gid: subGroup.id, zone: 'sub.route.example.com.' }
@@ -22,6 +25,9 @@ before(async () => {
   await Zone.destroy({ id: nsCase.id })
   await Zone.destroy({ id: case2Id })
   await Zone.destroy({ id: duplicateId })
+  await Zone.destroy({ id: duplicateCaseId })
+  await Zone.destroy({ id: recoveryDuplicateId })
+  for (const id of concurrentDuplicateIds) await Zone.destroy({ id })
   await Zone.destroy({ id: subZone.id })
   // Destroy the subgroup before recreating it: a lingering row would make
   // Group.create early-return and skip addToSubgroups, leaving the
@@ -41,6 +47,9 @@ before(async () => {
 
 after(async () => {
   await Zone.destroy({ id: duplicateId })
+  await Zone.destroy({ id: duplicateCaseId })
+  await Zone.destroy({ id: recoveryDuplicateId })
+  for (const id of concurrentDuplicateIds) await Zone.destroy({ id })
   await Zone.destroy({ id: subZone.id })
   await Group.destroy({ id: subGroup.id })
   await Group.destroy({ id: case2Id })
@@ -96,6 +105,54 @@ describe('zone routes', () => {
     assert.equal(res.statusCode, 409)
     assert.deepEqual(res.result.zone, [])
     assert.match(res.result.meta.msg, /already taken/)
+  })
+
+  it('POST /zone rejects a case-only duplicate name', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/zone',
+      headers: auth.headers,
+      payload: { ...nsCase, id: duplicateCaseId, zone: `${nsCase.zone.toUpperCase()}.` },
+    })
+    await Zone.destroy({ id: duplicateCaseId })
+
+    assert.equal(res.statusCode, 409)
+    assert.deepEqual(res.result.zone, [])
+  })
+
+  it('POST /zone admits only one concurrent canonical name', async () => {
+    const responses = await Promise.all(concurrentDuplicateIds.map((id, index) => server.inject({
+      method: 'POST',
+      url: '/zone',
+      headers: auth.headers,
+      payload: {
+        ...nsCase,
+        id,
+        zone: index === 0 ? 'concurrent.example.com' : 'CONCURRENT.EXAMPLE.COM.',
+      },
+    })))
+    for (const id of concurrentDuplicateIds) await Zone.destroy({ id })
+
+    assert.deepEqual(responses.map((res) => res.statusCode).sort(), [201, 409])
+  })
+
+  it('PUT /zone refuses recovery beside an active canonical name', async () => {
+    await Zone.create({
+      ...nsCase,
+      id: recoveryDuplicateId,
+      zone: `${nsCase.zone.toUpperCase()}.`,
+      deleted: true,
+    })
+
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${recoveryDuplicateId}`,
+      headers: auth.headers,
+      payload: { deleted: false },
+    })
+
+    assert.equal(res.statusCode, 409)
+    assert.equal((await Zone.get({ id: recoveryDuplicateId, deleted: true }))[0].deleted, true)
   })
 
   it(`PUT /zone/${nsCase.id} moves it to another group`, async () => {
