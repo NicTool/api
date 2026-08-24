@@ -3,6 +3,7 @@ import { describe, it, before, after } from 'node:test'
 
 import { init } from './index.js'
 import Group from '../lib/group/index.js'
+import Permission from '../lib/permission/index.js'
 import User from '../lib/user/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
@@ -17,6 +18,8 @@ before(async () => {
   await Group.create(groupCase)
   await User.create(userCase)
   await grantGroupPermissions(groupCase.id)
+  const permissions = await Permission.getEffective(userCase.id)
+  assert.equal(permissions.group.create, true)
 })
 
 after(async () => {
@@ -66,7 +69,7 @@ describe('group routes', () => {
       headers: auth.headers,
       payload: testCase,
     })
-    assert.equal(res.statusCode, 201)
+    assert.equal(res.statusCode, 201, JSON.stringify(res.result))
   })
 
   it(`GET /group/${case2Id}`, async () => {
