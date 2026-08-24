@@ -90,10 +90,15 @@ function UserRoutes(server) {
         const countArgs = {
           gid: getArgs.gid,
           deleted: getArgs.deleted,
+          include_subgroups: getArgs.include_subgroups,
           ...(getArgs.search ? { search: getArgs.search } : {}),
           ...(getArgs.exact_match ? { exact_match: true } : {}),
         }
-        const totalArgs = { gid: getArgs.gid, deleted: getArgs.deleted }
+        const totalArgs = {
+          gid: getArgs.gid,
+          deleted: getArgs.deleted,
+          include_subgroups: getArgs.include_subgroups,
+        }
         const [users, filtered, total] = await Promise.all([
           User.get(getArgs),
           User.count(countArgs),

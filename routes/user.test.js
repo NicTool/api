@@ -4,6 +4,8 @@ import { describe, it, before, after } from 'node:test'
 import { init } from './index.js'
 import User from '../lib/user/index.js'
 import Group from '../lib/group/index.js'
+import Permission from '../lib/permission/index.js'
+import Authz from '../lib/authz/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
 import { grantGroupPermissions } from './test/permissions.js'
@@ -66,6 +68,7 @@ describe('user routes', () => {
     const testCase = JSON.parse(JSON.stringify(userCase))
     testCase.id = userId2 // make it unique
     testCase.username = `${testCase.username}2`
+    testCase.inherit_group_permissions = false
     delete testCase.deleted
 
     const res = await server.inject({
@@ -99,6 +102,18 @@ describe('user routes', () => {
     })
     assert.equal(moved.statusCode, 200)
     assert.equal((await User.get({ id: userId2 }))[0].gid, moveGroup.id)
+    const movedPermission = await Permission.get({ uid: userId2 })
+    assert.equal(movedPermission.group.id, moveGroup.id)
+    assert.equal((await Authz.permissionRecord(movedPermission.id)).target_gid, moveGroup.id)
+
+    const listed = await server.inject({
+      method: 'GET',
+      url: `/user?gid=${groupCase.id}&include_subgroups=true`,
+      headers: auth.headers,
+    })
+    assert.equal(listed.statusCode, 200)
+    assert.ok(listed.result.user.some((u) => u.id === userId2))
+    assert.equal(listed.result.meta.pagination.total, listed.result.user.length)
 
     const restored = await server.inject({
       method: 'PUT',
@@ -108,6 +123,9 @@ describe('user routes', () => {
     })
     assert.equal(restored.statusCode, 200)
     assert.equal((await User.get({ id: userId2 }))[0].gid, groupCase.id)
+    const restoredPermission = await Permission.get({ uid: userId2 })
+    assert.equal(restoredPermission.group.id, groupCase.id)
+    assert.equal((await Authz.permissionRecord(restoredPermission.id)).target_gid, groupCase.id)
   })
 
   it(`GET /user/${userId2}`, async () => {
