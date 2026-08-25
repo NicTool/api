@@ -259,6 +259,12 @@ function UserRoutes(server) {
 
         const permFields = extractPermFields(request.payload)
 
+        // self_write grants profile edits only; own permissions change via /permission,
+        // which denies self-targeted writes
+        if (id === user.id) {
+          for (const field of Object.keys(permFields)) delete permFields[field]
+        }
+
         request.payload = pickFields(request.payload, USER_PUT_FIELDS)
 
         // switching yourself back to inherited permissions adopts the group's,

@@ -586,8 +586,51 @@ describe('authz plugin - zone record delegation', () => {
     assert.equal(record.zid, Z_INTREE.id)
   })
 
-  it('does not require create permission when an edit repeats the current zone id', async () => {
-    const perm = await Permission.get({ uid: U_FULL.id })
+  it('403 when moving a record out of a delegated zone without delete-record permission', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${ZR_OUTSIDE.id}`,
+      headers: authFull.headers,
+      payload: { zid: Z_INTREE.id },
+    })
+    assert.equal(res.statusCode, 403)
+
+    const [record] = await ZoneRecord.get({ id: ZR_OUTSIDE.id })
+    assert.equal(record.zid, Z_OUTSIDE.id)
+  })
+
+  it('moves a record between zones when both sides permit', async () => {
+    await Delegation.put({
+      gid: G_ROOT.id, oid: Z_OUTSIDE.id, type: 'ZONE',
+      zone_perm_add_records: true, zone_perm_delete_records: true,
+    })
+    try {
+      let res = await server.inject({
+        method: 'PUT',
+        url: `/zone_record/${ZR_INTREE_OTHER.id}`,
+        headers: authFull.headers,
+        payload: { zid: Z_OUTSIDE.id },
+      })
+      assert.equal(res.statusCode, 200)
+      assert.equal((await ZoneRecord.get({ id: ZR_INTREE_OTHER.id }))[0].zid, Z_OUTSIDE.id)
+
+      res = await server.inject({
+        method: 'PUT',
+        url: `/zone_record/${ZR_INTREE_OTHER.id}`,
+        headers: authFull.headers,
+        payload: { zid: Z_INTREE.id },
+      })
+      assert.equal(res.statusCode, 200)
+      assert.equal((await ZoneRecord.get({ id: ZR_INTREE_OTHER.id }))[0].zid, Z_INTREE.id)
+    } finally {
+      await Delegation.put({
+        gid: G_ROOT.id, oid: Z_OUTSIDE.id, type: 'ZONE',
+        zone_perm_add_records: false, zone_perm_delete_records: false,
+      })
+    }
+  })
+
+  it('does not require create permission when an edit repeats the current zone id', async () => {    const perm = await Permission.get({ uid: U_FULL.id })
     await Permission.put({ id: perm.id, zonerecord_create: false })
     try {
       const res = await server.inject({
@@ -1077,5 +1120,20 @@ describe('authz plugin - self permission inheritance', () => {
     const after = await Permission.get({ uid: U_FULL.id })
     assert.ok(after, 'the explicit permission row survives')
     assert.equal(after.id, before.id)
+  })
+
+  it('strips permission fields from a self edit', async () => {
+    const before = await Permission.get({ uid: U_FULL.id })
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/user/${U_FULL.id}`,
+      headers: authFull.headers,
+      payload: { first_name: 'Selfish', zone_write: false },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal((await User.get({ id: U_FULL.id }))[0].first_name, 'Selfish')
+
+    const after = await Permission.get({ uid: U_FULL.id })
+    assert.equal(after.zone.write, before.zone.write)
   })
 })
