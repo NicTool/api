@@ -93,7 +93,7 @@ async function setup() {
       sub: false,
       nbf: true,
       exp: true,
-      maxAgeSec: 14400, // 4 hours
+      maxAgeSec: 28800, // the token's ttl; idle expiry is the session's job
       timeSkewSec: 15,
     },
     httpAuthScheme: 'Bearer',

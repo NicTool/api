@@ -5,14 +5,17 @@ import { init } from './index.js'
 import User from '../lib/user/index.js'
 import Group from '../lib/group/index.js'
 import Permission from '../lib/permission/index.js'
+import Session from '../lib/session/index.js'
 import Authz from '../lib/authz/index.js'
+import Mysql from '../lib/mysql.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
 import { grantGroupPermissions } from './test/permissions.js'
 import userCase from './test/user.json' with { type: 'json' }
 
 let server,
-  auth = { headers: {} }
+  auth = { headers: {} },
+  sessionId
 
 before(async () => {
   server = await init()
@@ -42,7 +45,32 @@ describe('user routes', () => {
       },
     })
     assert.ok(res.result.user.id)
+    sessionId = res.result.session.id
     auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
+  })
+
+  it('authenticated requests refresh session activity', async () => {
+    const stale = Math.floor(Date.now() / 1000) - 7200
+    await Mysql.execute(
+      'UPDATE nt_user_session SET last_access = ? WHERE nt_user_session_id = ?',
+      [stale, sessionId],
+    )
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/user',
+      headers: auth.headers,
+    })
+    assert.equal(res.statusCode, 200)
+
+    // the plugin's activity touch is fire-and-forget; give it a beat
+    let lastAccess = stale
+    for (let i = 0; i < 20 && lastAccess <= stale; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 25))
+      const session = await Session.get({ id: sessionId })
+      lastAccess = session?.last_access ?? stale
+    }
+    assert.ok(lastAccess > stale, 'last_access advanced past the stale value')
   })
 
   it('GET /user', async () => {
