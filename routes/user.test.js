@@ -28,7 +28,7 @@ const userId2 = 4094
 const moveGroup = { id: 4090, parent_gid: groupCase.id, name: 'user-move.route.example.com' }
 
 after(async () => {
-  User.destroy({ id: userId2 })
+  await User.destroy({ id: userId2 })
   await Group.destroy({ id: moveGroup.id })
   await server.stop()
 })
