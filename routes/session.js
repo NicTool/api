@@ -19,7 +19,6 @@ function SessionRoutes(server) {
       options: {
         response: {
           schema: validate.session.GET_res,
-          options: { allowUnknown: true },
         },
         tags: ['api'],
       },
@@ -30,7 +29,8 @@ function SessionRoutes(server) {
 
         const perm = await Permission.getEffective(user.id)
         const groupPerm = await Permission.getGroup({
-          uid: user.id, deleted: false,
+          uid: user.id,
+          deleted: false,
         })
         if (perm && groupPerm) {
           perm.nameserver.usable = groupPerm.nameserver?.usable ?? []
@@ -60,7 +60,6 @@ function SessionRoutes(server) {
         },
         response: {
           schema: validate.session.GET_res,
-          options: { allowUnknown: true },
         },
         tags: ['api'],
       },
@@ -97,7 +96,8 @@ function SessionRoutes(server) {
 
         const perm = await Permission.getEffective(account.user.id)
         const groupPerm = await Permission.getGroup({
-          uid: account.user.id, deleted: false,
+          uid: account.user.id,
+          deleted: false,
         })
         if (perm && groupPerm) {
           perm.nameserver.usable = groupPerm.nameserver?.usable ?? []

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+- audit: enforce route-specific queries and file-store exact matching
+- session: validate qualified usernames and permission responses
+- user: add subgroup group-name sorting and reject unknown writes
+- group/zone: validate permission controls and zone serial updates
+
 ### [3.0.3] - 2026-07-27
 
 - many updates for data stores and NS backends

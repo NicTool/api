@@ -111,4 +111,15 @@ describe('session routes', () => {
       })
     }
   })
+
+  it('rejects malformed qualified usernames', async () => {
+    for (const username of ['a'.repeat(51), `@${groupCase.name}`, 'valid@x', 'valid@-invalid']) {
+      const res = await server.inject({
+        method: 'POST',
+        url: '/session',
+        payload: { username, password: userCase.password },
+      })
+      assert.equal(res.statusCode, 400, username)
+    }
+  })
 })

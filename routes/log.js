@@ -9,7 +9,7 @@ function LogRoutes(server) {
     {
       method: 'GET',
       path: '/log/global',
-      options: groupLogOptions(),
+      options: groupLogOptions(validate.log.GET_global_req),
       handler: async (request, h) => {
         const gids = await groupScope(request)
         return logResponse(h, await Audit.listGlobal({ ...request.query, gids }))
@@ -18,7 +18,7 @@ function LogRoutes(server) {
     {
       method: 'GET',
       path: '/log/zone',
-      options: groupLogOptions(),
+      options: groupLogOptions(validate.log.GET_zone_req),
       handler: async (request, h) => {
         const gids = await groupScope(request)
         return logResponse(h, await Audit.listZones({ ...request.query, gids }))
@@ -29,19 +29,16 @@ function LogRoutes(server) {
       path: '/log/zone_record',
       options: {
         app: { permission: { resource: 'zone', action: 'read', idFrom: 'query.zid' } },
-        validate: { query: validate.log.GET_req },
+        validate: { query: validate.log.GET_zone_record_req },
         response: { schema: validate.log.GET_res },
         tags: ['api'],
       },
-      handler: async (request, h) => logResponse(
-        h,
-        await Audit.listZoneRecords(request.query),
-      ),
+      handler: async (request, h) => logResponse(h, await Audit.listZoneRecords(request.query)),
     },
   ])
 }
 
-function groupLogOptions() {
+function groupLogOptions(querySchema) {
   return {
     app: {
       permission: {
@@ -50,7 +47,7 @@ function groupLogOptions() {
         list: { resource: 'group', idFrom: 'query.gid', defaultToGroup: true },
       },
     },
-    validate: { query: validate.log.GET_req },
+    validate: { query: querySchema },
     response: { schema: validate.log.GET_res },
     tags: ['api'],
   }
@@ -62,19 +59,21 @@ async function groupScope(request) {
 }
 
 function logResponse(h, result) {
-  return h.response({
-    log: result.rows,
-    meta: {
-      api: meta.api,
-      msg: 'audit entries',
-      pagination: {
-        total: result.total,
-        filtered: result.filtered,
-        limit: result.limit,
-        offset: result.offset,
+  return h
+    .response({
+      log: result.rows,
+      meta: {
+        api: meta.api,
+        msg: 'audit entries',
+        pagination: {
+          total: result.total,
+          filtered: result.filtered,
+          limit: result.limit,
+          offset: result.offset,
+        },
       },
-    },
-  }).code(200)
+    })
+    .code(200)
 }
 
 export default LogRoutes

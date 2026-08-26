@@ -82,6 +82,16 @@ describe('group routes', () => {
     assert.equal(res.result.group[0].id, case2Id)
   })
 
+  it(`PUT /group/${case2Id} rejects unknown permission controls`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/group/${case2Id}`,
+      headers: auth.headers,
+      payload: { definitely_not_a_permission: true },
+    })
+    assert.equal(res.statusCode, 400)
+  })
+
   it(`DELETE /group/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'DELETE',

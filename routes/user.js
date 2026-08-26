@@ -8,22 +8,47 @@ import { pageLimit } from '../lib/page.js'
 import { meta } from '../lib/util.js'
 
 const PERM_FIELDS = new Set([
-  'group_write', 'group_create', 'group_delete',
-  'zone_write', 'zone_create', 'zone_delegate', 'zone_delete',
-  'zonerecord_write', 'zonerecord_create', 'zonerecord_delegate', 'zonerecord_delete',
-  'user_write', 'user_create', 'user_delete',
-  'nameserver_write', 'nameserver_create', 'nameserver_delete',
-  'self_write', 'usable_ns',
+  'group_write',
+  'group_create',
+  'group_delete',
+  'zone_write',
+  'zone_create',
+  'zone_delegate',
+  'zone_delete',
+  'zonerecord_write',
+  'zonerecord_create',
+  'zonerecord_delegate',
+  'zonerecord_delete',
+  'user_write',
+  'user_create',
+  'user_delete',
+  'nameserver_write',
+  'nameserver_create',
+  'nameserver_delete',
+  'self_write',
+  'usable_ns',
 ])
 
 const USER_POST_FIELDS = new Set([
-  'id', 'gid', 'first_name', 'last_name', 'username', 'email', 'password',
+  'id',
+  'gid',
+  'first_name',
+  'last_name',
+  'username',
+  'email',
+  'password',
   'inherit_group_permissions',
 ])
 
 const USER_PUT_FIELDS = new Set([
-  'gid', 'first_name', 'last_name', 'username', 'email', 'password',
-  'deleted', 'inherit_group_permissions',
+  'gid',
+  'first_name',
+  'last_name',
+  'username',
+  'email',
+  'password',
+  'deleted',
+  'inherit_group_permissions',
 ])
 
 function extractPermFields(payload) {
@@ -156,7 +181,8 @@ function UserRoutes(server) {
 
         const gid = prepareUserResponse(users[0])
         const groupPerm = await Permission.getGroup({
-          uid: getArgs.id, deleted: false,
+          uid: getArgs.id,
+          deleted: false,
         })
         if (users[0].permissions && groupPerm) {
           users[0].permissions.nameserver.usable = groupPerm.nameserver?.usable ?? []
@@ -181,7 +207,6 @@ function UserRoutes(server) {
         app: { permission: { resource: 'user', action: 'create' } },
         validate: {
           payload: validate.user.POST,
-          options: { allowUnknown: true },
         },
         response: {
           schema: validate.user.GET_res,
@@ -230,7 +255,6 @@ function UserRoutes(server) {
         },
         validate: {
           payload: validate.user.PUT,
-          options: { allowUnknown: true },
         },
         response: {
           schema: validate.user.GET_res,
@@ -248,13 +272,8 @@ function UserRoutes(server) {
         request.payload = Authz.capPermissions(userPerm, request.payload, existingPerm)
 
         const hasPermFields = Object.keys(request.payload).some((field) => PERM_FIELDS.has(field))
-        if (
-          request.payload.inherit_group_permissions === false
-          || (!existingPerm && hasPermFields)
-        ) {
-          request.payload = Authz.preserveUnmanagedPermissions(
-            userPerm, request.payload, effectivePerm,
-          )
+        if (request.payload.inherit_group_permissions === false || (!existingPerm && hasPermFields)) {
+          request.payload = Authz.preserveUnmanagedPermissions(userPerm, request.payload, effectivePerm)
         }
 
         const permFields = extractPermFields(request.payload)
@@ -272,9 +291,7 @@ function UserRoutes(server) {
         if (id === user.id) delete request.payload.inherit_group_permissions
 
         if (request.payload.inherit_group_permissions !== undefined) {
-          const after = request.payload.inherit_group_permissions
-            ? groupPerm
-            : existingPerm ?? {}
+          const after = request.payload.inherit_group_permissions ? groupPerm : (existingPerm ?? {})
           if (!Authz.canTransitionPermissions(userPerm, effectivePerm, after)) {
             delete request.payload.inherit_group_permissions
           } else if (request.payload.inherit_group_permissions === true) {

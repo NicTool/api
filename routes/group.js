@@ -8,21 +8,30 @@ import Permission from '../lib/permission/index.js'
 import { meta } from '../lib/util.js'
 
 const PERM_FIELDS = new Set([
-  'group_write', 'group_create', 'group_delete',
-  'zone_write', 'zone_create', 'zone_delegate', 'zone_delete',
-  'zonerecord_write', 'zonerecord_create', 'zonerecord_delegate', 'zonerecord_delete',
-  'user_write', 'user_create', 'user_delete',
-  'nameserver_write', 'nameserver_create', 'nameserver_delete',
-  'self_write', 'usable_ns',
+  'group_write',
+  'group_create',
+  'group_delete',
+  'zone_write',
+  'zone_create',
+  'zone_delegate',
+  'zone_delete',
+  'zonerecord_write',
+  'zonerecord_create',
+  'zonerecord_delegate',
+  'zonerecord_delete',
+  'user_write',
+  'user_create',
+  'user_delete',
+  'nameserver_write',
+  'nameserver_create',
+  'nameserver_delete',
+  'self_write',
+  'usable_ns',
 ])
 
-const GROUP_POST_FIELDS = new Set([
-  'id', 'name', 'parent_gid', 'deleted', 'usable_ns',
-])
+const GROUP_POST_FIELDS = new Set(['id', 'name', 'parent_gid', 'deleted', 'usable_ns'])
 
-const GROUP_PUT_FIELDS = new Set([
-  'name', 'parent_gid', 'deleted', 'usable_ns',
-])
+const GROUP_PUT_FIELDS = new Set(['name', 'parent_gid', 'deleted', 'usable_ns'])
 
 function extractPermFields(payload) {
   const permFields = {}
@@ -117,7 +126,6 @@ function GroupRoutes(server) {
         app: { permission: { resource: 'group', action: 'create' } },
         validate: {
           payload: validate.group.POST,
-          options: { allowUnknown: true },
         },
         response: {
           schema: validate.group.GET_res,
@@ -165,7 +173,6 @@ function GroupRoutes(server) {
         },
         validate: {
           payload: validate.group.PUT,
-          options: { allowUnknown: true },
         },
         response: {
           schema: validate.group.GET_res,

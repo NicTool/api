@@ -9,7 +9,15 @@ import { pageLimit } from '../lib/page.js'
 import { meta } from '../lib/util.js'
 
 const ZONE_PUT_FIELDS = new Set([
-  'gid', 'description', 'mailaddr', 'serial', 'ttl', 'refresh', 'retry', 'expire', 'minimum',
+  'gid',
+  'description',
+  'mailaddr',
+  'serial',
+  'ttl',
+  'refresh',
+  'retry',
+  'expire',
+  'minimum',
   'deleted',
 ])
 
@@ -157,7 +165,6 @@ function ZoneRoutes(server) {
         },
         validate: {
           payload: validate.zone.PUT,
-          options: { allowUnknown: true },
         },
         response: {
           schema: validate.zone.GET_res,
@@ -276,10 +283,12 @@ function zoneAuditAction(previous, payload) {
 }
 
 function zoneNameConflict(h) {
-  return h.response({
-    zone: [],
-    meta: { api: meta.api, msg: `Zone is already taken` },
-  }).code(409)
+  return h
+    .response({
+      zone: [],
+      meta: { api: meta.api, msg: `Zone is already taken` },
+    })
+    .code(409)
 }
 
 export default ZoneRoutes

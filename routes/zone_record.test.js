@@ -144,6 +144,15 @@ describe('zone_record routes', () => {
     auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
   })
 
+  it('GET /log/zone_record requires zid', async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: '/log/zone_record',
+      headers: auth.headers,
+    })
+    assert.equal(res.statusCode, 400)
+  })
+
   it('POST /zone_record creates and returns array payload', async () => {
     const res = await server.inject({
       method: 'POST',
@@ -174,7 +183,10 @@ describe('zone_record routes', () => {
       headers: auth.headers,
     })
     assert.equal(zones.statusCode, 200)
-    assert.deepEqual(zones.result.zone.map((zone) => zone.id), [delegatedZoneId])
+    assert.deepEqual(
+      zones.result.zone.map((zone) => zone.id),
+      [delegatedZoneId],
+    )
     assert.equal(zones.result.meta.pagination.total, 2)
     assert.equal(zones.result.meta.pagination.filtered, 1)
 
@@ -184,7 +196,10 @@ describe('zone_record routes', () => {
       headers: auth.headers,
     })
     assert.equal(records.statusCode, 200)
-    assert.deepEqual(records.result.zone_record.map((record) => record.id), [delegatedRecordId])
+    assert.deepEqual(
+      records.result.zone_record.map((record) => record.id),
+      [delegatedRecordId],
+    )
     assert.equal(records.result.meta.pagination.total, 1)
     assert.equal(records.result.meta.pagination.filtered, 1)
   })

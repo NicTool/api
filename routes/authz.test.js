@@ -136,12 +136,21 @@ const authLimited = { headers: {} }
 
 before(async () => {
   // Clean up stale data from prior crashed runs
-  try { await Delegation.delete({ gid: 4200, oid: 4201, type: 'ZONE' }) }
-  catch { /* ignore */ }
-  try { await Delegation.delete({ gid: 4201, oid: 4200, type: 'ZONE' }) }
-  catch { /* ignore */ }
-  try { await Delegation.delete({ gid: 4201, oid: 4201, type: 'ZONE' }) }
-  catch { /* ignore */ }
+  try {
+    await Delegation.delete({ gid: 4200, oid: 4201, type: 'ZONE' })
+  } catch {
+    /* ignore */
+  }
+  try {
+    await Delegation.delete({ gid: 4201, oid: 4200, type: 'ZONE' })
+  } catch {
+    /* ignore */
+  }
+  try {
+    await Delegation.delete({ gid: 4201, oid: 4201, type: 'ZONE' })
+  } catch {
+    /* ignore */
+  }
   await ZoneRecord.destroy({ id: ZR_DELEGATED_CREATE.id })
   for (const id of [4200, 4201, ZR_INTREE_OTHER.id, U_CREATED.id]) {
     await ZoneRecord.destroy({ id })
@@ -154,10 +163,7 @@ before(async () => {
     await User.destroy({ id })
   }
   for (const id of [4201, 4202, 4200]) await Group.destroy({ id })
-  await Mysql.execute(
-    'DELETE FROM nt_group_subgroups WHERE nt_subgroup_id IN (?, ?, ?)',
-    [4200, 4201, 4202],
-  )
+  await Mysql.execute('DELETE FROM nt_group_subgroups WHERE nt_subgroup_id IN (?, ?, ?)', [4200, 4201, 4202])
 
   for (const g of [G_ROOT, G_CHILD, G_OUTSIDE]) await Group.create(g)
   for (const u of [U_FULL, U_LIMITED]) await User.create(u)
@@ -168,12 +174,23 @@ before(async () => {
     await Permission.put({
       id: fullPerm.id,
       self_write: 1,
-      group_write: 1, group_create: 1, group_delete: 1,
-      zone_write: 1, zone_create: 1, zone_delete: 1, zone_delegate: 1,
-      zonerecord_write: 1, zonerecord_create: 1, zonerecord_delete: 1,
+      group_write: 1,
+      group_create: 1,
+      group_delete: 1,
+      zone_write: 1,
+      zone_create: 1,
+      zone_delete: 1,
+      zone_delegate: 1,
+      zonerecord_write: 1,
+      zonerecord_create: 1,
+      zonerecord_delete: 1,
       zonerecord_delegate: 1,
-      user_write: 1, user_create: 1, user_delete: 1,
-      nameserver_write: 1, nameserver_create: 1, nameserver_delete: 1,
+      user_write: 1,
+      user_create: 1,
+      user_delete: 1,
+      nameserver_write: 1,
+      nameserver_create: 1,
+      nameserver_delete: 1,
       usable_ns: '4200',
     })
   }
@@ -184,12 +201,23 @@ before(async () => {
     await Permission.put({
       id: limPerm.id,
       self_write: 0,
-      group_write: 0, group_create: 0, group_delete: 0,
-      zone_write: 0, zone_create: 0, zone_delete: 0, zone_delegate: 0,
-      zonerecord_write: 0, zonerecord_create: 0, zonerecord_delete: 0,
+      group_write: 0,
+      group_create: 0,
+      group_delete: 0,
+      zone_write: 0,
+      zone_create: 0,
+      zone_delete: 0,
+      zone_delegate: 0,
+      zonerecord_write: 0,
+      zonerecord_create: 0,
+      zonerecord_delete: 0,
       zonerecord_delegate: 0,
-      user_write: 0, user_create: 0, user_delete: 0,
-      nameserver_write: 0, nameserver_create: 0, nameserver_delete: 0,
+      user_write: 0,
+      user_create: 0,
+      user_delete: 0,
+      nameserver_write: 0,
+      nameserver_create: 0,
+      nameserver_delete: 0,
       usable_ns: '',
     })
   }
@@ -203,8 +231,12 @@ before(async () => {
 
   // Delegation: zone 4201 → group 4200, write=yes delete=no
   await Delegation.create({
-    gid: 4200, oid: 4201, type: 'ZONE',
-    perm_write: true, perm_delete: false, perm_delegate: true,
+    gid: 4200,
+    oid: 4201,
+    type: 'ZONE',
+    perm_write: true,
+    perm_delete: false,
+    perm_delegate: true,
   })
 
   server = await init()
@@ -261,10 +293,7 @@ after(async () => {
   for (const g of [G_CHILD, G_OUTSIDE, G_ROOT]) {
     await Group.destroy({ id: g.id })
   }
-  await Mysql.execute(
-    'DELETE FROM nt_group_subgroups WHERE nt_subgroup_id IN (?, ?, ?)',
-    [4200, 4201, 4202],
-  )
+  await Mysql.execute('DELETE FROM nt_group_subgroups WHERE nt_subgroup_id IN (?, ?, ?)', [4200, 4201, 4202])
   await Mysql.disconnect()
 })
 
@@ -304,7 +333,10 @@ describe('authz plugin - zone routes', () => {
       headers: authLimited.headers,
     })
     assert.equal(res.statusCode, 200)
-    assert.deepEqual(res.result.zone.map((z) => z.id), [Z_OUTSIDE.id])
+    assert.deepEqual(
+      res.result.zone.map((z) => z.id),
+      [Z_OUTSIDE.id],
+    )
     assert.equal(res.result.meta.pagination.total, 1)
   })
 
@@ -378,18 +410,19 @@ describe('authz plugin - zone routes', () => {
     assert.equal(zone.gid, G_ROOT.id)
   })
 
-  it('does not pass unknown fields to the zone store', async () => {
+  it('rejects unknown zone fields before reaching the store', async () => {
+    const [before] = await Zone.get({ id: Z_INTREE.id })
     const res = await server.inject({
       method: 'PUT',
       url: `/zone/${Z_INTREE.id}`,
       headers: authFull.headers,
       payload: { ttl: 7201, serial: 7, malicious: 'not-a-column' },
     })
-    assert.equal(res.statusCode, 200)
+    assert.equal(res.statusCode, 400)
 
     const [zone] = await Zone.get({ id: Z_INTREE.id })
-    assert.equal(zone.ttl, 7201)
-    assert.equal(zone.serial, 7)
+    assert.equal(zone.ttl, before.ttl)
+    assert.equal(zone.serial, before.serial)
   })
 
   it('403 for POST /zone when the requested id already exists', async () => {
@@ -443,11 +476,20 @@ describe('authz plugin - user self-ops', () => {
     assert.equal((await User.get({ id: U_FULL.id }))[0].gid, G_ROOT.id)
   })
 
-  it('does not pass unknown fields or is_admin through self-write', async () => {
-    const [before] = await Mysql.execute(
-      'SELECT is_admin FROM nt_user WHERE nt_user_id = ?',
-      [U_FULL.id],
-    )
+  it('rejects unknown fields before self-write reaches the store', async () => {
+    const [before] = await User.get({ id: U_FULL.id })
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/user/${U_FULL.id}`,
+      headers: authFull.headers,
+      payload: { first_name: 'Rejected Full', malicious: 'not-a-column' },
+    })
+    assert.equal(res.statusCode, 400)
+    assert.equal((await User.get({ id: U_FULL.id }))[0].first_name, before.first_name)
+  })
+
+  it('does not pass is_admin through self-write', async () => {
+    const [before] = await Mysql.execute('SELECT is_admin FROM nt_user WHERE nt_user_id = ?', [U_FULL.id])
     const res = await server.inject({
       method: 'PUT',
       url: `/user/${U_FULL.id}`,
@@ -455,7 +497,6 @@ describe('authz plugin - user self-ops', () => {
       payload: {
         first_name: 'Still Full',
         is_admin: true,
-        malicious: 'not-a-column',
       },
     })
     assert.equal(res.statusCode, 200)
@@ -500,10 +541,7 @@ describe('authz plugin - user self-ops', () => {
     })
     assert.equal(res.statusCode, 201)
 
-    const [stored] = await Mysql.execute(
-      'SELECT is_admin FROM nt_user WHERE nt_user_id = ?',
-      [U_CREATED.id],
-    )
+    const [stored] = await Mysql.execute('SELECT is_admin FROM nt_user WHERE nt_user_id = ?', [U_CREATED.id])
     assert.equal(stored.is_admin, null)
   })
 })
@@ -527,10 +565,7 @@ describe('authz plugin - group self-ops', () => {
       headers: authFull.headers,
     })
     assert.equal(res.statusCode, 403)
-    assert.match(
-      res.result.error_msg,
-      /Not allowed to delete your own group/,
-    )
+    assert.match(res.result.error_msg, /Not allowed to delete your own group/)
   })
 
   it('403 when moving a group beneath itself', async () => {
@@ -601,8 +636,11 @@ describe('authz plugin - zone record delegation', () => {
 
   it('moves a record between zones when both sides permit', async () => {
     await Delegation.put({
-      gid: G_ROOT.id, oid: Z_OUTSIDE.id, type: 'ZONE',
-      zone_perm_add_records: true, zone_perm_delete_records: true,
+      gid: G_ROOT.id,
+      oid: Z_OUTSIDE.id,
+      type: 'ZONE',
+      zone_perm_add_records: true,
+      zone_perm_delete_records: true,
     })
     try {
       let res = await server.inject({
@@ -624,13 +662,17 @@ describe('authz plugin - zone record delegation', () => {
       assert.equal((await ZoneRecord.get({ id: ZR_INTREE_OTHER.id }))[0].zid, Z_INTREE.id)
     } finally {
       await Delegation.put({
-        gid: G_ROOT.id, oid: Z_OUTSIDE.id, type: 'ZONE',
-        zone_perm_add_records: false, zone_perm_delete_records: false,
+        gid: G_ROOT.id,
+        oid: Z_OUTSIDE.id,
+        type: 'ZONE',
+        zone_perm_add_records: false,
+        zone_perm_delete_records: false,
       })
     }
   })
 
-  it('does not require create permission when an edit repeats the current zone id', async () => {    const perm = await Permission.get({ uid: U_FULL.id })
+  it('does not require create permission when an edit repeats the current zone id', async () => {
+    const perm = await Permission.get({ uid: U_FULL.id })
     await Permission.put({ id: perm.id, zonerecord_create: false })
     try {
       const res = await server.inject({
@@ -775,7 +817,10 @@ describe('authz plugin - delegation routes', () => {
 
   it('perm_delete permits removal, never deletion of the delegated zone', async () => {
     await Delegation.put({
-      gid: G_ROOT.id, oid: Z_OUTSIDE.id, type: 'ZONE', perm_delete: true,
+      gid: G_ROOT.id,
+      oid: Z_OUTSIDE.id,
+      type: 'ZONE',
+      perm_delete: true,
     })
     const res = await server.inject({
       method: 'DELETE',
@@ -784,7 +829,10 @@ describe('authz plugin - delegation routes', () => {
     })
     assert.equal(res.statusCode, 403)
     await Delegation.put({
-      gid: G_ROOT.id, oid: Z_OUTSIDE.id, type: 'ZONE', perm_delete: false,
+      gid: G_ROOT.id,
+      oid: Z_OUTSIDE.id,
+      type: 'ZONE',
+      perm_delete: false,
     })
   })
 })
@@ -798,8 +846,6 @@ describe('authz plugin - create target resolution', () => {
   })
 
   it('authorizes the group a new group is actually filed under', async () => {
-    // gid is not the key Group.create reads; authorizing it would let
-    // parent_gid point anywhere
     const res = await server.inject({
       method: 'POST',
       url: '/group',
@@ -807,7 +853,6 @@ describe('authz plugin - create target resolution', () => {
       payload: {
         id: G_PLANTED,
         name: 'authz-planted',
-        gid: G_ROOT.id,
         parent_gid: G_OUTSIDE.id,
       },
     })
@@ -820,7 +865,7 @@ describe('authz plugin - create target resolution', () => {
       method: 'POST',
       url: '/group',
       headers: authFull.headers,
-      payload: { id: G_PLANTED, name: 'authz-rootless', gid: G_ROOT.id },
+      payload: { id: G_PLANTED, name: 'authz-rootless' },
     })
     assert.equal(res.statusCode, 403)
     assert.match(res.result.error_msg, /No target group/)
@@ -912,7 +957,10 @@ describe('authz plugin - permission records', () => {
     assert.equal(after.gid ?? after.group.id, G_CHILD.id)
 
     await Permission.put({
-      id: perm.id, zone_create: 0, zone_write: 0, self_write: 0,
+      id: perm.id,
+      zone_create: 0,
+      zone_write: 0,
+      self_write: 0,
     })
   })
 
@@ -929,8 +977,7 @@ describe('authz plugin - permission records', () => {
   }
 
   // direct SQL: Permission.get throws when a crashed run left two rows behind
-  const clearTarget = () =>
-    Mysql.execute('DELETE FROM nt_perm WHERE nt_user_id = ?', [U_TARGET.id])
+  const clearTarget = () => Mysql.execute('DELETE FROM nt_perm WHERE nt_user_id = ?', [U_TARGET.id])
 
   before(async () => {
     await clearTarget()
@@ -1042,8 +1089,12 @@ describe('authz plugin - delegation type and pseudo access', () => {
   it('grants read on a zone holding a record delegated to the caller', async () => {
     // limited user's group has no access to zone 4200, only to one record in it
     await Delegation.create({
-      gid: G_OUTSIDE.id, oid: ZR_INTREE.id, type: 'ZONERECORD',
-      perm_write: false, perm_delete: false, perm_delegate: false,
+      gid: G_OUTSIDE.id,
+      oid: ZR_INTREE.id,
+      type: 'ZONERECORD',
+      perm_write: false,
+      perm_delete: false,
+      perm_delegate: false,
     })
     try {
       const res = await server.inject({
@@ -1070,7 +1121,10 @@ describe('authz plugin - delegation type and pseudo access', () => {
         headers: authLimited.headers,
       })
       assert.equal(records.statusCode, 200)
-      assert.deepEqual(records.result.zone_record.map((record) => record.id), [ZR_INTREE.id])
+      assert.deepEqual(
+        records.result.zone_record.map((record) => record.id),
+        [ZR_INTREE.id],
+      )
       assert.equal(records.result.meta.pagination.total, 1)
 
       const write = await server.inject({
@@ -1082,7 +1136,9 @@ describe('authz plugin - delegation type and pseudo access', () => {
       assert.equal(write.statusCode, 403)
     } finally {
       await Delegation.delete({
-        gid: G_OUTSIDE.id, oid: ZR_INTREE.id, type: 'ZONERECORD',
+        gid: G_OUTSIDE.id,
+        oid: ZR_INTREE.id,
+        type: 'ZONERECORD',
       })
     }
   })

@@ -121,16 +121,20 @@ describe('zone routes', () => {
   })
 
   it('POST /zone admits only one concurrent canonical name', async () => {
-    const responses = await Promise.all(concurrentDuplicateIds.map((id, index) => server.inject({
-      method: 'POST',
-      url: '/zone',
-      headers: auth.headers,
-      payload: {
-        ...nsCase,
-        id,
-        zone: index === 0 ? 'concurrent.example.com' : 'CONCURRENT.EXAMPLE.COM.',
-      },
-    })))
+    const responses = await Promise.all(
+      concurrentDuplicateIds.map((id, index) =>
+        server.inject({
+          method: 'POST',
+          url: '/zone',
+          headers: auth.headers,
+          payload: {
+            ...nsCase,
+            id,
+            zone: index === 0 ? 'concurrent.example.com' : 'CONCURRENT.EXAMPLE.COM.',
+          },
+        }),
+      ),
+    )
     for (const id of concurrentDuplicateIds) await Zone.destroy({ id })
 
     assert.deepEqual(responses.map((res) => res.statusCode).sort(), [201, 409])
@@ -173,6 +177,25 @@ describe('zone routes', () => {
     })
     assert.equal(restored.statusCode, 200)
     assert.equal(restored.result.zone[0].gid, groupCase.id)
+  })
+
+  it(`PUT /zone/${nsCase.id} validates serial and unknown fields`, async () => {
+    const updated = await server.inject({
+      method: 'PUT',
+      url: `/zone/${nsCase.id}`,
+      headers: auth.headers,
+      payload: { serial: 2026082601 },
+    })
+    assert.equal(updated.statusCode, 200)
+    assert.equal(updated.result.zone[0].serial, 2026082601)
+
+    const unknown = await server.inject({
+      method: 'PUT',
+      url: `/zone/${nsCase.id}`,
+      headers: auth.headers,
+      payload: { definitely_not_a_zone_field: true },
+    })
+    assert.equal(unknown.statusCode, 400)
   })
 
   it(`POST /zone (${case2Id})`, async () => {

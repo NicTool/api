@@ -112,7 +112,10 @@ describe('user routes', () => {
       headers: auth.headers,
     })
     assert.equal(res.statusCode, 200)
-    assert.deepEqual(res.result.user.map((u) => u.username), [`${userCase.username}2`])
+    assert.deepEqual(
+      res.result.user.map((u) => u.username),
+      [`${userCase.username}2`],
+    )
     assert.equal(res.result.meta.pagination.filtered, 1)
     assert.equal(res.result.meta.pagination.limit, 10)
     assert.equal(res.result.meta.pagination.offset, 0)
@@ -140,6 +143,14 @@ describe('user routes', () => {
     assert.ok(listed.result.user.some((u) => u.id === userId2))
     assert.equal(listed.result.meta.pagination.total, listed.result.user.length)
 
+    const sorted = await server.inject({
+      method: 'GET',
+      url: `/user?gid=${groupCase.id}&include_subgroups=true&sort_by=group_name&sort_dir=asc`,
+      headers: auth.headers,
+    })
+    assert.equal(sorted.statusCode, 200)
+    assert.equal(sorted.result.user.find((u) => u.id === userId2).group_name, moveGroup.name)
+
     const restored = await server.inject({
       method: 'PUT',
       url: `/user/${userId2}`,
@@ -151,6 +162,16 @@ describe('user routes', () => {
     const restoredPermission = await Permission.get({ uid: userId2 })
     assert.equal(restoredPermission.group.id, groupCase.id)
     assert.equal((await Authz.permissionRecord(restoredPermission.id)).target_gid, groupCase.id)
+  })
+
+  it(`PUT /user/${userId2} rejects unknown permission controls`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/user/${userId2}`,
+      headers: auth.headers,
+      payload: { definitely_not_a_permission: true },
+    })
+    assert.equal(res.statusCode, 400)
   })
 
   it(`GET /user/${userId2}`, async () => {
