@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - session: validate qualified usernames and permission responses
 - user: add subgroup group-name sorting and reject unknown writes
 - group/zone: validate permission controls and zone serial updates
+- authz: a group change needs the owning tree, delegates edit in place
 
 ### [3.0.3] - 2026-07-27
 

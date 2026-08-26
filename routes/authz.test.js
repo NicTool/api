@@ -410,6 +410,31 @@ describe('authz plugin - zone routes', () => {
     assert.equal(zone.gid, G_ROOT.id)
   })
 
+  it('403 when a delegate moves the delegated zone into its own tree', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${Z_OUTSIDE.id}`,
+      headers: authFull.headers,
+      payload: { gid: G_ROOT.id },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.error_msg, /delegated/)
+
+    const [zone] = await Zone.get({ id: Z_OUTSIDE.id })
+    assert.equal(zone.gid, G_OUTSIDE.id)
+  })
+
+  it('200 when a delegate edits the delegated zone without moving it', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${Z_OUTSIDE.id}`,
+      headers: authFull.headers,
+      payload: { gid: G_OUTSIDE.id, ttl: 7200 },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.zone[0].gid, G_OUTSIDE.id)
+  })
+
   it('rejects unknown zone fields before reaching the store', async () => {
     const [before] = await Zone.get({ id: Z_INTREE.id })
     const res = await server.inject({
