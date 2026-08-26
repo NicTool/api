@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - group/zone: validate permission controls and zone serial updates
 - authz: a group change needs the owning tree, delegates edit in place
 - zone_record: sort by the legacy rdata columns
+- session: a failed activity touch no longer rejects unhandled
 
 ### [3.0.3] - 2026-07-27
 

@@ -25,7 +25,9 @@ function SessionRoutes(server) {
       handler: async (request, h) => {
         const { user, group, session } = h.request.auth.credentials
 
-        Session.put({ id: session.id, last_access: true })
+        Session.put({ id: session.id, last_access: true }).catch((err) => {
+          console.error(`session ${session.id} activity: ${err.message}`)
+        })
 
         const perm = await Permission.getEffective(user.id)
         const groupPerm = await Permission.getGroup({

@@ -70,6 +70,20 @@ describe('user routes', () => {
     assert.equal(lastAccess, now)
   })
 
+  it('a failed activity touch does not fail the request', async (t) => {
+    t.mock.method(Session, 'put', async () => {
+      throw new Error('store unavailable')
+    })
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/user',
+      headers: auth.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    await new Promise((resolve) => setImmediate(resolve))
+  })
+
   it('GET /user', async () => {
     const res = await server.inject({
       method: 'GET',
