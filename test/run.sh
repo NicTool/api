@@ -49,7 +49,7 @@ if [ $# -ge 1 ]; then
 			--test-reporter=lcov --test-reporter-destination=coverage/lcov.info \
 			--test-reporter=spec --test-reporter-destination=stdout
 	else
-		$NODE --test --test-force-exit --test-reporter=spec "$1"
+		$NODE --test --test-reporter=spec "$1"
 	fi
 else
 	run_tests --test-reporter=spec
