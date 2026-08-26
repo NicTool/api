@@ -257,6 +257,14 @@ describe('zone_record routes', () => {
     assert.equal(res.result.meta.pagination.limit, 2)
     assert.equal(res.result.meta.pagination.offset, 0)
     assert.ok(res.result.meta.pagination.total >= 3)
+
+    const byAddress = await server.inject({
+      method: 'GET',
+      url: `/zone_record?zid=${testZoneId}&search=${token}&sort_by=address&sort_dir=desc`,
+      headers: auth.headers,
+    })
+    assert.equal(byAddress.statusCode, 200)
+    assert.equal(byAddress.result.zone_record[0].address, '203.0.113.22')
   })
 
   it(`DELETE /zone_record/${testZoneRecordId} soft-deletes record`, async () => {
