@@ -17,8 +17,6 @@ test_files() {
 }
 
 run_tests() {
-	# Run serially: the file store uses shared files; parallel workers cause concurrent-write corruption
-	for f in $(test_files); do
-		$NODE --test --test-reporter=spec "$f" || exit 1
-	done
+	# shellcheck disable=SC2046 # word splitting is how the file list is passed
+	$NODE --test --test-force-exit --test-concurrency=1 "$@" $(test_files)
 }

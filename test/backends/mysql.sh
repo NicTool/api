@@ -23,5 +23,5 @@ test_files() {
 
 run_tests() {
 	# shellcheck disable=SC2046 # word splitting is how the file list is passed
-	$NODE --test --test-concurrency=1 --test-reporter=spec $(test_files)
+	$NODE --test --test-force-exit --test-concurrency=1 "$@" $(test_files)
 }
