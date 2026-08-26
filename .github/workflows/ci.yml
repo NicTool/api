@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  NICTOOL_VALIDATE_SPEC: https://github.com/aberoham/validate/archive/c3b37de5fcf42de94c02fa9c97d5a2323fe9cafb.tar.gz
+
 jobs:
   lint:
     uses: NicTool/.github/.github/workflows/lint.yml@main
@@ -43,6 +46,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: sh sql/init-mysql.sh
       - run: npm install
+      - name: Install proposed validate source
+        run: npm install --no-save ${{ env.NICTOOL_VALIDATE_SPEC }}
       - run: npm test
 
   test-mac:
@@ -63,6 +68,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: sh sql/init-mysql.sh
       - run: npm install
+      - name: Install proposed validate source
+        run: npm install --no-save ${{ env.NICTOOL_VALIDATE_SPEC }}
       - run: npm test
 
   test-docker:
@@ -100,4 +107,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: sh sql/init-mysql.sh
       - run: npm install
+      - name: Install proposed validate source
+        run: npm install --no-save ${{ env.NICTOOL_VALIDATE_SPEC }}
       - run: sh test/run.sh
