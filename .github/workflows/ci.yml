@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  NICTOOL_VALIDATE_SPEC: https://github.com/aberoham/validate/archive/c3b37de5fcf42de94c02fa9c97d5a2323fe9cafb.tar.gz
+  NICTOOL_VALIDATE_SPEC: https://github.com/aberoham/validate/archive/a4d07855a3afe824d7d1d754550cb2d9a75fb145.tar.gz
 
 jobs:
   lint:
