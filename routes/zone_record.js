@@ -174,11 +174,13 @@ function ZoneRecordRoutes(server) {
 
         await ZoneRecord.put({ id, ...request.payload })
 
-        const updated = await ZoneRecord.get({ id })
-        const zones = await Zone.get({ id: updated[0].zid })
+        let updated = await ZoneRecord.get({ id })
+        if (updated.length === 0) updated = await ZoneRecord.get({ id, deleted: true })
+        let zones = await Zone.get({ id: updated[0].zid })
+        if (zones.length === 0) zones = await Zone.get({ id: updated[0].zid, deleted: true })
         await Audit.logZoneRecord(
           request.auth.credentials.user,
-          'modified',
+          request.payload.deleted === true ? 'deleted' : 'modified',
           updated[0],
           zones[0],
           zrs[0],

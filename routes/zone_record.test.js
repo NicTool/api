@@ -267,6 +267,33 @@ describe('zone_record routes', () => {
     assert.equal(byAddress.result.zone_record[0].address, '203.0.113.22')
   })
 
+  it(`PUT /zone_record/${testZoneRecordId} can soft-delete and recover`, async () => {
+    const gone = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${testZoneRecordId}`,
+      headers: auth.headers,
+      payload: { deleted: true },
+    })
+    assert.equal(gone.statusCode, 200)
+    assert.equal(gone.result.zone_record[0].deleted, true)
+
+    const log = await server.inject({
+      method: 'GET',
+      url: `/log/zone_record?zid=${testZoneId}&search=www.route-zr-delete`,
+      headers: auth.headers,
+    })
+    assert.equal(log.result.log[0].action, 'deleted')
+
+    const back = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${testZoneRecordId}`,
+      headers: auth.headers,
+      payload: { deleted: false },
+    })
+    assert.equal(back.statusCode, 404, 'a deleted record is not editable through PUT')
+    await ZoneRecord.delete({ id: testZoneRecordId, deleted: 0 })
+  })
+
   it(`DELETE /zone_record/${testZoneRecordId} soft-deletes record`, async () => {
     const res = await server.inject({
       method: 'DELETE',
