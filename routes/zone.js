@@ -4,11 +4,13 @@ import Zone from '../lib/zone/index.js'
 import { ZoneNameConflictError } from '../lib/zone/store/base.js'
 import Group from '../lib/group/index.js'
 import Authz from '../lib/authz/index.js'
+import Permission from '../lib/permission/index.js'
 import Audit from '../lib/audit/index.js'
 import { pageLimit } from '../lib/page.js'
 import { meta } from '../lib/util.js'
 
 const ZONE_PUT_FIELDS = new Set([
+  'nameservers',
   'gid',
   'description',
   'mailaddr',
@@ -20,6 +22,40 @@ const ZONE_PUT_FIELDS = new Set([
   'minimum',
   'deleted',
 ])
+
+// a zone may only be assigned nameservers the caller can use: those owned
+// by a group in the caller's tree, or granted through usable_ns (the v2 rule)
+async function unusableNameservers(request) {
+  const requested = request.payload.nameservers
+  if (!Array.isArray(requested)) return []
+  const ids = [...new Set(requested.map(Number))]
+  request.payload.nameservers = ids
+
+  const { user, group } = request.auth.credentials
+  const userPerm = await Permission.getEffective(user.id)
+  const usable = new Set((userPerm?.nameserver?.usable ?? []).map(Number))
+
+  const unusable = []
+  for (const nid of ids) {
+    if (usable.has(nid)) continue
+    const nsGid = await Authz.getObjectGroupId('nameserver', nid)
+    if (nsGid !== null && (await Authz.isInGroupTree(group.id, nsGid))) continue
+    unusable.push(nid)
+  }
+  return unusable
+}
+
+function nameserversNotUsable(h, ids) {
+  return h
+    .response({ meta: { api: meta.api, msg: `nameserver(s) not usable: ${ids.join(', ')}` } })
+    .code(403)
+}
+
+// single-zone responses carry the assignment; lists stay one query
+async function withNameservers(zones) {
+  for (const zone of zones) zone.nameservers = await Zone.nameserverIds(zone.id)
+  return zones
+}
 
 function ZoneRoutes(server) {
   server.route([
@@ -97,6 +133,7 @@ function ZoneRoutes(server) {
           Zone.count(countArgs),
           Zone.count(totalArgs),
         ])
+        if (getArgs.id) await withNameservers(zones)
 
         return h
           .response({
@@ -129,6 +166,9 @@ function ZoneRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
+        const unusable = await unusableNameservers(request)
+        if (unusable.length) return nameserversNotUsable(h, unusable)
+
         let id
         try {
           id = await Zone.create(request.payload)
@@ -137,7 +177,7 @@ function ZoneRoutes(server) {
           throw err
         }
 
-        const zones = await Zone.get({ id })
+        const zones = await withNameservers(await Zone.get({ id }))
         await Audit.logZone(request.auth.credentials.user, 'added', zones[0])
 
         return h
@@ -180,6 +220,9 @@ function ZoneRoutes(server) {
           return h.response({ meta: { api: meta.api, msg: `I couldn't find that zone` } }).code(404)
         }
 
+        const unusable = await unusableNameservers(request)
+        if (unusable.length) return nameserversNotUsable(h, unusable)
+
         const payload = Object.fromEntries(
           Object.entries(request.payload).filter(([key]) => ZONE_PUT_FIELDS.has(key)),
         )
@@ -192,6 +235,7 @@ function ZoneRoutes(server) {
 
         let updated = await Zone.get({ id })
         if (updated.length === 0) updated = await Zone.get({ id, deleted: true })
+        await withNameservers(updated)
         await Audit.logZone(
           request.auth.credentials.user,
           zoneAuditAction(zones[0], payload),

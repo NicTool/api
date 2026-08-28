@@ -5,11 +5,13 @@ import { init } from './index.js'
 import Group from '../lib/group/index.js'
 import User from '../lib/user/index.js'
 import Zone from '../lib/zone/index.js'
+import Nameserver from '../lib/nameserver/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
 import { grantGroupPermissions } from './test/permissions.js'
 import userCase from './test/user.json' with { type: 'json' }
 import nsCase from './test/zone.json' with { type: 'json' }
+import nameserverCase from './test/nameserver.json' with { type: 'json' }
 
 let server
 let case2Id = 4094
@@ -20,6 +22,11 @@ const recoveryDuplicateId = 4086
 
 const subGroup = { id: 4090, parent_gid: groupCase.id, name: 'sub.route.example.com' }
 const subZone = { ...nsCase, id: 4091, gid: subGroup.id, zone: 'sub.route.example.com.' }
+// one nameserver in the caller's group, one it cannot use
+const ownNs = { ...nameserverCase, id: 4093, gid: groupCase.id, name: 'own.ns.example.com.' }
+const otherNs = { ...nameserverCase, id: 4092, gid: 1, name: 'other.ns.example.com.' }
+const nsZoneId = 4089
+const refusedZoneId = 4085
 
 before(async () => {
   await Zone.destroy({ id: nsCase.id })
@@ -42,10 +49,19 @@ before(async () => {
   await Zone.create(nsCase)
   await Group.create(subGroup)
   await Zone.create(subZone)
+  await Zone.destroy({ id: nsZoneId })
+  await Zone.destroy({ id: refusedZoneId })
+  await Nameserver.destroy({ id: ownNs.id })
+  await Nameserver.destroy({ id: otherNs.id })
+  await Nameserver.create(ownNs)
+  await Nameserver.create(otherNs)
   server = await init()
 })
 
 after(async () => {
+  await Zone.destroy({ id: nsZoneId })
+  await Nameserver.destroy({ id: ownNs.id })
+  await Nameserver.destroy({ id: otherNs.id })
   await Zone.destroy({ id: duplicateId })
   await Zone.destroy({ id: duplicateCaseId })
   await Zone.destroy({ id: recoveryDuplicateId })
@@ -196,6 +212,65 @@ describe('zone routes', () => {
       payload: { definitely_not_a_zone_field: true },
     })
     assert.equal(unknown.statusCode, 400)
+  })
+
+  it(`PUT /zone/${nsCase.id} assigns a usable nameserver`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${nsCase.id}`,
+      headers: auth.headers,
+      payload: { nameservers: [ownNs.id, ownNs.id] },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.deepEqual(res.result.zone[0].nameservers, [ownNs.id])
+
+    const get = await server.inject({ method: 'GET', url: `/zone/${nsCase.id}`, headers: auth.headers })
+    assert.deepEqual(get.result.zone[0].nameservers, [ownNs.id])
+  })
+
+  it(`PUT /zone/${nsCase.id} refuses a nameserver the caller cannot use`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${nsCase.id}`,
+      headers: auth.headers,
+      payload: { nameservers: [ownNs.id, otherNs.id] },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.match(res.result.meta.msg, /not usable: 4092/)
+    assert.deepEqual(await Zone.nameserverIds(nsCase.id), [ownNs.id])
+  })
+
+  it(`PUT /zone/${nsCase.id} clears the assignment`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${nsCase.id}`,
+      headers: auth.headers,
+      payload: { nameservers: [] },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.deepEqual(res.result.zone[0].nameservers, [])
+  })
+
+  it(`POST /zone (${nsZoneId}) with nameservers`, async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/zone',
+      headers: auth.headers,
+      payload: { ...nsCase, id: nsZoneId, zone: 'ns.route.example.com.', nameservers: [ownNs.id] },
+    })
+    assert.equal(res.statusCode, 201)
+    assert.deepEqual(res.result.zone[0].nameservers, [ownNs.id])
+  })
+
+  it('POST /zone rejects a nameserver the caller cannot use', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/zone',
+      headers: auth.headers,
+      payload: { ...nsCase, id: refusedZoneId, zone: 'ns2.route.example.com.', nameservers: [otherNs.id] },
+    })
+    assert.equal(res.statusCode, 403)
+    assert.equal((await Zone.get({ id: refusedZoneId })).length, 0)
   })
 
   it(`POST /zone (${case2Id})`, async () => {
