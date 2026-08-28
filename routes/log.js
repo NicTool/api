@@ -2,6 +2,7 @@ import validate from '@nictool/validate'
 
 import Audit from '../lib/audit/index.js'
 import Group from '../lib/group/index.js'
+import Authz from '../lib/authz/index.js'
 import { meta } from '../lib/util.js'
 
 function LogRoutes(server) {
@@ -33,7 +34,14 @@ function LogRoutes(server) {
         response: { schema: validate.log.GET_res },
         tags: ['api'],
       },
-      handler: async (request, h) => logResponse(h, await Audit.listZoneRecords(request.query)),
+      handler: async (request, h) => {
+        // a record-only delegation reads the zone but not every record in it
+        const ids = await Authz.getZoneRecordReadScope(
+          request.auth.credentials.group.id, request.query.zid,
+        )
+        const args = ids === null ? request.query : { ...request.query, ids }
+        return logResponse(h, await Audit.listZoneRecords(args))
+      },
     },
   ])
 }
