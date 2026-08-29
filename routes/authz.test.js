@@ -10,7 +10,6 @@ import Nameserver from '../lib/nameserver/index.js'
 import Permission from '../lib/permission/index.js'
 import Audit from '../lib/audit/index.js'
 import Delegation from '../lib/delegation/index.js'
-import Mysql from '../lib/mysql.js'
 
 const G_ROOT = {
   id: 4200,
@@ -165,7 +164,6 @@ before(async () => {
     await User.destroy({ id })
   }
   for (const id of [4201, 4202, 4200]) await Group.destroy({ id })
-  await Mysql.execute('DELETE FROM nt_group_subgroups WHERE nt_subgroup_id IN (?, ?, ?)', [4200, 4201, 4202])
 
   for (const g of [G_ROOT, G_CHILD, G_OUTSIDE]) await Group.create(g)
   for (const u of [U_FULL, U_LIMITED]) await User.create(u)
@@ -295,8 +293,7 @@ after(async () => {
   for (const g of [G_CHILD, G_OUTSIDE, G_ROOT]) {
     await Group.destroy({ id: g.id })
   }
-  await Mysql.execute('DELETE FROM nt_group_subgroups WHERE nt_subgroup_id IN (?, ?, ?)', [4200, 4201, 4202])
-  await Mysql.disconnect()
+  await Group.disconnect()
 })
 
 describe('authz plugin - zone routes', () => {
@@ -934,7 +931,6 @@ describe('authz plugin - create target resolution', () => {
 
   after(async () => {
     await Group.destroy({ id: G_PLANTED })
-    await Mysql.execute('DELETE FROM nt_group_subgroups WHERE nt_subgroup_id = ?', [G_PLANTED])
   })
 
   it('authorizes the group a new group is actually filed under', async () => {
@@ -1069,8 +1065,7 @@ describe('authz plugin - permission records', () => {
     inherit_group_permissions: true,
   }
 
-  // direct SQL: Permission.get throws when a crashed run left two rows behind
-  const clearTarget = () => Mysql.execute('DELETE FROM nt_perm WHERE nt_user_id = ?', [U_TARGET.id])
+  const clearTarget = () => Permission.destroy({ uid: U_TARGET.id })
 
   before(async () => {
     await clearTarget()
