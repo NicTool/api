@@ -11,14 +11,13 @@ import userCase from './test/user.json' with { type: 'json' }
 import nsCase from './test/zone.json' with { type: 'json' }
 
 let server
-let case2Id = 4094
+let case2Id
 
 const subGroup = { id: 4090, parent_gid: groupCase.id, name: 'sub.route.example.com' }
 const subZone = { ...nsCase, id: 4091, gid: subGroup.id, zone: 'sub.route.example.com.' }
 
 before(async () => {
   await Zone.destroy({ id: nsCase.id })
-  await Zone.destroy({ id: case2Id })
   await Zone.destroy({ id: subZone.id })
   // Destroy the subgroup before recreating it: a lingering row would make
   // Group.create early-return and skip addToSubgroups, leaving the
@@ -33,6 +32,7 @@ before(async () => {
 })
 
 after(async () => {
+  if (case2Id) await Zone.destroy({ id: case2Id })
   await Zone.destroy({ id: subZone.id })
   await Group.destroy({ id: subGroup.id })
   await server.stop()
@@ -75,10 +75,10 @@ describe('zone routes', () => {
     assert.ok(res.result.zone.some((z) => z.zone === nsCase.zone))
   })
 
-  it(`POST /zone (${case2Id})`, async () => {
+  it('POST /zone allocates an id', async () => {
     const testCase = JSON.parse(JSON.stringify(nsCase))
-    testCase.id = case2Id // make it unique
-    testCase.gid = case2Id
+    delete testCase.id
+    testCase.gid = groupCase.id
     testCase.zone = 'route2.example.com.'
 
     const res = await server.inject({
@@ -89,10 +89,25 @@ describe('zone routes', () => {
     })
     // console.log(res.result)
     assert.equal(res.statusCode, 201)
+    assert.equal(res.result.zone.length, 1)
+    assert.equal(res.result.zone[0].zone, 'route2.example.com.')
     assert.ok(res.result.zone[0].gid)
+    case2Id = res.result.zone[0].id
+    assert.ok(Number.isInteger(case2Id))
   })
 
-  it(`GET /zone/${case2Id}`, async () => {
+  it('PUT /zone/{id} keeps using the route id', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${case2Id}`,
+      headers: auth.headers,
+      payload: { description: 'updated' },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.zone[0].description, 'updated')
+  })
+
+  it('GET /zone/{id}', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/zone/${case2Id}`,
@@ -103,19 +118,7 @@ describe('zone routes', () => {
     assert.ok(res.result.zone[0].gid)
   })
 
-  it(`PUT /zone/${case2Id}`, async () => {
-    const res = await server.inject({
-      method: 'PUT',
-      url: `/zone/${case2Id}`,
-      headers: auth.headers,
-      payload: { description: 'edited by the route test' },
-    })
-
-    assert.equal(res.statusCode, 200)
-    assert.equal((await Zone.get({ id: case2Id }))[0].description, 'edited by the route test')
-  })
-
-  it(`DELETE /zone/${case2Id}`, async () => {
+  it('DELETE /zone/{id}', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/zone/${case2Id}`,
@@ -125,7 +128,7 @@ describe('zone routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it(`DELETE /zone/${case2Id}`, async () => {
+  it('DELETE /zone/{id} returns 404 when already deleted', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/zone/${case2Id}`,
@@ -135,7 +138,7 @@ describe('zone routes', () => {
     assert.equal(res.statusCode, 404)
   })
 
-  it(`GET /zone/${case2Id}`, async () => {
+  it('GET /zone/{id} hides a soft-deleted zone', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/zone/${case2Id}`,
@@ -146,7 +149,7 @@ describe('zone routes', () => {
     assert.deepEqual(res.result.zone, [])
   })
 
-  it(`GET /zone/${case2Id} (deleted)`, async () => {
+  it('GET /zone/{id}?deleted=true returns a soft-deleted zone', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/zone/${case2Id}?deleted=true`,

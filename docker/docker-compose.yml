@@ -24,6 +24,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      args:
+        NICTOOL_VALIDATE_SPEC: ${NICTOOL_VALIDATE_SPEC:-}
     ports:
       - '${API_PORT:-3000}:3000'
     depends_on:

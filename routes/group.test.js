@@ -9,7 +9,7 @@ import groupCase from './test/group.json' with { type: 'json' }
 import userCase from './test/user.json' with { type: 'json' }
 
 let server
-const case2Id = 4094
+let case2Id
 
 before(async () => {
   server = await init()
@@ -18,7 +18,7 @@ before(async () => {
 })
 
 after(async () => {
-  await Group.destroy({ id: case2Id })
+  if (case2Id) await Group.destroy({ id: case2Id })
   await server.stop()
 })
 
@@ -49,9 +49,9 @@ describe('group routes', () => {
     assert.equal(res.result.group[0].id, groupCase.id)
   })
 
-  it('POST /group', async () => {
+  it('POST /group allocates an id', async () => {
     const testCase = JSON.parse(JSON.stringify(groupCase))
-    testCase.id = case2Id // make it unique
+    delete testCase.id
     testCase.name = `example2.com`
     delete testCase.deleted
 
@@ -62,9 +62,24 @@ describe('group routes', () => {
       payload: testCase,
     })
     assert.equal(res.statusCode, 201)
+    assert.equal(res.result.group.length, 1)
+    assert.equal(res.result.group[0].name, 'example2.com')
+    case2Id = res.result.group[0].id
+    assert.ok(Number.isInteger(case2Id))
   })
 
-  it(`GET /group/${case2Id}`, async () => {
+  it('PUT /group/{id} keeps using the route id', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/group/${case2Id}`,
+      headers: auth.headers,
+      payload: { name: 'example3.com' },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.group[0].name, 'example3.com')
+  })
+
+  it('GET /group/{id}', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/group/${case2Id}`,
@@ -74,7 +89,7 @@ describe('group routes', () => {
     assert.equal(res.result.group[0].id, case2Id)
   })
 
-  it(`DELETE /group/${case2Id}`, async () => {
+  it('DELETE /group/{id}', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/group/${case2Id}`,
@@ -83,7 +98,7 @@ describe('group routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it(`GET /group/${case2Id} (soft-deleted → empty array)`, async () => {
+  it('GET /group/{id} hides a soft-deleted group', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/group/${case2Id}`,
@@ -93,7 +108,7 @@ describe('group routes', () => {
     assert.deepEqual(res.result.group, [])
   })
 
-  it(`GET /group/${case2Id} (deleted)`, async () => {
+  it('GET /group/{id}?deleted=true returns a soft-deleted group', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/group/${case2Id}?deleted=true`,

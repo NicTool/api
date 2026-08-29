@@ -53,7 +53,7 @@ describe('permission routes', () => {
     assert.equal(res.result.permission.nameserver.create, false)
   })
 
-  it('POST /permission', async () => {
+  it('POST /permission allocates an id', async () => {
     const testCase = JSON.parse(JSON.stringify(permCase))
     delete testCase.id
     testCase.user.id = targetId
@@ -68,9 +68,11 @@ describe('permission routes', () => {
       payload: testCase,
     })
     assert.equal(res.statusCode, 201)
-    case2Id = res.result.permission.id
+    assert.equal(res.result.permission.name, 'Route Test Permission 2')
     assert.equal(res.result.permission.zone.create, true)
     assert.equal(res.result.permission.nameserver.create, false)
+    case2Id = res.result.permission.id
+    assert.ok(Number.isInteger(case2Id))
   })
 
   it('POST /permission rejects an existing target', async () => {
@@ -94,7 +96,7 @@ describe('permission routes', () => {
     assert.equal(existing.name, 'Route Test Permission 2')
   })
 
-  it('GET the created permission', async () => {
+  it('GET /permission/{id}', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/permission/${case2Id}`,
@@ -106,7 +108,7 @@ describe('permission routes', () => {
     assert.equal(res.result.permission.nameserver.create, false)
   })
 
-  it('DELETE the created permission', async () => {
+  it('DELETE /permission/{id}', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/permission/${case2Id}`,
@@ -116,7 +118,7 @@ describe('permission routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it('DELETE the created permission again', async () => {
+  it('DELETE /permission/{id} returns 404 when already deleted', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/permission/${case2Id}`,
@@ -126,7 +128,7 @@ describe('permission routes', () => {
     assert.equal(res.statusCode, 404)
   })
 
-  it('GET the deleted permission', async () => {
+  it('GET /permission/{id} hides a soft-deleted permission', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/permission/${case2Id}`,
@@ -137,7 +139,7 @@ describe('permission routes', () => {
     assert.equal(res.result.permission, undefined)
   })
 
-  it('GET the deleted permission with deleted=true', async () => {
+  it('GET /permission/{id}?deleted=true returns a soft-deleted permission', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/permission/${case2Id}?deleted=true`,

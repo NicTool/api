@@ -131,6 +131,19 @@ describe('zone_record routes', () => {
     createdZoneRecordIds.push(res.result.zone_record[0].id)
   })
 
+  it('PUT /zone_record/{id} keeps using the route id', async () => {
+    const id = createdZoneRecordIds[0]
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${id}`,
+      headers: auth.headers,
+      payload: { description: 'updated' },
+    })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.zone_record[0].description, 'updated')
+  })
+
   it('POST /zone_record accepts omitted ttl and stores 0', async () => {
     const res = await server.inject({
       method: 'POST',
