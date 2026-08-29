@@ -845,22 +845,16 @@ describe('authz plugin - delegation routes', () => {
     assert.equal(res.statusCode, 404)
   })
 
-  it(
-    'creates one delegation when identical requests race',
-    {
-      skip: (process.env.NICTOOL_DATA_STORE ?? 'mysql') !== 'mysql',
-    },
-    async () => {
-      const args = { gid: G_CHILD.id, oid: ZR_INTREE_OTHER.id, type: 'ZONERECORD' }
-      await Delegation.delete(args)
-      const results = await Promise.all([1, 2, 3].map(() => Delegation.create(args)))
-      assert.equal(results.filter((r) => r.created).length, 1)
-      assert.equal(results.filter((r) => r.duplicate).length, 2)
-      const rows = await Delegation.get(args)
-      assert.equal(rows.length, 1)
-      await Delegation.delete(args)
-    },
-  )
+  it('creates one delegation when identical requests race', async () => {
+    const args = { gid: G_CHILD.id, oid: ZR_INTREE_OTHER.id, type: 'ZONERECORD' }
+    await Delegation.delete(args)
+    const results = await Promise.all([1, 2, 3].map(() => Delegation.create(args)))
+    assert.equal(results.filter((r) => r.created).length, 1)
+    assert.equal(results.filter((r) => r.duplicate).length, 2)
+    const rows = await Delegation.get(args)
+    assert.equal(rows.length, 1)
+    await Delegation.delete(args)
+  })
 
   it('cannot delegate an object back to your own group', async () => {
     const res = await server.inject({
