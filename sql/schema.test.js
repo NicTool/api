@@ -2,9 +2,6 @@
 //
 // Regression guard for two things: the files hold many statements per file
 // (so the connection needs multipleStatements), and they must be idempotent
-//
-// Connects the way the api does, through conf.d plus the NICTOOL_DB_*
-// overrides. Skips when MySQL is unreachable.
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -28,14 +25,9 @@ async function connOpts() {
 }
 
 let conn = null
-let skip = false
 
 before(async () => {
-  try {
-    conn = await mysql.createConnection(await connOpts())
-  } catch (err) {
-    skip = `MySQL unreachable: ${err.code ?? err.message}`
-  }
+  conn = await mysql.createConnection(await connOpts())
 })
 
 after(async () => {
@@ -164,23 +156,22 @@ describe('sql schema', () => {
     t.diagnostic('sql/upgrade/ holds the destructive cleanup and is not applied on install')
   })
 
-  it('applies cleanly, twice, without duplicating seed rows', async (t) => {
-    if (skip) return t.skip(skip)
-
+  it('applies cleanly, twice, without duplicating seed rows', async () => {
     const files = await schemaFiles()
     const seedCount = async () => (await conn.query('SELECT COUNT(*) n FROM resource_record_type'))[0][0].n
-    const seedRows = await fs.readFile(path.join(sqlDir, '06_resource_records.sql'), 'utf8')
-    const seeded = seedRows.match(/^\s*\(\d+,'[A-Z0-9]+',/gm) ?? []
-    assert.ok(seeded.length, '06_resource_records.sql still seeds one row per line')
-
-    for (const pass of [1, 2]) {
+    const apply = async (pass) => {
       for (const f of files) {
         const sql = await fs.readFile(path.join(sqlDir, f), 'utf8')
         await assert.doesNotReject(() => conn.query(sql), `${f} failed on pass ${pass}`)
       }
     }
 
-    assert.equal(await seedCount(), seeded.length, 'INSERT IGNORE kept the seed rows unique')
+    await apply(1)
+    const seeded = await seedCount()
+    assert.ok(seeded, 'the resource record types seeded on the first pass')
+
+    await apply(2)
+    assert.equal(await seedCount(), seeded, 'INSERT IGNORE kept the seed rows unique')
   })
 
   it('declares the 2.x db_version the upgrade path detects', async () => {
