@@ -1,4 +1,4 @@
-# Copyright 2004-2024 The Network People, Inc.
+# Copyright 2004-2026 The Network People, Inc.
 #
 # Lookup rows added since NicTool 2.x. New installs get these from
 # sql/04_nt_nameserver.sql and sql/06_resource_records.sql; a database
