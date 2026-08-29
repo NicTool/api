@@ -178,4 +178,51 @@ describe('sql schema', () => {
     const sql = await fs.readFile(path.join(sqlDir, '12_nt_options.sql'), 'utf8')
     assert.match(sql, /'db_version','2\.41'/)
   })
+
+  it('re-seeds every lookup row on upgrade', async () => {
+    const seeds = async (file) => {
+      const sql = await fs.readFile(path.join(sqlDir, file), 'utf8')
+      const rows = {}
+      for (const [, table, body] of sql.matchAll(/INSERT IGNORE INTO `(\w+)`[^;]*VALUES([^;]*);/g)) {
+        rows[table] = [...body.matchAll(/\((\d+),'([^']+)'/g)].map((m) => `${m[1]}:${m[2]}`).sort()
+      }
+      return rows
+    }
+    const upgrade = await seeds('upgrade/06_reseed_lookup_tables.sql')
+    const installed = {
+      ...(await seeds('04_nt_nameserver.sql')),
+      ...(await seeds('06_resource_records.sql')),
+    }
+    for (const table of ['nt_nameserver_export_type', 'resource_record_type']) {
+      assert.deepEqual(upgrade[table], installed[table], `${table} rows an upgraded database would never get`)
+    }
+  })
+
+  // The header claims an id already in use keeps its row. Run that, don't assert it.
+  it('leaves an id a site already uses alone', async () => {
+    const reseed = await fs.readFile(path.join(sqlDir, 'upgrade', '06_reseed_lookup_tables.sql'), 'utf8')
+    const typeRows = async () =>
+      (await conn.query('SELECT id, name FROM nt_nameserver_export_type WHERE id = 9'))[0]
+
+    try {
+      await conn.query('DELETE FROM nt_nameserver_export_type WHERE id = 9')
+      await conn.query(
+        "INSERT INTO nt_nameserver_export_type (id, name, descr, url) VALUES (9,'gerbil','Gerbil DNS','')",
+      )
+      await conn.query(reseed)
+
+      assert.deepEqual(
+        await typeRows(),
+        [{ id: 9, name: 'gerbil' }],
+        'the reseed overwrote a row it did not own',
+      )
+      const coredns = (await conn.query("SELECT id FROM nt_nameserver_export_type WHERE name = 'coredns'"))[0]
+      assert.deepEqual(coredns, [], 'coredns landed somewhere the file does not claim')
+    } finally {
+      await conn.query('DELETE FROM nt_nameserver_export_type WHERE id = 9')
+      await conn.query(reseed)
+    }
+
+    assert.deepEqual(await typeRows(), [{ id: 9, name: 'coredns' }], 'the reseed did not restore coredns')
+  })
 })
