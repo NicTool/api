@@ -798,6 +798,53 @@ describe('authz plugin - delegation routes', () => {
     assert.equal(res.result.delegation[0].nt_group_id, G_CHILD.id)
   })
 
+  it('returns 409 without creating a duplicate delegation', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/delegation',
+      headers: authFull.headers,
+      payload: { gid: G_CHILD.id, oid: Z_INTREE.id, type: 'ZONE' },
+    })
+    assert.equal(res.statusCode, 409)
+    assert.equal((await Delegation.get({ gid: G_CHILD.id, oid: Z_INTREE.id, type: 'ZONE' })).length, 1)
+  })
+
+  it('updates an existing delegation', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: '/delegation',
+      headers: authFull.headers,
+      payload: { gid: G_CHILD.id, oid: Z_INTREE.id, type: 'ZONE', perm_write: true },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.delegation[0].delegate_write, 1)
+  })
+
+  it('returns 404 when updating a missing delegation', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: '/delegation',
+      headers: authFull.headers,
+      payload: {
+        gid: G_CHILD.id,
+        oid: ZR_INTREE_OTHER.id,
+        type: 'ZONERECORD',
+        perm_write: true,
+      },
+    })
+    assert.equal(res.statusCode, 404)
+  })
+
+  it('deletes an existing delegation and returns 404 when repeated', async () => {
+    const url = `/delegation?gid=${G_CHILD.id}&oid=${Z_INTREE.id}&type=ZONE`
+    let res = await server.inject({ method: 'DELETE', url, headers: authFull.headers })
+    assert.equal(res.statusCode, 200)
+    assert.equal((await Delegation.get({ gid: G_CHILD.id, oid: Z_INTREE.id, type: 'ZONE' })).length, 0)
+
+    res = await server.inject({ method: 'DELETE', url, headers: authFull.headers })
+    assert.equal(res.statusCode, 404)
+  })
+
   it(
     'creates one delegation when identical requests race',
     {
