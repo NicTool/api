@@ -568,7 +568,7 @@ describe('authz plugin - user self-ops', () => {
     assert.equal(res.statusCode, 201)
 
     const [stored] = await Mysql.execute('SELECT is_admin FROM nt_user WHERE nt_user_id = ?', [U_CREATED.id])
-    assert.equal(stored.is_admin, null)
+    assert.ok(!stored.is_admin) // v2 schemas default the column to 0, v3 to null
   })
 })
 
