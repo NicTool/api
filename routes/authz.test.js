@@ -8,6 +8,7 @@ import Zone from '../lib/zone/index.js'
 import ZoneRecord from '../lib/zone_record/index.js'
 import Nameserver from '../lib/nameserver/index.js'
 import Permission from '../lib/permission/index.js'
+import Audit from '../lib/audit/index.js'
 import Delegation from '../lib/delegation/index.js'
 import Mysql from '../lib/mysql.js'
 
@@ -800,18 +801,22 @@ describe('authz plugin - delegation routes', () => {
     assert.equal(res.result.delegation[0].nt_group_id, G_CHILD.id)
   })
 
-  it('creates one delegation when identical requests race', {
-    skip: (process.env.NICTOOL_DATA_STORE ?? 'mysql') !== 'mysql',
-  }, async () => {
-    const args = { gid: G_CHILD.id, oid: ZR_INTREE_OTHER.id, type: 'ZONERECORD' }
-    await Delegation.delete(args)
-    const results = await Promise.all([1, 2, 3].map(() => Delegation.create(args)))
-    assert.equal(results.filter((r) => r.created).length, 1)
-    assert.equal(results.filter((r) => r.duplicate).length, 2)
-    const rows = await Delegation.get(args)
-    assert.equal(rows.length, 1)
-    await Delegation.delete(args)
-  })
+  it(
+    'creates one delegation when identical requests race',
+    {
+      skip: (process.env.NICTOOL_DATA_STORE ?? 'mysql') !== 'mysql',
+    },
+    async () => {
+      const args = { gid: G_CHILD.id, oid: ZR_INTREE_OTHER.id, type: 'ZONERECORD' }
+      await Delegation.delete(args)
+      const results = await Promise.all([1, 2, 3].map(() => Delegation.create(args)))
+      assert.equal(results.filter((r) => r.created).length, 1)
+      assert.equal(results.filter((r) => r.duplicate).length, 2)
+      const rows = await Delegation.get(args)
+      assert.equal(rows.length, 1)
+      await Delegation.delete(args)
+    },
+  )
 
   it('cannot delegate an object back to your own group', async () => {
     const res = await server.inject({
@@ -1175,6 +1180,17 @@ describe('authz plugin - delegation type and pseudo access', () => {
         [ZR_INTREE.id],
       )
       assert.equal(records.result.meta.pagination.total, 1)
+
+      await Audit.logZoneRecord(U_FULL, 'modified', ZR_INTREE, Z_INTREE)
+      await Audit.logZoneRecord(U_FULL, 'modified', ZR_INTREE_OTHER, Z_INTREE)
+      const log = await server.inject({
+        method: 'GET',
+        url: `/log/zone_record?zid=${Z_INTREE.id}`,
+        headers: authLimited.headers,
+      })
+      assert.equal(log.statusCode, 200)
+      assert.ok(log.result.log.length > 0)
+      assert.deepEqual(new Set(log.result.log.map((row) => row.zrid)), new Set([ZR_INTREE.id]))
 
       const write = await server.inject({
         method: 'PUT',
