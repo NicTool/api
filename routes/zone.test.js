@@ -24,9 +24,9 @@ before(async () => {
   // Group.create early-return and skip addToSubgroups, leaving the
   // nt_group_subgroups closure row (and thus the include_subgroups query) empty.
   await Group.destroy({ id: subGroup.id })
-  await Group.create(groupCase)
-  await User.create(userCase)
-  await Zone.create(nsCase)
+  await Group.create(groupCase, { ifExists: 'return' })
+  await User.create(userCase, { ifExists: 'return' })
+  await Zone.create(nsCase, { ifExists: 'return' })
   await Group.create(subGroup)
   await Zone.create(subZone)
   server = await init()

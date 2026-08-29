@@ -14,6 +14,7 @@ import HapiSwagger from '@msimerson/hapi-openapi'
 import qs from 'qs'
 
 import Config from '../lib/config.js'
+import { StoreConflictError } from '../lib/store/error.js'
 
 import pkgJson from '../package.json' with { type: 'json' }
 
@@ -104,6 +105,21 @@ async function setup() {
   })
 
   server.auth.default('nt_jwt_strategy')
+
+  server.ext('onPreResponse', (request, h) => {
+    const response = request.response
+    if (!(response instanceof StoreConflictError) && response?.code !== 'STORE_CONFLICT') {
+      return h.continue
+    }
+
+    return h
+      .response({
+        statusCode: 409,
+        error: 'Conflict',
+        message: response.message,
+      })
+      .code(409)
+  })
 
   server.route({
     method: 'GET',
