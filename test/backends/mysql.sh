@@ -17,13 +17,11 @@ cleanup() {
 	$NODE test/fixtures.js teardown
 }
 
+test_files() {
+	discover_tests
+}
+
 run_tests() {
-	$NODE --test --test-reporter=spec \
-		lib/*/test/index.js \
-		lib/*/test/mysql.js \
-		lib/*/test/runtime.js \
-		lib/*.test.js \
-		lib/store/*.test.js \
-		sql/*.test.js \
-		routes/*.test.js
+	# shellcheck disable=SC2046 # word splitting is how the file list is passed
+	$NODE --test --test-reporter=spec $(test_files)
 }
