@@ -7,36 +7,10 @@ on:
     branches: [main]
 
 jobs:
-  lint:
-    permissions:
-      contents: read
-    uses: NicTool/.github/.github/workflows/lint.yml@main
-
   coverage:
-    runs-on: ubuntu-latest
+    uses: NicTool/.github/.github/workflows/coverage.yml@main
+    secrets: inherit
     permissions:
       contents: read
-    steps:
-      - name: Start MySQL
-        run: sudo /etc/init.d/mysql start
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: lts/*
-      - run: npm install
-      - name: Initialize MySQL
-        run: sh sql/init-mysql.sh
-      - run: npm run test:coverage:lcov
-        env:
-          NODE_ENV: cov
-      - name: codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info
-          disable_search: true
-          fail_ci_if_error: true
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
+    with:
+      mysql: true
