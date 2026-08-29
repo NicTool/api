@@ -36,9 +36,7 @@ function LogRoutes(server) {
       },
       handler: async (request, h) => {
         // a record-only delegation reads the zone but not every record in it
-        const ids = await Authz.getZoneRecordReadScope(
-          request.auth.credentials.group.id, request.query.zid,
-        )
+        const ids = await Authz.getZoneRecordReadScope(request.auth.credentials.group.id, request.query.zid)
         const args = ids === null ? request.query : { ...request.query, ids }
         return logResponse(h, await Audit.listZoneRecords(args))
       },

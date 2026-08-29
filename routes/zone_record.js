@@ -67,9 +67,7 @@ function ZoneRecordRoutes(server) {
         if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
 
         if (!getArgs.id && getArgs.zid) {
-          const ids = await Authz.getZoneRecordReadScope(
-            request.auth.credentials.group.id, getArgs.zid,
-          )
+          const ids = await Authz.getZoneRecordReadScope(request.auth.credentials.group.id, getArgs.zid)
           if (ids !== null) getArgs.ids = ids
         }
 
@@ -126,12 +124,7 @@ function ZoneRecordRoutes(server) {
 
         const zrs = await ZoneRecord.get({ id })
         const zones = await Zone.get({ id: zrs[0].zid })
-        await Audit.logZoneRecord(
-          request.auth.credentials.user,
-          'added',
-          zrs[0],
-          zones[0],
-        )
+        await Audit.logZoneRecord(request.auth.credentials.user, 'added', zrs[0], zones[0])
 
         return h
           .response({
@@ -233,12 +226,7 @@ function ZoneRecordRoutes(server) {
           id: zrs[0].id,
           deleted: 1,
         })
-        await Audit.logZoneRecord(
-          request.auth.credentials.user,
-          'deleted',
-          zrs[0],
-          zones[0],
-        )
+        await Audit.logZoneRecord(request.auth.credentials.user, 'deleted', zrs[0], zones[0])
 
         const deletedZrs = await ZoneRecord.get({
           id: zrs[0].id,

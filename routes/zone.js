@@ -46,9 +46,7 @@ async function unusableNameservers(request) {
 }
 
 function nameserversNotUsable(h, ids) {
-  return h
-    .response({ meta: { api: meta.api, msg: `nameserver(s) not usable: ${ids.join(', ')}` } })
-    .code(403)
+  return h.response({ meta: { api: meta.api, msg: `nameserver(s) not usable: ${ids.join(', ')}` } }).code(403)
 }
 
 // single-zone responses carry the assignment; lists stay one query

@@ -28,10 +28,7 @@ function capDelegationPerms(payload, perm, sourceDelegation, mode) {
   if (!capMap) return
   for (const [field, [resource, action]] of Object.entries(capMap)) {
     if (payload[field] === undefined) continue
-    if (
-      perm[resource]?.[action] !== true
-      || (sourceDelegation && sourceDelegation[field] !== 1)
-    ) {
+    if (perm[resource]?.[action] !== true || (sourceDelegation && sourceDelegation[field] !== 1)) {
       if (mode === 'create') payload[field] = false
       else delete payload[field]
     }
@@ -233,14 +230,10 @@ async function sourceDelegationFor(request) {
   const resource = DELEGABLE_RESOURCE[request.payload.type]
   if (!resource) return null
   const gid = await Authz.getObjectGroupId(resource, request.payload.oid)
-  if (gid !== null && await Authz.isInGroupTree(request.auth.credentials.group.id, gid)) {
+  if (gid !== null && (await Authz.isInGroupTree(request.auth.credentials.group.id, gid))) {
     return null
   }
-  return Authz.getDelegateAccess(
-    request.auth.credentials.group.id,
-    request.payload.oid,
-    resource,
-  )
+  return Authz.getDelegateAccess(request.auth.credentials.group.id, request.payload.oid, resource)
 }
 
 export default DelegationRoutes

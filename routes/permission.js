@@ -61,9 +61,7 @@ function PermissionRoutes(server) {
         const currentPerm = uid === undefined ? null : await Permission.getEffective(uid)
         request.payload = Authz.capPermissions(userPerm, request.payload, currentPerm)
         if (uid !== undefined && request.payload.inherit !== true) {
-          request.payload = Authz.preserveUnmanagedPermissions(
-            userPerm, request.payload, currentPerm,
-          )
+          request.payload = Authz.preserveUnmanagedPermissions(userPerm, request.payload, currentPerm)
         }
         delete request.payload.id
         const pid = await Permission.create(request.payload)
@@ -98,9 +96,7 @@ function PermissionRoutes(server) {
         const id = parseInt(request.params.id, 10)
         const existing = await Permission.get({ id })
         if (!existing) {
-          return h
-            .response({ meta: { api: meta.api, msg: `permission not found` } })
-            .code(404)
+          return h.response({ meta: { api: meta.api, msg: `permission not found` } }).code(404)
         }
 
         const userPerm = await Permission.getEffective(request.auth.credentials.user.id)
