@@ -1,9 +1,10 @@
 // Applies sql/*.sql the way the configurator's /nt/init-schema does.
 //
-// Regression guard for two things: the files hold many statements per file 
+// Regression guard for two things: the files hold many statements per file
 // (so the connection needs multipleStatements), and they must be idempotent
 //
-// Skips when MySQL is unreachable.
+// Connects the way the api does (conf.d plus NICTOOL_DB_* overrides), or to
+// NICTOOL_TEST_DSN when set. Skips when MySQL is unreachable.
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -12,21 +13,26 @@ import { describe, it, before, after } from 'node:test'
 
 import mysql from 'mysql2/promise'
 
+import Config from '../lib/config.js'
+
 const sqlDir = fileURLToPath(new URL('./', import.meta.url))
 
-const DSN = process.env.NICTOOL_TEST_DSN ?? 'mysql://nictool:lootcin!mysql@127.0.0.1:3306/nictool'
-
-function connOpts() {
-  const u = new URL(DSN)
-  return {
-    host: u.hostname,
-    port: Number(u.port) || 3306,
-    user: decodeURIComponent(u.username),
-    password: decodeURIComponent(u.password),
-    database: u.pathname.replace(/^\//, ''),
-    connectTimeout: 4000,
-    multipleStatements: true,
+async function connOpts() {
+  const opts = { connectTimeout: 4000, multipleStatements: true }
+  const dsn = process.env.NICTOOL_TEST_DSN
+  if (dsn) {
+    const u = new URL(dsn)
+    return {
+      ...opts,
+      host: u.hostname,
+      port: Number(u.port) || 3306,
+      user: decodeURIComponent(u.username),
+      password: decodeURIComponent(u.password),
+      database: u.pathname.replace(/^\//, ''),
+    }
   }
+  const { socketPath, ...cfg } = await Config.get('mysql')
+  return { ...cfg, ...(socketPath ? { socketPath } : {}), ...opts }
 }
 
 let conn = null
@@ -34,7 +40,7 @@ let skip = false
 
 before(async () => {
   try {
-    conn = await mysql.createConnection(connOpts())
+    conn = await mysql.createConnection(await connOpts())
   } catch (err) {
     skip = `MySQL unreachable: ${err.code ?? err.message}`
   }
@@ -171,6 +177,8 @@ describe('sql schema', () => {
 
     const files = await schemaFiles()
     const seedCount = async () => (await conn.query('SELECT COUNT(*) n FROM resource_record_type'))[0][0].n
+    const seedRows = await fs.readFile(path.join(sqlDir, '06_resource_records.sql'), 'utf8')
+    const seeded = seedRows.match(/^\s*\(\d+,'[A-Z0-9]+',/gm).length
 
     for (const pass of [1, 2]) {
       for (const f of files) {
@@ -179,7 +187,7 @@ describe('sql schema', () => {
       }
     }
 
-    assert.equal(await seedCount(), 29, 'INSERT IGNORE kept the seed rows unique')
+    assert.equal(await seedCount(), seeded, 'INSERT IGNORE kept the seed rows unique')
   })
 
   it('declares the 2.x db_version the upgrade path detects', async () => {
