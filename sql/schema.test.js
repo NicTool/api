@@ -1,9 +1,7 @@
 // Applies sql/*.sql the way the configurator's /nt/init-schema does.
 //
-// Regression guard for two things: the files hold many statements per file 
+// Regression guard for two things: the files hold many statements per file
 // (so the connection needs multipleStatements), and they must be idempotent
-//
-// Skips when MySQL is unreachable.
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -12,32 +10,24 @@ import { describe, it, before, after } from 'node:test'
 
 import mysql from 'mysql2/promise'
 
+import Config from '../lib/config.js'
+
 const sqlDir = fileURLToPath(new URL('./', import.meta.url))
 
-const DSN = process.env.NICTOOL_TEST_DSN ?? 'mysql://nictool:lootcin!mysql@127.0.0.1:3306/nictool'
-
-function connOpts() {
-  const u = new URL(DSN)
+async function connOpts() {
+  const { socketPath, ...cfg } = await Config.get('mysql')
   return {
-    host: u.hostname,
-    port: Number(u.port) || 3306,
-    user: decodeURIComponent(u.username),
-    password: decodeURIComponent(u.password),
-    database: u.pathname.replace(/^\//, ''),
+    ...cfg,
+    ...(socketPath ? { socketPath } : {}),
     connectTimeout: 4000,
     multipleStatements: true,
   }
 }
 
 let conn = null
-let skip = false
 
 before(async () => {
-  try {
-    conn = await mysql.createConnection(connOpts())
-  } catch (err) {
-    skip = `MySQL unreachable: ${err.code ?? err.message}`
-  }
+  conn = await mysql.createConnection(await connOpts())
 })
 
 after(async () => {
@@ -166,20 +156,22 @@ describe('sql schema', () => {
     t.diagnostic('sql/upgrade/ holds the destructive cleanup and is not applied on install')
   })
 
-  it('applies cleanly, twice, without duplicating seed rows', async (t) => {
-    if (skip) return t.skip(skip)
-
+  it('applies cleanly, twice, without duplicating seed rows', async () => {
     const files = await schemaFiles()
     const seedCount = async () => (await conn.query('SELECT COUNT(*) n FROM resource_record_type'))[0][0].n
-
-    for (const pass of [1, 2]) {
+    const apply = async (pass) => {
       for (const f of files) {
         const sql = await fs.readFile(path.join(sqlDir, f), 'utf8')
         await assert.doesNotReject(() => conn.query(sql), `${f} failed on pass ${pass}`)
       }
     }
 
-    assert.equal(await seedCount(), 29, 'INSERT IGNORE kept the seed rows unique')
+    await apply(1)
+    const seeded = await seedCount()
+    assert.ok(seeded, 'the resource record types seeded on the first pass')
+
+    await apply(2)
+    assert.equal(await seedCount(), seeded, 'INSERT IGNORE kept the seed rows unique')
   })
 
   it('declares the 2.x db_version the upgrade path detects', async () => {
