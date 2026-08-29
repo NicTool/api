@@ -125,10 +125,11 @@ const NS = {
   id: 4200,
   gid: 4200,
   name: 'ns1.authz.example.com.',
+  type: 'bind',
   ttl: 3600,
   description: 'authz test ns',
   address: '192.0.2.10',
-  export: { type: 'bind', interval: 0, serials: 0 },
+  export: { interval: 0, serials: 0 },
 }
 
 let server
@@ -515,7 +516,7 @@ describe('authz plugin - user self-ops', () => {
   })
 
   it('does not pass is_admin through self-write', async () => {
-    const [before] = await Mysql.execute('SELECT is_admin FROM nt_user WHERE nt_user_id = ?', [U_FULL.id])
+    const [before] = await User.get({ id: U_FULL.id })
     const res = await server.inject({
       method: 'PUT',
       url: `/user/${U_FULL.id}`,
@@ -528,12 +529,8 @@ describe('authz plugin - user self-ops', () => {
     assert.equal(res.statusCode, 200)
 
     const [user] = await User.get({ id: U_FULL.id })
-    const [stored] = await Mysql.execute(
-      'SELECT nt_group_id AS gid, is_admin FROM nt_user WHERE nt_user_id = ?',
-      [U_FULL.id],
-    )
-    assert.equal(stored.gid, G_ROOT.id)
-    assert.equal(stored.is_admin, before.is_admin)
+    assert.equal(user.gid, G_ROOT.id)
+    assert.equal(user.is_admin, before.is_admin)
     assert.equal(user.first_name, 'Still Full')
   })
 
@@ -567,8 +564,8 @@ describe('authz plugin - user self-ops', () => {
     })
     assert.equal(res.statusCode, 201)
 
-    const [stored] = await Mysql.execute('SELECT is_admin FROM nt_user WHERE nt_user_id = ?', [U_CREATED.id])
-    assert.ok(!stored.is_admin) // v2 schemas default the column to 0, v3 to null
+    const [stored] = await User.get({ id: U_CREATED.id })
+    assert.equal(stored.is_admin, false)
   })
 })
 
@@ -944,9 +941,10 @@ describe('authz plugin - nameserver reads', () => {
     id: 4201,
     gid: G_CHILD.id,
     name: 'ns2.authz.example.com.',
+    type: 'bind',
     ttl: 3600,
     address: '192.0.2.11',
-    export: { type: 'bind', interval: 0, serials: 0 },
+    export: { interval: 0, serials: 0 },
   }
 
   before(async () => {
