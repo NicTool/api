@@ -23,7 +23,10 @@ if [ $# -ge 1 ]; then
 		$NODE --test --experimental-test-coverage
 	elif [ "$1" = "coverage:lcov" ]; then
 		mkdir -p coverage
-		$NODE --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info
+		# lcov alone writes only to the file, so a failure exits 1 with an empty log
+		$NODE --test --experimental-test-coverage \
+			--test-reporter=lcov --test-reporter-destination=coverage/lcov.info \
+			--test-reporter=spec --test-reporter-destination=stdout
 	else
 		$NODE --test --test-reporter=spec "$1"
 	fi
