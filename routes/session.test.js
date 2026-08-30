@@ -13,9 +13,9 @@ import Permission from '../lib/permission/index.js'
 let server
 
 before(async () => {
-  await Group.create(groupCase)
-  await User.create(userCase)
-  await Permission.create(permCase)
+  await Group.create(groupCase, { ifExists: 'return' })
+  await User.create(userCase, { ifExists: 'return' })
+  await Permission.create(permCase, { ifExists: 'return' })
   server = await init()
 })
 

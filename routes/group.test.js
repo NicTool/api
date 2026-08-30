@@ -13,8 +13,8 @@ const case2Id = 4094
 
 before(async () => {
   server = await init()
-  await Group.create(groupCase)
-  await User.create(userCase)
+  await Group.create(groupCase, { ifExists: 'return' })
+  await User.create(userCase, { ifExists: 'return' })
 })
 
 after(async () => {

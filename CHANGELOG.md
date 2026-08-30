@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+- fix: reject create conflicts and duplicate permission targets
+
 ### [3.0.3] - 2026-07-27
 
 - many updates for data stores and NS backends

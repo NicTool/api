@@ -48,8 +48,8 @@ before(async () => {
     username: `route-zr-delete-${testGroupId}`,
   }
 
-  await Group.create(testGroup)
-  await User.create(testUser)
+  await Group.create(testGroup, { ifExists: 'return' })
+  await User.create(testUser, { ifExists: 'return' })
   await Zone.create(testZone)
   await ZoneRecord.create(testZoneRecord)
   await ZoneRecord.create({
@@ -88,6 +88,24 @@ describe('zone_record routes', () => {
     assert.equal(res.statusCode, 200)
     assert.ok(res.result.session.token)
     auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
+  })
+
+  it('POST /zone_record returns 409 for an existing id', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/zone_record',
+      headers: auth.headers,
+      payload: {
+        ...testZoneRecord,
+        owner: 'changed.route-zr-delete.example.com.',
+      },
+    })
+
+    assert.equal(res.statusCode, 409)
+    assert.equal(res.result.message, `zone record id ${testZoneRecordId} already exists`)
+
+    const [existing] = await ZoneRecord.get({ id: testZoneRecordId })
+    assert.equal(existing.owner, testZoneRecord.owner)
   })
 
   it('POST /zone_record creates and returns array payload', async () => {

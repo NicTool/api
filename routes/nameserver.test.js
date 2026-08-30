@@ -15,9 +15,9 @@ let case2Id = 4094
 
 before(async () => {
   await Nameserver.destroy({ id: case2Id })
-  await Group.create(groupCase)
-  await User.create(userCase)
-  await Nameserver.create(nsCase)
+  await Group.create(groupCase, { ifExists: 'return' })
+  await User.create(userCase, { ifExists: 'return' })
+  await Nameserver.create(nsCase, { ifExists: 'return' })
   server = await init()
 })
 

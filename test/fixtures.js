@@ -31,14 +31,12 @@ switch (process.argv[2]) {
 }
 
 async function setup() {
-  await Group.create(groupCase)
-  await Group.create(groupCaseR)
-  await User.create(userCase)
-  await User.create(userCaseR)
-  // Seed the shared route permission so the permission and session suites,
-  // which both create it in their before hooks, early-return instead of racing
-  // two concurrent INSERTs of the same explicit id.
-  await Permission.create(permCaseR)
+  const fixture = { ifExists: 'return' }
+  await Group.create(groupCase, fixture)
+  await Group.create(groupCaseR, fixture)
+  await User.create(userCase, fixture)
+  await User.create(userCaseR, fixture)
+  await Permission.create(permCaseR, fixture)
   // await createTestSession()
   await Permission.disconnect()
   await User.disconnect()
