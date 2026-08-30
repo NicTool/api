@@ -124,7 +124,7 @@ function ZoneRoutes(server) {
           return h.response({ meta: { api: meta.api, msg: `I couldn't find that zone` } }).code(404)
         }
 
-        await Zone.put({ id, ...request.payload })
+        await Zone.put({ ...request.payload, id })
 
         const updated = await Zone.get({ id })
         return h.response({ zone: updated, meta: { api: meta.api, msg: `the zone was updated` } }).code(200)

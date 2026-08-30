@@ -103,6 +103,18 @@ describe('zone routes', () => {
     assert.ok(res.result.zone[0].gid)
   })
 
+  it(`PUT /zone/${case2Id}`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone/${case2Id}`,
+      headers: auth.headers,
+      payload: { description: 'edited by the route test' },
+    })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal((await Zone.get({ id: case2Id }))[0].description, 'edited by the route test')
+  })
+
   it(`DELETE /zone/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'DELETE',

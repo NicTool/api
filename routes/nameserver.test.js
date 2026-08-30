@@ -78,6 +78,18 @@ describe('nameserver routes', () => {
     assert.ok(res.result.nameserver[0].gid)
   })
 
+  it(`PUT /nameserver/${case2Id}`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/nameserver/${case2Id}`,
+      headers: auth.headers,
+      payload: { description: 'edited by the route test' },
+    })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal((await Nameserver.get({ id: case2Id }))[0].description, 'edited by the route test')
+  })
+
   it(`DELETE /nameserver/${case2Id}`, async () => {
     const res = await server.inject({
       method: 'DELETE',
