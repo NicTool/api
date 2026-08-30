@@ -134,7 +134,7 @@ function ZoneRecordRoutes(server) {
           return h.response({ meta: { api: meta.api, msg: `I couldn't find that zone record` } }).code(404)
         }
 
-        await ZoneRecord.put({ id, ...request.payload })
+        await ZoneRecord.put({ ...request.payload, id })
 
         const updated = await ZoneRecord.get({ id })
         return h

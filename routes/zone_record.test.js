@@ -17,6 +17,7 @@ const createdZoneRecordIds = []
 const testGroupId = 5094
 const testZoneId = 5095
 const testZoneRecordId = 5096
+const bystanderId = 5097
 
 const testZone = {
   ...zoneCase,
@@ -51,6 +52,12 @@ before(async () => {
   await User.create(testUser)
   await Zone.create(testZone)
   await ZoneRecord.create(testZoneRecord)
+  await ZoneRecord.create({
+    ...testZoneRecord,
+    id: bystanderId,
+    owner: 'bystander.route-zr-delete.example.com.',
+    address: '203.0.113.9',
+  })
 
   server = await init()
 })
@@ -60,6 +67,7 @@ after(async () => {
     await ZoneRecord.destroy({ id })
   }
   await ZoneRecord.destroy({ id: testZoneRecordId })
+  await ZoneRecord.destroy({ id: bystanderId })
   await Zone.destroy({ id: testZoneId })
   await server.stop()
 })
@@ -168,6 +176,31 @@ describe('zone_record routes', () => {
     assert.equal(res.result.meta.pagination.limit, 2)
     assert.equal(res.result.meta.pagination.offset, 0)
     assert.ok(res.result.meta.pagination.total >= 3)
+  })
+
+  it(`PUT /zone_record/${testZoneRecordId} updates the record in the path`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${testZoneRecordId}`,
+      headers: auth.headers,
+      payload: { address: '198.51.100.99' },
+    })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal((await ZoneRecord.get({ id: testZoneRecordId }))[0].address, '198.51.100.99')
+  })
+
+  // asserts on the bystander alone, so a schema that refuses a payload id
+  // leaves this passing rather than pinning the status code
+  it(`PUT /zone_record/${testZoneRecordId} leaves ${bystanderId} alone`, async () => {
+    await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${testZoneRecordId}`,
+      headers: auth.headers,
+      payload: { id: bystanderId, address: '198.51.100.50' },
+    })
+
+    assert.equal((await ZoneRecord.get({ id: bystanderId }))[0].address, '203.0.113.9')
   })
 
   it(`DELETE /zone_record/${testZoneRecordId} soft-deletes record`, async () => {

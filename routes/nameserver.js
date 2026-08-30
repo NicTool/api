@@ -86,7 +86,7 @@ function NameserverRoutes(server) {
           return h.response({ meta: { api: meta.api, msg: `I couldn't find that nameserver` } }).code(404)
         }
 
-        await Nameserver.put({ id, ...request.payload })
+        await Nameserver.put({ ...request.payload, id })
 
         const updated = await Nameserver.get({ id })
         return h
