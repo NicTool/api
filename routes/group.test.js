@@ -3,9 +3,11 @@ import { describe, it, before, after } from 'node:test'
 
 import { init } from './index.js'
 import Group from '../lib/group/index.js'
+import Permission from '../lib/permission/index.js'
 import User from '../lib/user/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
+import { grantGroupPermissions } from './test/permissions.js'
 import userCase from './test/user.json' with { type: 'json' }
 
 let server
@@ -15,6 +17,9 @@ before(async () => {
   server = await init()
   await Group.create(groupCase)
   await User.create(userCase)
+  await grantGroupPermissions(groupCase.id)
+  const permissions = await Permission.getEffective(userCase.id)
+  assert.equal(permissions.group.create, true)
 })
 
 after(async () => {
@@ -53,6 +58,9 @@ describe('group routes', () => {
     const testCase = JSON.parse(JSON.stringify(groupCase))
     testCase.id = case2Id // make it unique
     testCase.name = `example2.com`
+    // create it inside the fixture user's group tree, like a real user would;
+    // a top-level group is only visible to the root admin
+    testCase.parent_gid = groupCase.id
     delete testCase.deleted
 
     const res = await server.inject({
@@ -61,7 +69,7 @@ describe('group routes', () => {
       headers: auth.headers,
       payload: testCase,
     })
-    assert.equal(res.statusCode, 201)
+    assert.equal(res.statusCode, 201, JSON.stringify(res.result))
   })
 
   it(`GET /group/${case2Id}`, async () => {
@@ -72,6 +80,16 @@ describe('group routes', () => {
     })
     assert.equal(res.statusCode, 200)
     assert.equal(res.result.group[0].id, case2Id)
+  })
+
+  it(`PUT /group/${case2Id} rejects unknown permission controls`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/group/${case2Id}`,
+      headers: auth.headers,
+      payload: { definitely_not_a_permission: true },
+    })
+    assert.equal(res.statusCode, 400)
   })
 
   it(`DELETE /group/${case2Id}`, async () => {

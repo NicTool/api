@@ -9,6 +9,14 @@ function NameserverRoutes(server) {
       method: 'GET',
       path: '/nameserver/{id?}',
       options: {
+        app: {
+          permission: {
+            resource: 'nameserver',
+            action: 'read',
+            idFrom: 'params.id',
+            list: { resource: 'group', idFrom: 'query.gid', defaultToGroup: true },
+          },
+        },
         validate: {
           query: validate.nameserver.GET_req,
         },
@@ -18,11 +26,18 @@ function NameserverRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const getArgs = {
-          deleted: request.query.deleted === true ? 1 : 0,
+        const getArgs = {}
+        if (request.query.deleted !== undefined) {
+          getArgs.deleted = request.query.deleted === true
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
-        if (request.query.gid) getArgs.gid = parseInt(request.query.gid, 10)
+        // authz has already scoped a single-object fetch, which may resolve
+        // through a usable_ns grant on a nameserver outside the caller's group
+        if (request.query.gid !== undefined) {
+          getArgs.gid = parseInt(request.query.gid, 10)
+        } else if (!request.params.id) {
+          getArgs.gid = request.auth.credentials.group.id
+        }
 
         const nameservers = await Nameserver.get(getArgs)
 
@@ -41,6 +56,7 @@ function NameserverRoutes(server) {
       method: 'POST',
       path: '/nameserver',
       options: {
+        app: { permission: { resource: 'nameserver', action: 'create' } },
         validate: {
           payload: validate.nameserver.POST,
         },
@@ -69,6 +85,14 @@ function NameserverRoutes(server) {
       method: 'PUT',
       path: '/nameserver/{id}',
       options: {
+        app: {
+          permission: {
+            resource: 'nameserver',
+            action: 'write',
+            idFrom: 'params.id',
+            targetGroupFrom: 'payload.gid',
+          },
+        },
         validate: {
           payload: validate.nameserver.PUT,
         },
@@ -98,6 +122,7 @@ function NameserverRoutes(server) {
       method: 'DELETE',
       path: '/nameserver/{id}',
       options: {
+        app: { permission: { resource: 'nameserver', action: 'delete', idFrom: 'params.id' } },
         validate: {
           query: validate.nameserver.DELETE,
         },

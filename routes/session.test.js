@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, it, before, after } from 'node:test'
 
+import Jwt from '@hapi/jwt'
+
 import { init } from './index.js'
 import userCase from './test/user.json' with { type: 'json' }
 import groupCase from './test/group.json' with { type: 'json' }
@@ -9,6 +11,7 @@ import permCase from './test/permission.json' with { type: 'json' }
 import User from '../lib/user/index.js'
 import Group from '../lib/group/index.js'
 import Permission from '../lib/permission/index.js'
+import Config from '../lib/config.js'
 
 let server
 
@@ -58,6 +61,23 @@ describe('session routes', () => {
       auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
     })
 
+    it('honours a token issued five hours ago while its session is active', async () => {
+      const { user, group, session } = Jwt.token.decode(auth.headers.Authorization.replace('Bearer ', ''))
+        .decoded.payload.nt
+      const { jwt } = await Config.get('http')
+      const token = Jwt.token.generate(
+        { aud: 'urn:audience:test', iss: 'urn:issuer:test', nt: { user, group, session } },
+        { key: jwt.key, algorithm: 'HS512' },
+        { ttlSec: 28800, now: Date.now() - 5 * 3600 * 1000 },
+      )
+      const res = await server.inject({
+        method: 'GET',
+        url: '/session',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      assert.equal(res.statusCode, 200)
+    })
+
     after(async () => {
       const res = await server.inject({
         method: 'DELETE',
@@ -66,9 +86,16 @@ describe('session routes', () => {
       })
       // console.log(res.result)
       assert.equal(res.statusCode, 200)
+
+      const revoked = await server.inject({
+        method: 'GET',
+        url: '/session',
+        headers: auth.headers,
+      })
+      assert.equal(revoked.statusCode, 401)
     })
 
-    const routes = [{ GET: '/' }, { GET: '/session' }, { DELETE: '/session' }]
+    const routes = [{ GET: '/' }, { GET: '/session' }]
 
     for (const r of routes) {
       const key = Object.keys(r)[0]
@@ -82,6 +109,17 @@ describe('session routes', () => {
         assert.equal(res.request.auth.isAuthenticated, true)
         assert.equal(res.statusCode, 200)
       })
+    }
+  })
+
+  it('rejects malformed qualified usernames', async () => {
+    for (const username of ['a'.repeat(51), `@${groupCase.name}`, 'valid@x', 'valid@-invalid']) {
+      const res = await server.inject({
+        method: 'POST',
+        url: '/session',
+        payload: { username, password: userCase.password },
+      })
+      assert.equal(res.statusCode, 400, username)
     }
   })
 })

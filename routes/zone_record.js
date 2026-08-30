@@ -2,6 +2,9 @@ import validate from '@nictool/validate'
 
 import ZoneRecord from '../lib/zone_record/index.js'
 import Zone from '../lib/zone/index.js'
+import Authz from '../lib/authz/index.js'
+import Audit from '../lib/audit/index.js'
+import { pageLimit } from '../lib/page.js'
 import { meta } from '../lib/util.js'
 
 async function zoneRecordResponseFailAction(request, h, err) {
@@ -33,6 +36,14 @@ function ZoneRecordRoutes(server) {
       method: 'GET',
       path: '/zone_record/{id?}',
       options: {
+        app: {
+          permission: {
+            resource: 'zonerecord',
+            action: 'read',
+            idFrom: 'params.id',
+            list: { resource: 'zone', idFrom: 'query.zid' },
+          },
+        },
         validate: {
           query: validate.zone_record.GET_req,
         },
@@ -46,7 +57,7 @@ function ZoneRecordRoutes(server) {
         const deleted = request.query.deleted === true ? 1 : 0
         const getArgs = {
           deleted,
-          limit: Number.isInteger(request.query.limit) ? request.query.limit : 1000,
+          limit: await pageLimit(request.query.limit),
         }
         if (request.params.id) getArgs.id = parseInt(request.params.id, 10)
         if (request.query.zid) getArgs.zid = parseInt(request.query.zid, 10)
@@ -55,7 +66,16 @@ function ZoneRecordRoutes(server) {
         if (request.query.sort_by) getArgs.sort_by = request.query.sort_by
         if (request.query.sort_dir) getArgs.sort_dir = request.query.sort_dir
 
-        const scope = getArgs.id ? { id: getArgs.id } : getArgs.zid ? { zid: getArgs.zid } : {}
+        if (!getArgs.id && getArgs.zid) {
+          const ids = await Authz.getZoneRecordReadScope(request.auth.credentials.group.id, getArgs.zid)
+          if (ids !== null) getArgs.ids = ids
+        }
+
+        const scope = getArgs.id
+          ? { id: getArgs.id }
+          : getArgs.zid
+            ? { zid: getArgs.zid, ...(getArgs.ids ? { ids: getArgs.ids } : {}) }
+            : {}
         const countArgs = {
           deleted,
           ...scope,
@@ -90,6 +110,7 @@ function ZoneRecordRoutes(server) {
       method: 'POST',
       path: '/zone_record',
       options: {
+        app: { permission: { resource: 'zonerecord', action: 'create' } },
         validate: {
           payload: validate.zone_record.POST,
         },
@@ -102,6 +123,8 @@ function ZoneRecordRoutes(server) {
         const id = await ZoneRecord.create(request.payload)
 
         const zrs = await ZoneRecord.get({ id })
+        const zones = await Zone.get({ id: zrs[0].zid })
+        await Audit.logZoneRecord(request.auth.credentials.user, 'added', zrs[0], zones[0])
 
         return h
           .response({
@@ -118,6 +141,14 @@ function ZoneRecordRoutes(server) {
       method: 'PUT',
       path: '/zone_record/{id}',
       options: {
+        app: {
+          permission: {
+            resource: 'zonerecord',
+            action: 'write',
+            idFrom: 'params.id',
+            targetCreateResource: 'zonerecord',
+          },
+        },
         validate: {
           payload: validate.zone_record.PUT,
         },
@@ -136,7 +167,17 @@ function ZoneRecordRoutes(server) {
 
         await ZoneRecord.put({ id, ...request.payload })
 
-        const updated = await ZoneRecord.get({ id })
+        let updated = await ZoneRecord.get({ id })
+        if (updated.length === 0) updated = await ZoneRecord.get({ id, deleted: true })
+        let zones = await Zone.get({ id: updated[0].zid })
+        if (zones.length === 0) zones = await Zone.get({ id: updated[0].zid, deleted: true })
+        await Audit.logZoneRecord(
+          request.auth.credentials.user,
+          request.payload.deleted === true ? 'deleted' : 'modified',
+          updated[0],
+          zones[0],
+          zrs[0],
+        )
         return h
           .response({
             zone_record: updated,
@@ -149,6 +190,7 @@ function ZoneRecordRoutes(server) {
       method: 'DELETE',
       path: '/zone_record/{id}',
       options: {
+        app: { permission: { resource: 'zonerecord', action: 'delete', idFrom: 'params.id' } },
         validate: {
           query: validate.zone_record.DELETE,
         },
@@ -174,10 +216,17 @@ function ZoneRecordRoutes(server) {
             .code(404)
         }
 
+        let zones = await Zone.get({ id: zrs[0].zid })
+        if (zones.length === 0) zones = await Zone.get({ id: zrs[0].zid, deleted: true })
+        if (zones.length === 0) {
+          return h.response({ meta: { api: meta.api, msg: `I couldn't find that zone` } }).code(404)
+        }
+
         await ZoneRecord.delete({
           id: zrs[0].id,
           deleted: 1,
         })
+        await Audit.logZoneRecord(request.auth.credentials.user, 'deleted', zrs[0], zones[0])
 
         const deletedZrs = await ZoneRecord.get({
           id: zrs[0].id,

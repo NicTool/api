@@ -6,11 +6,42 @@ on:
   push:
     branches: [main]
 
+env:
+  NICTOOL_VALIDATE_SPEC: https://github.com/NicTool/validate/archive/0a09c61bd174cd75e5b5ec62c83e947c432be98d.tar.gz
+
 jobs:
   coverage:
-    uses: NicTool/.github/.github/workflows/coverage.yml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-    with:
-      mysql: true
+    steps:
+      - name: Start MySQL
+        run: sudo /etc/init.d/mysql start
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+      - run: npm install
+      - name: Install proposed validate source
+        run: npm install --no-save ${{ env.NICTOOL_VALIDATE_SPEC }}
+      - name: Initialize MySQL
+        run: sh sql/init-mysql.sh
+      - name: Measure each store
+        env:
+          NODE_ENV: cov
+        run: |
+          for store in json mysql; do
+            NICTOOL_DATA_STORE=$store npm run test:coverage:lcov
+            cp coverage/lcov.info coverage/lcov-$store.info
+          done
+      - name: codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov-json.info,./coverage/lcov-mysql.info
+          disable_search: true
+          fail_ci_if_error: true
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}

@@ -24,6 +24,9 @@ import { PermissionRoutes } from './permission.js'
 import { NameserverRoutes } from './nameserver.js'
 import { ZoneRoutes } from './zone.js'
 import { ZoneRecordRoutes } from './zone_record.js'
+import { DelegationRoutes } from './delegation.js'
+import { LogRoutes } from './log.js'
+import authzPlugin from '../lib/authz-plugin.js'
 
 let server
 
@@ -90,7 +93,7 @@ async function setup() {
       sub: false,
       nbf: true,
       exp: true,
-      maxAgeSec: 14400, // 4 hours
+      maxAgeSec: 28800, // the token's ttl; idle expiry is the session's job
       timeSkewSec: 15,
     },
     httpAuthScheme: 'Bearer',
@@ -104,6 +107,8 @@ async function setup() {
   })
 
   server.auth.default('nt_jwt_strategy')
+
+  await server.register(authzPlugin)
 
   server.route({
     method: 'GET',
@@ -120,6 +125,8 @@ async function setup() {
   NameserverRoutes(server)
   ZoneRoutes(server)
   ZoneRecordRoutes(server)
+  DelegationRoutes(server)
+  LogRoutes(server)
 
   server.route({
     method: '*',
@@ -139,7 +146,7 @@ async function setup() {
     }
   })
 
-  server.events.on('stop', async () => {
+  server.ext('onPostStop', async () => {
     await User.disconnect()
     await Session.disconnect()
   })
