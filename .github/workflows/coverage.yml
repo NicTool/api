@@ -26,14 +26,19 @@ jobs:
         run: npm install --no-save ${{ env.NICTOOL_VALIDATE_SPEC }}
       - name: Initialize MySQL
         run: sh sql/init-mysql.sh
-      - run: npm run test:coverage:lcov
+      - name: Measure each store
         env:
           NODE_ENV: cov
+        run: |
+          for store in json mysql; do
+            NICTOOL_DATA_STORE=$store npm run test:coverage:lcov
+            cp coverage/lcov.info coverage/lcov-$store.info
+          done
       - name: codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info
+          files: ./coverage/lcov-json.info,./coverage/lcov-mysql.info
           disable_search: true
           fail_ci_if_error: true
       - name: Coveralls
