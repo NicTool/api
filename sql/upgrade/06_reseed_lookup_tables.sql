@@ -1,6 +1,6 @@
 # Copyright 2004-2026 The Network People, Inc.
 #
-# Lookup rows added since NicTool 2.x. New installs get these from
+# Lookup rows added in NicTool 3.0. New installs get these from
 # sql/04_nt_nameserver.sql and sql/06_resource_records.sql; a database
 # created by 2.x has only the rows of its day (no coredns or native
 # nameserver type), so re-seed. Safe to re-run: INSERT IGNORE keeps
