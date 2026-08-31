@@ -56,15 +56,16 @@ const cases = [
 ]
 
 before(async () => {
+  const fixture = { ifExists: 'return' }
   await ZoneRecord.destroy({ id: chosenId })
   await Zone.destroy({ id: chosenId })
   await User.destroy({ id: chosenId })
   await Permission.destroy({ id: chosenId })
   await Nameserver.destroy({ id: chosenId })
   await Group.destroy({ id: chosenId })
-  await Group.create(groupCase)
-  await User.create(userCase)
-  await Zone.create(zoneCase)
+  await Group.create(groupCase, fixture)
+  await User.create(userCase, fixture)
+  await Zone.create(zoneCase, fixture)
   server = await init()
 
   const res = await server.inject({
@@ -86,7 +87,7 @@ after(async () => {
   await Permission.destroy({ id: chosenId })
   await Nameserver.destroy({ id: chosenId })
   await Group.destroy({ id: chosenId })
-  await server.stop()
+  if (server) await server.stop()
 })
 
 describe('caller-supplied create ids', () => {
