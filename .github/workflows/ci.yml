@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  NICTOOL_VALIDATE_SPEC: https://github.com/NicTool/validate/archive/c7d2776fd465b4118eb6d90449d1ecae42220dd5.tar.gz
+  NICTOOL_VALIDATE_SPEC: https://github.com/NicTool/validate/archive/45037764d5ef420be6536e66894da02f60527e5e.tar.gz
 
 jobs:
   lint:
