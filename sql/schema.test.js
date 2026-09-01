@@ -174,6 +174,47 @@ describe('sql schema', () => {
     assert.equal(await seedCount(), seeded, 'INSERT IGNORE kept the seed rows unique')
   })
 
+  it('offers an upgraded database every export type a new install seeds', async () => {
+    const seeded = async (file, row) => {
+      const sql = await fs.readFile(path.join(sqlDir, file), 'utf8')
+      const insert = sql.match(/INSERT IGNORE INTO `nt_nameserver_export_type`[\s\S]*?;/)
+      assert.ok(insert, `${file} seeds nt_nameserver_export_type`)
+      return [...insert[0].matchAll(row)]
+    }
+
+    // 2.41 shipped ids 1-8, so every type seeded above that is one an
+    // upgraded database can only get from the migration.
+    const install = await seeded(
+      '04_nt_nameserver.sql',
+      /\(\s*(\d+)\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*\)/g,
+    )
+    const migration = await seeded(
+      'upgrade/06_add_nameserver_export_types.sql',
+      /\(\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*\)/g,
+    )
+
+    assert.deepEqual(
+      migration.map(([, ...cols]) => cols),
+      install.filter(([, id]) => Number(id) > 8).map(([, , ...cols]) => cols),
+    )
+  })
+
+  it('adds the v3 export types to an existing database, and again on a re-run', async () => {
+    const migration = await fs.readFile(
+      path.join(sqlDir, 'upgrade', '06_add_nameserver_export_types.sql'),
+      'utf8',
+    )
+    const types = async () =>
+      (await conn.query('SELECT name FROM nt_nameserver_export_type ORDER BY id'))[0].map((r) => r.name)
+
+    await assert.doesNotReject(() => conn.query(migration))
+    const seeded = await types()
+    for (const name of ['coredns', 'native']) assert.ok(seeded.includes(name), `${name} is selectable`)
+
+    await assert.doesNotReject(() => conn.query(migration), 'the migration is not re-runnable')
+    assert.deepEqual(await types(), seeded, 'the second run changed the rows')
+  })
+
   it('declares the 2.x db_version the upgrade path detects', async () => {
     const sql = await fs.readFile(path.join(sqlDir, '12_nt_options.sql'), 'utf8')
     assert.match(sql, /'db_version','2\.41'/)

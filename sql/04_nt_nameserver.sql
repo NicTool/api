@@ -61,7 +61,8 @@ CREATE TABLE IF NOT EXISTS `nt_nameserver_export_type` (
     `name`   varchar(16) NOT NULL DEFAULT '',
     `descr`  varchar(56) NOT NULL DEFAULT '',
     `url`    varchar(128) DEFAULT NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `name` (`name`)
 ) DEFAULT CHARSET=utf8mb4;
 
 INSERT IGNORE INTO `nt_nameserver_export_type` (`id`, `name`, `descr`, `url`)
