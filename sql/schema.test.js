@@ -179,50 +179,69 @@ describe('sql schema', () => {
     assert.match(sql, /'db_version','2\.41'/)
   })
 
-  it('re-seeds every lookup row on upgrade', async () => {
-    const seeds = async (file) => {
-      const sql = await fs.readFile(path.join(sqlDir, file), 'utf8')
-      const rows = {}
-      for (const [, table, body] of sql.matchAll(/INSERT IGNORE INTO `(\w+)`[^;]*VALUES([^;]*);/g)) {
-        rows[table] = [...body.matchAll(/\((\d+),'([^']+)'/g)].map((m) => `${m[1]}:${m[2]}`).sort()
-      }
-      return rows
-    }
-    const upgrade = await seeds('upgrade/06_reseed_lookup_tables.sql')
-    const installed = {
-      ...(await seeds('04_nt_nameserver.sql')),
-      ...(await seeds('06_resource_records.sql')),
-    }
-    for (const table of ['nt_nameserver_export_type', 'resource_record_type']) {
-      assert.deepEqual(upgrade[table], installed[table], `${table} rows an upgraded database would never get`)
-    }
-  })
-
-  // The header claims an id already in use keeps its row. Run that, don't assert it.
-  it('leaves an id a site already uses alone', async () => {
-    const reseed = await fs.readFile(path.join(sqlDir, 'upgrade', '06_reseed_lookup_tables.sql'), 'utf8')
-    const typeRows = async () =>
-      (await conn.query('SELECT id, name FROM nt_nameserver_export_type WHERE id = 9'))[0]
-
-    try {
-      await conn.query('DELETE FROM nt_nameserver_export_type WHERE id = 9')
+  it('adds v3 nameserver types without changing existing rows', async () => {
+    const source = await fs.readFile(
+      path.join(sqlDir, 'upgrade', '06_add_nameserver_export_types.sql'),
+      'utf8',
+    )
+    const migration = source.replaceAll(
+      '`nt_nameserver_export_type`',
+      '`test_nameserver_export_type_upgrade`',
+    )
+    const rows = async () =>
+      (
+        await conn.query('SELECT id, name, descr, url FROM test_nameserver_export_type_upgrade ORDER BY id')
+      )[0]
+    const reset = async (extra) => {
+      await conn.query('DELETE FROM test_nameserver_export_type_upgrade')
       await conn.query(
-        "INSERT INTO nt_nameserver_export_type (id, name, descr, url) VALUES (9,'gerbil','Gerbil DNS','')",
+        `INSERT INTO test_nameserver_export_type_upgrade (id, name, descr, url)
+         SELECT id, name, descr, url FROM nt_nameserver_export_type WHERE id <= 8`,
       )
-      await conn.query(reseed)
-
-      assert.deepEqual(
-        await typeRows(),
-        [{ id: 9, name: 'gerbil' }],
-        'the reseed overwrote a row it did not own',
-      )
-      const coredns = (await conn.query("SELECT id FROM nt_nameserver_export_type WHERE name = 'coredns'"))[0]
-      assert.deepEqual(coredns, [], 'coredns landed somewhere the file does not claim')
-    } finally {
-      await conn.query('DELETE FROM nt_nameserver_export_type WHERE id = 9')
-      await conn.query(reseed)
+      for (const row of extra) {
+        await conn.query(
+          'INSERT INTO test_nameserver_export_type_upgrade (id, name, descr, url) VALUES (?, ?, ?, ?)',
+          row,
+        )
+      }
     }
 
-    assert.deepEqual(await typeRows(), [{ id: 9, name: 'coredns' }], 'the reseed did not restore coredns')
+    await conn.query('DROP TABLE IF EXISTS test_nameserver_export_type_upgrade')
+    await conn.query('CREATE TABLE test_nameserver_export_type_upgrade LIKE nt_nameserver_export_type')
+    try {
+      await reset([
+        [9, 'gerbil', 'Gerbil DNS', ''],
+        [10, 'otter', 'Otter DNS', ''],
+      ])
+      await conn.query(migration)
+
+      const clashingIds = await rows()
+      assert.deepEqual(clashingIds.slice(8, 10), [
+        { id: 9, name: 'gerbil', descr: 'Gerbil DNS', url: '' },
+        { id: 10, name: 'otter', descr: 'Otter DNS', url: '' },
+      ])
+      assert.equal(clashingIds.filter((r) => r.name === 'coredns').length, 1)
+      assert.equal(clashingIds.filter((r) => r.name === 'native').length, 1)
+
+      await conn.query(migration)
+      assert.deepEqual(await rows(), clashingIds, 'repeat migration changed the rows')
+
+      await reset([
+        [11, 'coredns', 'Custom CoreDNS', ''],
+        [12, 'native', 'Custom native', ''],
+      ])
+      await conn.query(migration)
+
+      const existingNames = await rows()
+      assert.deepEqual(
+        existingNames.filter((r) => ['coredns', 'native'].includes(r.name)),
+        [
+          { id: 11, name: 'coredns', descr: 'Custom CoreDNS', url: '' },
+          { id: 12, name: 'native', descr: 'Custom native', url: '' },
+        ],
+      )
+    } finally {
+      await conn.query('DROP TABLE test_nameserver_export_type_upgrade')
+    }
   })
 })
