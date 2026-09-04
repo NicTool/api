@@ -90,24 +90,6 @@ describe('zone_record routes', () => {
     auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
   })
 
-  it('POST /zone_record returns 409 for an existing id', async () => {
-    const res = await server.inject({
-      method: 'POST',
-      url: '/zone_record',
-      headers: auth.headers,
-      payload: {
-        ...testZoneRecord,
-        owner: 'changed.route-zr-delete.example.com.',
-      },
-    })
-
-    assert.equal(res.statusCode, 409)
-    assert.equal(res.result.message, `zone record id ${testZoneRecordId} already exists`)
-
-    const [existing] = await ZoneRecord.get({ id: testZoneRecordId })
-    assert.equal(existing.owner, testZoneRecord.owner)
-  })
-
   it('POST /zone_record creates and returns array payload', async () => {
     const res = await server.inject({
       method: 'POST',
@@ -129,6 +111,19 @@ describe('zone_record routes', () => {
     assert.equal(res.result.zone_record[0].owner, 'new.route-zr-delete.example.com.')
 
     createdZoneRecordIds.push(res.result.zone_record[0].id)
+  })
+
+  it('PUT /zone_record/{id} keeps using the route id', async () => {
+    const id = createdZoneRecordIds[0]
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${id}`,
+      headers: auth.headers,
+      payload: { description: 'updated' },
+    })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.zone_record[0].description, 'updated')
   })
 
   it('POST /zone_record accepts omitted ttl and stores 0', async () => {

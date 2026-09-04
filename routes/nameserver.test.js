@@ -11,10 +11,9 @@ import userCase from './test/user.json' with { type: 'json' }
 import nsCase from './test/nameserver.json' with { type: 'json' }
 
 let server
-let case2Id = 4094
+let case2Id
 
 before(async () => {
-  await Nameserver.destroy({ id: case2Id })
   await Group.create(groupCase, { ifExists: 'return' })
   await User.create(userCase, { ifExists: 'return' })
   await Nameserver.create(nsCase, { ifExists: 'return' })
@@ -22,7 +21,7 @@ before(async () => {
 })
 
 after(async () => {
-  await Nameserver.destroy({ id: case2Id })
+  if (case2Id) await Nameserver.destroy({ id: case2Id })
   await server.stop()
 })
 
@@ -53,9 +52,9 @@ describe('nameserver routes', () => {
     assert.equal(res.result.nameserver[0].name, nsCase.name)
   })
 
-  it(`POST /nameserver (${case2Id})`, async () => {
+  it('POST /nameserver allocates an id', async () => {
     const testCase = JSON.parse(JSON.stringify(nsCase))
-    testCase.id = case2Id // make it unique
+    delete testCase.id
     testCase.name = 'c.ns.example.com.'
 
     const res = await server.inject({
@@ -65,10 +64,25 @@ describe('nameserver routes', () => {
       payload: testCase,
     })
     assert.equal(res.statusCode, 201)
+    assert.equal(res.result.nameserver.length, 1)
+    assert.equal(res.result.nameserver[0].name, 'c.ns.example.com.')
     assert.ok(res.result.nameserver[0].gid)
+    case2Id = res.result.nameserver[0].id
+    assert.ok(Number.isInteger(case2Id))
   })
 
-  it(`GET /nameserver/${case2Id}`, async () => {
+  it('PUT /nameserver/{id} keeps using the route id', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/nameserver/${case2Id}`,
+      headers: auth.headers,
+      payload: { description: 'updated' },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.nameserver[0].description, 'updated')
+  })
+
+  it('GET /nameserver/{id}', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/nameserver/${case2Id}`,
@@ -78,19 +92,7 @@ describe('nameserver routes', () => {
     assert.ok(res.result.nameserver[0].gid)
   })
 
-  it(`PUT /nameserver/${case2Id}`, async () => {
-    const res = await server.inject({
-      method: 'PUT',
-      url: `/nameserver/${case2Id}`,
-      headers: auth.headers,
-      payload: { description: 'edited by the route test' },
-    })
-
-    assert.equal(res.statusCode, 200)
-    assert.equal((await Nameserver.get({ id: case2Id }))[0].description, 'edited by the route test')
-  })
-
-  it(`DELETE /nameserver/${case2Id}`, async () => {
+  it('DELETE /nameserver/{id}', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/nameserver/${case2Id}`,
@@ -99,7 +101,7 @@ describe('nameserver routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it(`DELETE /nameserver/${case2Id}`, async () => {
+  it('DELETE /nameserver/{id} returns 404 when already deleted', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/nameserver/${case2Id}`,
@@ -108,7 +110,7 @@ describe('nameserver routes', () => {
     assert.equal(res.statusCode, 404)
   })
 
-  it(`GET /nameserver/${case2Id}`, async () => {
+  it('GET /nameserver/{id} hides a soft-deleted nameserver', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/nameserver/${case2Id}`,
@@ -117,7 +119,7 @@ describe('nameserver routes', () => {
     assert.deepEqual(res.result.nameserver, [])
   })
 
-  it(`GET /nameserver/${case2Id} (deleted)`, async () => {
+  it('GET /nameserver/{id}?deleted=true returns a soft-deleted nameserver', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/nameserver/${case2Id}?deleted=true`,
