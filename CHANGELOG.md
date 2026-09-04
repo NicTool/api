@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 - fix: reject create conflicts and duplicate permission targets
 - create: allocate ids internally and reject caller-supplied ids
+- fix(sql): seed ns export types coredns & native for 2.x upgrade
 
 ### [3.0.3] - 2026-07-27
 
