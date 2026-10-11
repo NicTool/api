@@ -155,7 +155,7 @@ async function setup() {
     }
   })
 
-  server.events.on('stop', async () => {
+  server.ext('onPostStop', async () => {
     await User.disconnect()
     await Session.disconnect()
   })
