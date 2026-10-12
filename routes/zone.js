@@ -2,7 +2,6 @@ import validate from '@nictool/validate'
 
 import Zone from '../lib/zone/index.js'
 import Group from '../lib/group/index.js'
-import Mysql from '../lib/mysql.js'
 import { meta } from '../lib/util.js'
 
 function ZoneRoutes(server) {
@@ -142,15 +141,7 @@ function ZoneRoutes(server) {
       handler: async (request, h) => {
         const zid = parseInt(request.params.id, 10)
 
-        const nsRows = await Mysql.execute(
-          `SELECT z.zone, n.name, n.ttl
-             FROM nt_zone_nameserver nzns
-             JOIN nt_nameserver n ON n.nt_nameserver_id = nzns.nt_nameserver_id
-             JOIN nt_zone z       ON z.nt_zone_id       = nzns.nt_zone_id
-            WHERE nzns.nt_zone_id = ?
-            ORDER BY n.name`,
-          [zid],
-        )
+        const nsRows = await Zone.nameserversFor(zid)
 
         const ns = nsRows.map((row) => {
           const zoneFqdn = row.zone.endsWith('.') ? row.zone : `${row.zone}.`

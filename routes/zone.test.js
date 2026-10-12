@@ -65,6 +65,16 @@ describe('zone routes', () => {
     assert.equal(res.result.zone[0].zone, nsCase.zone)
   })
 
+  it(`GET /zone/${nsCase.id}/ns`, async () => {
+    const res = await server.inject({
+      method: 'GET',
+      url: `/zone/${nsCase.id}/ns`,
+      headers: auth.headers,
+    })
+    assert.equal(res.statusCode, 200)
+    assert.ok(Array.isArray(res.result.ns))
+  })
+
   it('GET /zone?search=... returns DB matches', async () => {
     const res = await server.inject({
       method: 'GET',
