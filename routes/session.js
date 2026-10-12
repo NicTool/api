@@ -5,6 +5,7 @@ import Jwt from '@hapi/jwt'
 
 import User from '../lib/user/index.js'
 import Session from '../lib/session/index.js'
+import { maxAgeSec, newSessionValue, timeSkewSec } from '../lib/session/v3.js'
 
 import { meta } from '../lib/util.js'
 
@@ -24,7 +25,9 @@ function SessionRoutes(server) {
       handler: async (request, h) => {
         const { user, group, session } = h.request.auth.credentials
 
-        Session.put({ id: session.id, last_access: true })
+        Session.put({ id: session.id, last_access: true }).catch((err) => {
+          console.error(`session ${session.id} activity: ${err.message}`)
+        })
 
         return h
           .response({
@@ -58,10 +61,14 @@ function SessionRoutes(server) {
           return h.response({ err: 'Invalid authentication' }).code(401)
         }
 
+        const now = parseInt(Date.now() / 1000, 10)
+        await Session.expire({ uid: account.user.id, before: now - maxAgeSec - timeSkewSec }).catch((err) => {
+          console.error(`session expiry for user ${account.user.id}: ${err.message}`)
+        })
         const sessId = await Session.create({
           uid: account.user.id,
-          session: '3.0.0',
-          last_access: parseInt(Date.now() / 1000, 10),
+          session: newSessionValue(),
+          last_access: now,
         })
 
         const token = Jwt.token.generate(
@@ -79,7 +86,7 @@ function SessionRoutes(server) {
             algorithm: 'HS512',
           },
           {
-            ttlSec: 28800, // 8 hours
+            ttlSec: maxAgeSec,
           },
         )
 
@@ -111,10 +118,7 @@ function SessionRoutes(server) {
       handler: async (request, h) => {
         const { user, group, session } = h.request.auth.credentials
 
-        const bool = await Session.delete({
-          id: session.id,
-          session: '3.0.0',
-        })
+        const bool = await Session.delete({ id: session.id, uid: user.id })
 
         return h
           .response({

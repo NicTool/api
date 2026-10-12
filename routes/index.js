@@ -21,6 +21,7 @@ import pkgJson from '../package.json' with { type: 'json' }
 import GroupRoutes from './group.js'
 import { User, UserRoutes } from './user.js'
 import { Session, SessionRoutes } from './session.js'
+import { maxAgeSec, timeSkewSec } from '../lib/session/v3.js'
 import { PermissionRoutes } from './permission.js'
 import { NameserverRoutes } from './nameserver.js'
 import { ZoneRoutes } from './zone.js'
@@ -91,8 +92,8 @@ async function setup() {
       sub: false,
       nbf: true,
       exp: true,
-      maxAgeSec: 14400, // 4 hours
-      timeSkewSec: 15,
+      maxAgeSec,
+      timeSkewSec,
     },
     httpAuthScheme: 'Bearer',
     headerName: 'authorization',
