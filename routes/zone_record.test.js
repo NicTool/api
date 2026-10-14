@@ -37,6 +37,7 @@ const testZoneRecord = {
 
 before(async () => {
   await ZoneRecord.destroy({ id: testZoneRecordId })
+  await ZoneRecord.destroy({ id: bystanderId })
   await Zone.destroy({ id: testZoneId })
 
   const testGroup = { ...groupCase, id: testGroupId }
@@ -69,7 +70,9 @@ after(async () => {
   await ZoneRecord.destroy({ id: testZoneRecordId })
   await ZoneRecord.destroy({ id: bystanderId })
   await Zone.destroy({ id: testZoneId })
-  await server.stop()
+  // a failed before() leaves no server, and an open db connection keeps node running
+  if (server) await server.stop()
+  else await ZoneRecord.disconnect()
 })
 
 describe('zone_record routes', () => {

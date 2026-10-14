@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - fix(sql): seed ns export types coredns & native for 2.x upgrade
 - fix: server stop waits for the stores to disconnect
 - fix(mysql): read v2 group permission rows, and save partial permission changes
+- fix: file store login checks the group in user@group
 
 ### [3.0.3] - 2026-07-27
 
