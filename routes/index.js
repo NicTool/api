@@ -108,6 +108,9 @@ async function setup() {
 
   server.ext('onPreResponse', (request, h) => {
     const response = request.response
+    if (response?.code === 'STORE_INVALID') {
+      return h.response({ statusCode: 400, error: 'Bad Request', message: response.message }).code(400)
+    }
     if (!(response instanceof StoreConflictError) && response?.code !== 'STORE_CONFLICT') {
       return h.continue
     }

@@ -211,6 +211,36 @@ describe('zone_record routes', () => {
     assert.equal((await ZoneRecord.get({ id: testZoneRecordId }))[0].address, '198.51.100.99')
   })
 
+  it(`PUT /zone_record/${testZoneRecordId} refuses a type change it can't complete`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${testZoneRecordId}`,
+      headers: auth.headers,
+      payload: { type: 'MX' },
+    })
+
+    assert.equal(res.statusCode, 400)
+    assert.match(res.result.message, /preference is required/)
+    assert.equal((await ZoneRecord.get({ id: testZoneRecordId }))[0].type, 'A')
+  })
+
+  it(`PUT /zone_record/${testZoneRecordId} refuses a TXT with no data`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${testZoneRecordId}`,
+      headers: auth.headers,
+      payload: { type: 'TXT' },
+    })
+    assert.equal(res.statusCode, 400)
+
+    const list = await server.inject({
+      method: 'GET',
+      url: `/zone_record?zid=${testZoneId}`,
+      headers: auth.headers,
+    })
+    assert.equal(list.statusCode, 200)
+  })
+
   // asserts on the bystander alone, so a schema that refuses a payload id
   // leaves this passing rather than pinning the status code
   it(`PUT /zone_record/${testZoneRecordId} leaves ${bystanderId} alone`, async () => {
