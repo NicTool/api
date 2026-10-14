@@ -75,6 +75,17 @@ describe('permission routes', () => {
     assert.ok(Number.isInteger(case2Id))
   })
 
+  it('POST /permission with no user or group', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/permission',
+      headers: auth.headers,
+      payload: { name: 'No Target Route Test' },
+    })
+    assert.equal(res.statusCode, 400)
+    assert.match(res.result.message, /needs a user or group/)
+  })
+
   it('POST /permission rejects an existing target', async () => {
     const testCase = JSON.parse(JSON.stringify(permCase))
     delete testCase.id
