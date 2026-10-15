@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - fix: GET /zone/{id}/ns reads nameservers through the zone store
 - fix(mysql): read v2 group permission rows, and save partial permission changes
 - fix: file store login checks the group in user@group
+- create: allocate ids internally and reject caller-supplied ids
 
 ### [3.0.3] - 2026-07-27
 
