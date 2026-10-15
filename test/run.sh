@@ -39,19 +39,18 @@ if [ $# -ge 1 ]; then
 	if [ "$1" = "watch" ]; then
 		$NODE --test --watch
 	elif [ "$1" = "coverage" ]; then
-		# shellcheck disable=SC2046 # word splitting is how the file list is passed
-		$NODE --test --experimental-test-coverage $COVERAGE_EXCLUDE $(test_files)
+		# shellcheck disable=SC2086 # word splitting passes each exclusion separately
+		run_tests --experimental-test-coverage $COVERAGE_EXCLUDE
 	elif [ "$1" = "coverage:lcov" ]; then
 		mkdir -p coverage
 		# lcov alone writes only to the file, so a failure exits 1 with an empty log
-		# shellcheck disable=SC2046 # word splitting is how the file list is passed
-		$NODE --test --experimental-test-coverage $COVERAGE_EXCLUDE \
+		# shellcheck disable=SC2086 # word splitting passes each exclusion separately
+		run_tests --experimental-test-coverage $COVERAGE_EXCLUDE \
 			--test-reporter=lcov --test-reporter-destination=coverage/lcov.info \
-			--test-reporter=spec --test-reporter-destination=stdout \
-			$(test_files)
+			--test-reporter=spec --test-reporter-destination=stdout
 	else
 		$NODE --test --test-reporter=spec "$1"
 	fi
 else
-	run_tests
+	run_tests --test-reporter=spec
 fi
