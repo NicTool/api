@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - create: allocate ids internally and reject caller-supplied ids
 - zone: `nameservers` holds the zone's nameserver ids on every store, and POST /zone defaults it to the group's usable nameservers
 - fix: one live zone per name, ignoring case and a trailing dot
-- fix(sql): store existing zone names lowercase without the trailing dot
+- fix(sql): lowercase existing zone names, and the zone in record names
 - fix: one random, self describing session row per login, expired ones swept at login, and mysql throttles the activity touch
 - fix: a token is valid only while its session row exists, so logout revokes it, and any authenticated request counts as activity
 

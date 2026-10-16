@@ -255,6 +255,60 @@ describe('sql schema', () => {
     }
   })
 
+  it('gives record names that spell their zone its new spelling', async () => {
+    const migration = await fs.readFile(path.join(sqlDir, 'upgrade', '07_lowercase_zone_names.sql'), 'utf8')
+    const zone = `records-${Date.now()}.test`
+    const Zone = zone.replace('records', 'Records').replace('.test', '.TEST')
+    const zoneIds = []
+    const addZone = async (name) => {
+      const [z] = await conn.query('INSERT INTO nt_zone (nt_group_id, zone) VALUES (1, ?)', [name])
+      zoneIds.push(z.insertId)
+      return z.insertId
+    }
+    const zid = await addZone(Zone)
+    // a live pair 07 leaves alone, so its records must keep its spelling
+    const skipped = await addZone(`Pair-${zone}`)
+    await addZone(`pair-${zone}`)
+
+    const names = {
+      apex: [zid, `${Zone}.`, `${zone}.`],
+      host: [zid, `WWW.${Zone}.`, `WWW.${zone}.`],
+      bare: [zid, Zone, zone],
+      relative: [zid, 'www', 'www'],
+      outside: [zid, `not${Zone}.`, `not${Zone}.`],
+      canonical: [zid, `mail.${zone}.`, `mail.${zone}.`],
+      inSkippedZone: [skipped, `Pair-${zone}.`, `Pair-${zone}.`],
+    }
+    const ids = {}
+    for (const [key, [inZone, name]] of Object.entries(names)) {
+      const [r] = await conn.query(
+        "INSERT INTO nt_zone_record (nt_zone_id, name, ttl, type_id, address) VALUES (?, ?, 60, 1, '192.0.2.1')",
+        [inZone, name],
+      )
+      ids[key] = r.insertId
+    }
+    const read = async () => {
+      const [rows] = await conn.query(
+        'SELECT nt_zone_record_id, name FROM nt_zone_record WHERE nt_zone_id IN (?)',
+        [zoneIds],
+      )
+      return Object.fromEntries(
+        Object.entries(ids).map(([k, id]) => [k, rows.find((r) => r.nt_zone_record_id === id).name]),
+      )
+    }
+
+    try {
+      await conn.query(migration)
+      const after = await read()
+      assert.deepEqual(after, Object.fromEntries(Object.entries(names).map(([k, [, , want]]) => [k, want])))
+
+      await assert.doesNotReject(() => conn.query(migration), 'the migration is not re-runnable')
+      assert.deepEqual(await read(), after)
+    } finally {
+      await conn.query('DELETE FROM nt_zone WHERE nt_zone_id IN (?)', [zoneIds])
+    }
+  })
+
   it('adds the v3 export types to an existing database, and again on a re-run', async () => {
     const migration = await fs.readFile(
       path.join(sqlDir, 'upgrade', '06_add_nameserver_export_types.sql'),
