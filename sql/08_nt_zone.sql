@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS nt_zone(
     nt_zone_id          INT UNSIGNED AUTO_INCREMENT NOT NULL,
     nt_group_id         INT UNSIGNED NOT NULL,
     zone                VARCHAR(255) NOT NULL,
+    zone_canonical      VARCHAR(255) GENERATED ALWAYS AS (LOWER(TRIM(TRAILING '.' FROM zone))) VIRTUAL,
     mailaddr            VARCHAR(127),
     description         VARCHAR(255),
     serial              INT UNSIGNED NOT NULL DEFAULT '1',
@@ -35,7 +36,8 @@ CREATE TABLE IF NOT EXISTS nt_zone(
     PRIMARY KEY (`nt_zone_id`),
     KEY `nt_zone_idx1` (`nt_group_id`),
     KEY `nt_zone_idx2` (`deleted`),
-    KEY `nt_zone_idx3` (`zone`)
+    KEY `nt_zone_idx3` (`zone`),
+    KEY `nt_zone_idx4` (`zone_canonical`)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 

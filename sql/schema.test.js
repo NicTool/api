@@ -215,6 +215,25 @@ describe('sql schema', () => {
     assert.deepEqual(await types(), seeded, 'the second run changed the rows')
   })
 
+  it('indexes the canonical zone name the zone store matches, on install and upgrade', async () => {
+    const read = (...f) => fs.readFile(path.join(sqlDir, ...f), 'utf8')
+    const generated = (sql) =>
+      sql
+        .replaceAll("''", "'")
+        .replaceAll('`', '')
+        .match(/zone_canonical\s+VARCHAR\(255\)\s+GENERATED ALWAYS AS \((.+)\) VIRTUAL/)?.[1]
+    const store = (await read('..', 'lib', 'zone', 'store', 'mysql.js')).match(
+      /const STORED_NAME = "(.+)"/,
+    )[1]
+
+    assert.equal(generated(await read('08_nt_zone.sql')), store)
+    const migration = await read('upgrade', '07_zone_canonical_name.sql')
+    assert.equal(generated(migration), store)
+
+    await assert.doesNotReject(() => conn.query(migration))
+    await assert.doesNotReject(() => conn.query(migration), 'the migration is not re-runnable')
+  })
+
   it('declares the 2.x db_version the upgrade path detects', async () => {
     const sql = await fs.readFile(path.join(sqlDir, '12_nt_options.sql'), 'utf8')
     assert.match(sql, /'db_version','2\.41'/)
