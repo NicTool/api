@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - fix(mysql): read v2 group permission rows, and save partial permission changes
 - fix: file store login checks the group in user@group
 - fix: zone record PUT keeps the rdata it is not given, and a type change drops the old rdata
+- create: allocate ids internally and reject caller-supplied ids
 
 ### [3.0.3] - 2026-07-27
 

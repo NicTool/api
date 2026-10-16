@@ -17,10 +17,10 @@ before(async () => {
   await User.create(userCase, { ifExists: 'return' })
 })
 
-const userId2 = 4094
+let userId2
 
 after(async () => {
-  User.destroy({ id: userId2 })
+  if (userId2) await User.destroy({ id: userId2 })
   await server.stop()
 })
 
@@ -57,9 +57,9 @@ describe('user routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it('POST /user', async () => {
+  it('POST /user allocates an id', async () => {
     const testCase = JSON.parse(JSON.stringify(userCase))
-    testCase.id = userId2 // make it unique
+    delete testCase.id
     testCase.username = `${testCase.username}2`
     delete testCase.deleted
 
@@ -70,9 +70,24 @@ describe('user routes', () => {
       payload: testCase,
     })
     assert.equal(res.statusCode, 201)
+    assert.equal(res.result.user.length, 1)
+    assert.equal(res.result.user[0].username, `${userCase.username}2`)
+    userId2 = res.result.user[0].id
+    assert.ok(Number.isInteger(userId2))
   })
 
-  it(`GET /user/${userId2}`, async () => {
+  it('PUT /user/{id} keeps using the route id', async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/user/${userId2}`,
+      headers: auth.headers,
+      payload: { first_name: 'Updated' },
+    })
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.result.user[0].first_name, 'Updated')
+  })
+
+  it('GET /user/{id}', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/user/${userId2}`,
@@ -81,7 +96,7 @@ describe('user routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it(`DELETE /user/${userId2}`, async () => {
+  it('DELETE /user/{id}', async () => {
     const res = await server.inject({
       method: 'DELETE',
       url: `/user/${userId2}`,
@@ -90,7 +105,7 @@ describe('user routes', () => {
     assert.equal(res.statusCode, 200)
   })
 
-  it(`GET /user/${userId2} (deleted)`, async () => {
+  it('GET /user/{id} hides a soft-deleted user', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/user/${userId2}`,
@@ -99,7 +114,7 @@ describe('user routes', () => {
     assert.ok([200, 204].includes(res.statusCode))
   })
 
-  it(`GET /user/${userId2}?deleted=true`, async () => {
+  it('GET /user/{id}?deleted=true returns a soft-deleted user', async () => {
     const res = await server.inject({
       method: 'GET',
       url: `/user/${userId2}?deleted=true`,

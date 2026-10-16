@@ -79,7 +79,7 @@ function SessionRoutes(server) {
             algorithm: 'HS512',
           },
           {
-            ttlSec: 28800, // 8 hours
+            ttlSec: 8 * 60 * 60,
           },
         )
 
@@ -104,7 +104,7 @@ function SessionRoutes(server) {
           query: validate.session.DELETE,
         },
         response: {
-          schema: validate.session.GET,
+          schema: validate.session.GET_res,
         },
         tags: ['api'],
       },
