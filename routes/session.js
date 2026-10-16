@@ -104,7 +104,7 @@ function SessionRoutes(server) {
           query: validate.session.DELETE,
         },
         response: {
-          schema: validate.session.GET,
+          schema: validate.session.GET_res,
         },
         tags: ['api'],
       },

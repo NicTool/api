@@ -41,6 +41,29 @@ describe('session routes', () => {
     }
   })
 
+  describe('invalid payload responds with 400', () => {
+    const env = process.env.NODE_ENV
+
+    after(() => {
+      if (env === undefined) delete process.env.NODE_ENV
+      else process.env.NODE_ENV = env
+    })
+
+    it('in production, with a generic message', async () => {
+      process.env.NODE_ENV = 'production'
+      const res = await server.inject({ method: 'POST', url: '/session', payload: {} })
+      assert.equal(res.statusCode, 400)
+      assert.equal(res.result.message, 'Invalid request payload input')
+    })
+
+    it('in development, with the validation details', async () => {
+      process.env.NODE_ENV = 'development'
+      const res = await server.inject({ method: 'POST', url: '/session', payload: {} })
+      assert.equal(res.statusCode, 400)
+      assert.match(res.result.message, /username/)
+    })
+  })
+
   describe('with session, can retrieve private URIs', () => {
     let auth = { headers: {} }
 

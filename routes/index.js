@@ -1,17 +1,8 @@
 'use strict'
 
-import path from 'node:path'
-import url from 'node:url'
-
 import Jwt from '@hapi/jwt'
 import Hapi from '@hapi/hapi'
-// import Cookie from '@hapi/cookie'
-import Inert from '@hapi/inert'
-import Vision from '@hapi/vision'
 import HapiSwagger from '@msimerson/hapi-openapi'
-// import Hoek from '@hapi/hoek'
-
-import qs from 'qs'
 
 import Config from '../lib/config.js'
 import { StoreConflictError } from '../lib/store/error.js'
@@ -35,25 +26,16 @@ async function setup() {
     port: httpCfg.port,
     host: httpCfg.host,
     tls: httpCfg.tls,
-    query: {
-      parser: (query) => qs.parse(query),
-    },
     routes: {
       cors: true,
-      files: {
-        relativeTo: path.join(path.dirname(url.fileURLToPath(import.meta.url)), 'html'),
-      },
       validate: {
         failAction: async (request, h, err) => {
           if (process.env.NODE_ENV === 'production') {
-            // In production, log detailed error internally, but send a generic one to the client
             console.error('ValidationError:', err.message)
-            throw h.boom.badRequest(`Invalid request payload input`)
-          } else {
-            // In development, return the full error details
-            console.error(err)
-            throw err // Hapi/Boom handles this error object correctly
+            throw err.data.defaultError
           }
+          console.error(err)
+          throw err
         },
         options: {
           abortEarly: false,
@@ -63,25 +45,22 @@ async function setup() {
   })
 
   await server.register(Jwt)
-  await server.register([
-    Inert,
-    Vision,
-    {
-      plugin: HapiSwagger,
-      options: {
-        info: {
-          title: 'NicTool API Documentation',
-          version: pkgJson.version,
-        },
-        swagger: '2.0',
-        host: httpCfg.host ? `${httpCfg.host}:${httpCfg.port}` : `localhost:${httpCfg.port}`,
-        documentationPage: true,
-        swaggerUI: true,
-        debug: true,
-        grouping: 'tags',
+  // registers @hapi/inert itself for the Swagger UI's static files
+  await server.register({
+    plugin: HapiSwagger,
+    options: {
+      info: {
+        title: 'NicTool API Documentation',
+        version: pkgJson.version,
       },
+      swagger: '2.0',
+      host: httpCfg.host ? `${httpCfg.host}:${httpCfg.port}` : `localhost:${httpCfg.port}`,
+      documentationPage: true,
+      swaggerUI: true,
+      debug: true,
+      grouping: 'tags',
     },
-  ])
+  })
 
   server.auth.strategy('nt_jwt_strategy', 'jwt', {
     keys: httpCfg.jwt.key,
