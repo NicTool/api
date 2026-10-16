@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - zone: `nameservers` holds the zone's nameserver ids on every store, and POST /zone defaults it to the group's usable nameservers
 - fix: one live zone per name, ignoring case and a trailing dot
 - fix(sql): store existing zone names lowercase without the trailing dot
-- fix(sql): `sql/upgrade/08_lowercase_record_zone_suffix.sql` gives record names that spell their zone its lowercase spelling
+- fix(sql): lowercase the zone in record names
 - fix: one random, self describing session row per login, expired ones swept at login, and mysql throttles the activity touch
 - fix: a token is valid only while its session row exists, so logout revokes it, and any authenticated request counts as activity
 
