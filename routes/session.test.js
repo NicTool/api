@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { describe, it, before, after } from 'node:test'
+import { describe, it, before, after, mock } from 'node:test'
 
 import { init } from './index.js'
 import userCase from './test/user.json' with { type: 'json' }
@@ -9,6 +9,7 @@ import permCase from './test/permission.json' with { type: 'json' }
 import User from '../lib/user/index.js'
 import Group from '../lib/group/index.js'
 import Permission from '../lib/permission/index.js'
+import Session from '../lib/session/index.js'
 
 let server
 
@@ -38,6 +39,41 @@ describe('session routes', () => {
         assert.deepEqual(res.statusCode, 401)
         // console.log(res.result)
       })
+    }
+  })
+
+  const login = {
+    username: `${userCase.username}@${groupCase.name}`,
+    password: userCase.password,
+  }
+
+  it('POST /session refuses a wrong password', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/session',
+      payload: { ...login, password: 'wrong' },
+    })
+    assert.equal(res.statusCode, 401)
+  })
+
+  it('logs in and refreshes activity when session writes fail', async () => {
+    mock.method(console, 'error', () => {})
+    mock.method(Session, 'expire', async () => {
+      throw new Error('expire failed')
+    })
+    mock.method(Session, 'put', async () => {
+      throw new Error('put failed')
+    })
+    try {
+      const res = await server.inject({ method: 'POST', url: '/session', payload: login })
+      assert.equal(res.statusCode, 200)
+      const headers = { Authorization: `Bearer ${res.result.session.token}` }
+      assert.equal((await server.inject({ method: 'GET', url: '/session', headers })).statusCode, 200)
+      await new Promise((resolve) => setImmediate(resolve))
+      assert.equal(console.error.mock.callCount(), 2)
+      await server.inject({ method: 'DELETE', url: '/session', headers })
+    } finally {
+      mock.restoreAll()
     }
   })
 
@@ -81,16 +117,6 @@ describe('session routes', () => {
       auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
     })
 
-    after(async () => {
-      const res = await server.inject({
-        method: 'DELETE',
-        url: '/session',
-        headers: auth.headers,
-      })
-      // console.log(res.result)
-      assert.equal(res.statusCode, 200)
-    })
-
     const routes = [{ GET: '/' }, { GET: '/session' }, { DELETE: '/session' }]
 
     for (const r of routes) {
@@ -106,5 +132,39 @@ describe('session routes', () => {
         assert.equal(res.statusCode, 200)
       })
     }
+  })
+
+  it('DELETE /session revokes the token', async () => {
+    const res = await server.inject({ method: 'POST', url: '/session', payload: login })
+    const headers = { Authorization: `Bearer ${res.result.session.token}` }
+
+    assert.equal((await server.inject({ method: 'DELETE', url: '/session', headers })).statusCode, 200)
+    assert.equal((await server.inject({ method: 'GET', url: '/session', headers })).statusCode, 401)
+  })
+
+  it('refuses a token whose session row is gone', async () => {
+    const res = await server.inject({ method: 'POST', url: '/session', payload: login })
+    const headers = { Authorization: `Bearer ${res.result.session.token}` }
+
+    await Session.delete({ id: res.result.session.id })
+    assert.equal((await server.inject({ method: 'GET', url: '/user/4096', headers })).statusCode, 401)
+  })
+
+  it('counts any authenticated request as session activity', async () => {
+    const res = await server.inject({ method: 'POST', url: '/session', payload: login })
+    const { id, token } = res.result.session
+    const headers = { Authorization: `Bearer ${token}` }
+    const loggedIn = (await Session.get({ id })).last_access
+
+    const now = Date.now()
+    mock.method(Date, 'now', () => now + 120_000)
+    try {
+      assert.equal((await server.inject({ method: 'GET', url: '/', headers })).statusCode, 200)
+    } finally {
+      mock.restoreAll()
+    }
+    assert.ok((await Session.get({ id })).last_access >= loggedIn + 120)
+
+    await server.inject({ method: 'DELETE', url: '/session', headers })
   })
 })

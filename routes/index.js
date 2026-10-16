@@ -12,6 +12,7 @@ import pkgJson from '../package.json' with { type: 'json' }
 import GroupRoutes from './group.js'
 import { User, UserRoutes } from './user.js'
 import { Session, SessionRoutes } from './session.js'
+import { maxAgeSec, timeSkewSec } from '../lib/session/v3.js'
 import { PermissionRoutes } from './permission.js'
 import { NameserverRoutes } from './nameserver.js'
 import { ZoneRoutes } from './zone.js'
@@ -70,16 +71,22 @@ async function setup() {
       sub: false,
       nbf: true,
       exp: true,
-      maxAgeSec: 8 * 60 * 60,
-      timeSkewSec: 15,
+      maxAgeSec,
+      timeSkewSec,
     },
     httpAuthScheme: 'Bearer',
     headerName: 'authorization',
-    validate: (artifacts, request, h) => {
-      return {
-        isValid: true,
-        credentials: artifacts.decoded.payload.nt,
-      }
+    validate: async (artifacts) => {
+      const credentials = artifacts.decoded.payload.nt
+      const session = await Session.get({ id: credentials.session.id, uid: credentials.user.id })
+      if (!session) return { isValid: false }
+
+      // v2's timeout_sessions deletes any row idle past its session_timeout,
+      // so every authenticated request has to count as activity
+      await Session.put({ id: session.id, last_access: true }).catch((err) => {
+        console.error(`session ${session.id} activity: ${err.message}`)
+      })
+      return { isValid: true, credentials }
     },
   })
 
