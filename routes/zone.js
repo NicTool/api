@@ -4,6 +4,11 @@ import Zone from '../lib/zone/index.js'
 import Group from '../lib/group/index.js'
 import { meta } from '../lib/util.js'
 
+async function usableNameservers(gid) {
+  const [group] = await Group.get({ id: gid })
+  return (group?.permissions?.nameserver?.usable ?? []).map(Number).filter((nsid) => nsid > 0)
+}
+
 function ZoneRoutes(server) {
   server.route([
     {
@@ -87,7 +92,10 @@ function ZoneRoutes(server) {
         tags: ['api'],
       },
       handler: async (request, h) => {
-        const id = await Zone.create(request.payload)
+        const zone = { ...request.payload }
+        // NicTool 2 offered the group's usable nameservers as a new zone's default
+        zone.nameservers ??= await usableNameservers(zone.gid)
+        const id = await Zone.create(zone)
 
         const zones = await Zone.get({ id })
 
