@@ -2,9 +2,9 @@
   "id": 4096,
   "zid": 4096,
   "owner": "_8443._foo.api.example.com.",
-  "priority": 0,
+  "priority": 1,
   "target name": "svc4.example.net.",
-  "params": "alpn=\"bar\" port=\"8004\" ech=\"...\"",
+  "params": "alpn=\"bar\" port=8004",
   "ttl": 86400,
   "type": "SVCB"
 }
