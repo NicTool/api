@@ -209,6 +209,8 @@ describe('sql schema', () => {
       takenBy: [`taken.${suffix}`, 0],
       deleted: [`Gone.${suffix}`, 1],
       liveBeside: [`gone.${suffix}`, 0],
+      same: [`same.${suffix}`, 0],
+      sameAgain: [`same.${suffix}`, 0],
     }
     const ids = {}
     for (const [key, [zone, deleted]] of Object.entries(rows)) {
@@ -230,13 +232,21 @@ describe('sql schema', () => {
 
     try {
       const before = await read()
-      await conn.query(migration)
+      const [results] = await conn.query(migration)
       const after = await read()
       assert.equal(after.upper.zone, `upper.${suffix}`)
       assert.equal(after.dotted.zone, `dotted.${suffix}`)
       assert.equal(after.taken.zone, `Taken.${suffix}`, 'a live zone keeps a name another live zone has')
       assert.equal(after.deleted.zone, `gone.${suffix}`, 'a deleted zone may share a name')
       assert.deepEqual(after.upper.last_modified, before.upper.last_modified)
+
+      const reported = results.find(Array.isArray).map((r) => r.nt_zone_id)
+      const ours = Object.entries(ids).filter(([, id]) => reported.includes(id))
+      assert.deepEqual(
+        ours.map(([k]) => k),
+        ['taken', 'takenBy', 'same', 'sameAgain'],
+        'every live zone sharing a name, whatever its spelling',
+      )
 
       await assert.doesNotReject(() => conn.query(migration), 'the migration is not re-runnable')
       assert.deepEqual(await read(), after)

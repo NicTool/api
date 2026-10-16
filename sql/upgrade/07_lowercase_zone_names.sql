@@ -8,7 +8,8 @@
 # same rewrite.
 #
 # A live zone is left alone when another live zone has the same canonical
-# name; the final SELECT lists those for an admin to rename or delete. DNS
+# name. The SELECT at the end lists every live zone that shares its name with
+# another, whatever its spelling, for an admin to rename or delete. DNS
 # names are case-insensitive, so the zone itself is unchanged, and
 # last_modified is kept so it doesn't read as edited.
 #
@@ -30,9 +31,10 @@ UPDATE nt_zone
    AND (deleted = 1
         OR LOWER(TRIM(TRAILING '.' FROM zone)) NOT IN (SELECT canonical FROM nt_zone_name_taken));
 
-DROP TEMPORARY TABLE nt_zone_name_taken;
-
 SELECT nt_zone_id, zone AS `live zone sharing its name with another`
   FROM nt_zone
  WHERE deleted = 0
-   AND zone <> LOWER(TRIM(TRAILING '.' FROM zone));
+   AND LOWER(TRIM(TRAILING '.' FROM zone)) IN (SELECT canonical FROM nt_zone_name_taken)
+ ORDER BY LOWER(TRIM(TRAILING '.' FROM zone)), nt_zone_id;
+
+DROP TEMPORARY TABLE nt_zone_name_taken;
