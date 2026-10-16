@@ -70,7 +70,7 @@ async function setup() {
       sub: false,
       nbf: true,
       exp: true,
-      maxAgeSec: 14400, // 4 hours
+      maxAgeSec: 8 * 60 * 60,
       timeSkewSec: 15,
     },
     httpAuthScheme: 'Bearer',

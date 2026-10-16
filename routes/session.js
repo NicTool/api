@@ -79,7 +79,7 @@ function SessionRoutes(server) {
             algorithm: 'HS512',
           },
           {
-            ttlSec: 28800, // 8 hours
+            ttlSec: 8 * 60 * 60,
           },
         )
 
