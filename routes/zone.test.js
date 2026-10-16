@@ -16,7 +16,7 @@ let server
 let case2Id
 
 const subGroup = { id: 4090, parent_gid: groupCase.id, name: 'sub.route.example.com' }
-const subZone = { ...nsCase, id: 4091, gid: subGroup.id, zone: 'sub.route.example.com.' }
+const subZone = { ...nsCase, id: 4091, gid: subGroup.id, zone: 'sub.route.example.com' }
 const nsLow = { ...nameserverCase, id: 4086, name: 'low.route.example.com.' }
 const nsHigh = { ...nameserverCase, id: 4087, name: 'high.route.example.com.', ttl: 900 }
 const assignedZone = { ...nsCase, gid: subGroup.id, zone: 'assigned.route.example.com.' }
@@ -24,6 +24,9 @@ delete assignedZone.id
 let assignedId
 
 before(async () => {
+  for (const deleted of [false, true]) {
+    for (const z of await Zone.get({ zone: 'route2.example.com', deleted })) await Zone.destroy({ id: z.id })
+  }
   await Zone.destroy({ id: nsCase.id })
   await Zone.destroy({ id: subZone.id })
   // Destroy the subgroup before recreating it: a lingering row would make
@@ -113,10 +116,20 @@ describe('zone routes', () => {
     // console.log(res.result)
     assert.equal(res.statusCode, 201)
     assert.equal(res.result.zone.length, 1)
-    assert.equal(res.result.zone[0].zone, 'route2.example.com.')
+    assert.equal(res.result.zone[0].zone, 'route2.example.com')
     assert.ok(res.result.zone[0].gid)
     case2Id = res.result.zone[0].id
     assert.ok(Number.isInteger(case2Id))
+  })
+
+  it('POST /zone rejects a live name in another case', async () => {
+    const res = await server.inject({
+      method: 'POST',
+      url: '/zone',
+      headers: auth.headers,
+      payload: { ...nsCase, id: undefined, zone: `${nsCase.zone.toUpperCase()}.` },
+    })
+    assert.equal(res.statusCode, 409)
   })
 
   it('PUT /zone/{id} keeps using the route id', async () => {

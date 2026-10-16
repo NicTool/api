@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - fix: file store login checks the group in user@group
 - create: allocate ids internally and reject caller-supplied ids
 - zone: `nameservers` holds the zone's nameserver ids on every store, and POST /zone defaults it to the group's usable nameservers
+- fix: one live zone per name, ignoring case and a trailing dot
 
 ### [3.0.3] - 2026-07-27
 
