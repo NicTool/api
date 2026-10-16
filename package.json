@@ -53,18 +53,13 @@
     "globals": "^17.13.0"
   },
   "dependencies": {
-    "@hapi/cookie": "^12.0.1",
     "@hapi/hapi": "^21.4.10",
-    "@hapi/hoek": "^11.0.7",
-    "@hapi/inert": "^7.1.2",
     "@hapi/jwt": "^3.2.4",
-    "@hapi/vision": "^7.0.3",
     "@msimerson/hapi-openapi": "^18.0.3",
     "@nictool/dns-resource-record": "^2.0.0",
     "@nictool/validate": "^1.0.1",
     "joi": "^18.2.9",
     "mysql2": "^3.24.6",
-    "qs": "^6.16.1",
     "smol-toml": "^1.9.1"
   },
   "prettier": {
