@@ -263,6 +263,6 @@ describe('sql schema', () => {
 
   it('declares the 2.x db_version the upgrade path detects', async () => {
     const sql = await fs.readFile(path.join(sqlDir, '12_nt_options.sql'), 'utf8')
-    assert.match(sql, /'db_version','2\.41'/)
+    assert.match(sql, /'db_version','2\.42'/)
   })
 })

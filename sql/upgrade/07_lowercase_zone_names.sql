@@ -4,7 +4,8 @@
 # the trailing dot. A zone created through the 2.x API or web UI keeps the
 # case it was given (2.x imports lowercase it). NicTool 3 matches names
 # exactly, so it can't find such a zone by name, and the zone doesn't block
-# a second one of the same name.
+# a second one of the same name. NicTool 2.42's sql/upgrade.pl does the
+# same rewrite.
 #
 # A live zone is left alone when another live zone has the same canonical
 # name; the final SELECT lists those for an admin to rename or delete. DNS
