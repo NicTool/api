@@ -117,16 +117,6 @@ describe('session routes', () => {
       auth.headers = { Authorization: `Bearer ${res.result.session.token}` }
     })
 
-    after(async () => {
-      const res = await server.inject({
-        method: 'DELETE',
-        url: '/session',
-        headers: auth.headers,
-      })
-      // console.log(res.result)
-      assert.equal(res.statusCode, 200)
-    })
-
     const routes = [{ GET: '/' }, { GET: '/session' }, { DELETE: '/session' }]
 
     for (const r of routes) {
@@ -142,5 +132,39 @@ describe('session routes', () => {
         assert.equal(res.statusCode, 200)
       })
     }
+  })
+
+  it('DELETE /session revokes the token', async () => {
+    const res = await server.inject({ method: 'POST', url: '/session', payload: login })
+    const headers = { Authorization: `Bearer ${res.result.session.token}` }
+
+    assert.equal((await server.inject({ method: 'DELETE', url: '/session', headers })).statusCode, 200)
+    assert.equal((await server.inject({ method: 'GET', url: '/session', headers })).statusCode, 401)
+  })
+
+  it('refuses a token whose session row is gone', async () => {
+    const res = await server.inject({ method: 'POST', url: '/session', payload: login })
+    const headers = { Authorization: `Bearer ${res.result.session.token}` }
+
+    await Session.delete({ id: res.result.session.id })
+    assert.equal((await server.inject({ method: 'GET', url: '/user/4096', headers })).statusCode, 401)
+  })
+
+  it('counts any authenticated request as session activity', async () => {
+    const res = await server.inject({ method: 'POST', url: '/session', payload: login })
+    const { id, token } = res.result.session
+    const headers = { Authorization: `Bearer ${token}` }
+    const loggedIn = (await Session.get({ id })).last_access
+
+    const now = Date.now()
+    mock.method(Date, 'now', () => now + 120_000)
+    try {
+      assert.equal((await server.inject({ method: 'GET', url: '/', headers })).statusCode, 200)
+    } finally {
+      mock.restoreAll()
+    }
+    assert.ok((await Session.get({ id })).last_access >= loggedIn + 120)
+
+    await server.inject({ method: 'DELETE', url: '/session', headers })
   })
 })

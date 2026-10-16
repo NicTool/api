@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - fix: file store login checks the group in user@group
 - create: allocate ids internally and reject caller-supplied ids
 - fix: one random, self describing session row per login, expired ones swept at login, and mysql throttles the activity touch
+- fix: a token is valid only while its session row exists, so logout revokes it, and any authenticated request counts as activity
 
 ### [3.0.3] - 2026-07-27
 
