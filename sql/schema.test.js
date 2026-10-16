@@ -199,6 +199,62 @@ describe('sql schema', () => {
     )
   })
 
+  it('lowercases zone names, leaving live zones that would share a name', async () => {
+    const migration = await fs.readFile(path.join(sqlDir, 'upgrade', '07_lowercase_zone_names.sql'), 'utf8')
+    const suffix = `lowercase-${Date.now()}.test`
+    const rows = {
+      upper: [`Upper.${suffix}`, 0],
+      dotted: [`dotted.${suffix}.`, 0],
+      taken: [`Taken.${suffix}`, 0],
+      takenBy: [`taken.${suffix}`, 0],
+      deleted: [`Gone.${suffix}`, 1],
+      liveBeside: [`gone.${suffix}`, 0],
+      same: [`same.${suffix}`, 0],
+      sameAgain: [`same.${suffix}`, 0],
+    }
+    const ids = {}
+    for (const [key, [zone, deleted]] of Object.entries(rows)) {
+      const [r] = await conn.query(
+        "INSERT INTO nt_zone (nt_group_id, zone, deleted, last_modified) VALUES (1, ?, ?, '2020-01-01')",
+        [zone, deleted],
+      )
+      ids[key] = r.insertId
+    }
+    const read = async () => {
+      const [found] = await conn.query(
+        'SELECT nt_zone_id, zone, last_modified FROM nt_zone WHERE nt_zone_id IN (?)',
+        [Object.values(ids)],
+      )
+      return Object.fromEntries(
+        Object.entries(ids).map(([k, id]) => [k, found.find((r) => r.nt_zone_id === id)]),
+      )
+    }
+
+    try {
+      const before = await read()
+      const [results] = await conn.query(migration)
+      const after = await read()
+      assert.equal(after.upper.zone, `upper.${suffix}`)
+      assert.equal(after.dotted.zone, `dotted.${suffix}`)
+      assert.equal(after.taken.zone, `Taken.${suffix}`, 'a live zone keeps a name another live zone has')
+      assert.equal(after.deleted.zone, `gone.${suffix}`, 'a deleted zone may share a name')
+      assert.deepEqual(after.upper.last_modified, before.upper.last_modified)
+
+      const reported = results.find(Array.isArray).map((r) => r.nt_zone_id)
+      const ours = Object.entries(ids).filter(([, id]) => reported.includes(id))
+      assert.deepEqual(
+        ours.map(([k]) => k),
+        ['taken', 'takenBy', 'same', 'sameAgain'],
+        'every live zone sharing a name, whatever its spelling',
+      )
+
+      await assert.doesNotReject(() => conn.query(migration), 'the migration is not re-runnable')
+      assert.deepEqual(await read(), after)
+    } finally {
+      await conn.query('DELETE FROM nt_zone WHERE nt_zone_id IN (?)', [Object.values(ids)])
+    }
+  })
+
   it('adds the v3 export types to an existing database, and again on a re-run', async () => {
     const migration = await fs.readFile(
       path.join(sqlDir, 'upgrade', '06_add_nameserver_export_types.sql'),
@@ -217,6 +273,6 @@ describe('sql schema', () => {
 
   it('declares the 2.x db_version the upgrade path detects', async () => {
     const sql = await fs.readFile(path.join(sqlDir, '12_nt_options.sql'), 'utf8')
-    assert.match(sql, /'db_version','2\.41'/)
+    assert.match(sql, /'db_version','2\.42'/)
   })
 })
