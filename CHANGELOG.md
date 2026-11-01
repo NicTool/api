@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+- fix: file stores draw permission ids from one sequence, and renumber repeated ids at startup
+- fix: file store user, group and permission reads hide revoked permissions, and a regrant gets a new id
 - fix: reject create conflicts and duplicate permission targets
 - fix(sql): seed ns export types coredns & native for 2.x upgrade
 - fix: server stop waits for the stores to disconnect

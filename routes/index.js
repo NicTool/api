@@ -13,7 +13,7 @@ import GroupRoutes from './group.js'
 import { User, UserRoutes } from './user.js'
 import { Session, SessionRoutes } from './session.js'
 import { maxAgeSec, timeSkewSec } from '../lib/session/v3.js'
-import { PermissionRoutes } from './permission.js'
+import { Permission, PermissionRoutes } from './permission.js'
 import { NameserverRoutes } from './nameserver.js'
 import { ZoneRoutes } from './zone.js'
 import { ZoneRecordRoutes } from './zone_record.js'
@@ -21,6 +21,8 @@ import { ZoneRecordRoutes } from './zone_record.js'
 let server
 
 async function setup() {
+  await Permission.migrate()
+
   const httpCfg = await Config.get('http')
 
   server = Hapi.server({

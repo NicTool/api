@@ -1,8 +1,21 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import Permission from '../lib/permission/index.js'
 import User from '../lib/user/index.js'
-import { init } from './index.js'
+import { init, start } from './index.js'
+
+test('server does not come up when permissions fail to migrate', async (t) => {
+  t.mock.method(Permission, 'migrate', async () => {
+    throw new Error('bad store')
+  })
+
+  await assert.rejects(init(), /bad store/)
+
+  const started = await start().catch((err) => err)
+  if (started.stop) await started.stop()
+  assert.match(started.message ?? '', /bad store/)
+})
 
 test('server stop waits for store disconnection', async (t) => {
   const server = await init()
