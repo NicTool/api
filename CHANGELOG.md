@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+- fix: a user created without names reads back, lists and logs in on mysql
 - fix: file stores draw permission ids from one sequence, and renumber repeated ids at startup
 - fix: file store user, group and permission reads hide revoked permissions, and a regrant gets a new id
 - fix: reject create conflicts and duplicate permission targets

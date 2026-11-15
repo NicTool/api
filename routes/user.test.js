@@ -18,9 +18,14 @@ before(async () => {
 })
 
 let userId2
+const namelessUsername = `${userCase.username}3`
 
 after(async () => {
   if (userId2) await User.destroy({ id: userId2 })
+  for (const deleted of [false, true]) {
+    for (const u of await User.get({ username: namelessUsername, gid: userCase.gid, deleted }))
+      await User.destroy({ id: u.id })
+  }
   await server.stop()
 })
 
@@ -121,6 +126,49 @@ describe('user routes', () => {
       headers: auth.headers,
     })
     assert.ok([200, 204].includes(res.statusCode))
+  })
+
+  it('a user created without names can be read, listed and logged in', async () => {
+    const testCase = JSON.parse(JSON.stringify(userCase))
+    delete testCase.id
+    delete testCase.deleted
+    delete testCase.first_name
+    delete testCase.last_name
+    testCase.username = namelessUsername
+
+    const created = await server.inject({
+      method: 'POST',
+      url: '/user',
+      headers: auth.headers,
+      payload: testCase,
+    })
+    assert.equal(created.statusCode, 201)
+    const id = created.result.user[0].id
+    assert.equal(created.result.user[0].first_name, undefined)
+
+    const one = await server.inject({ method: 'GET', url: `/user/${id}`, headers: auth.headers })
+    assert.equal(one.statusCode, 200)
+
+    const list = await server.inject({
+      method: 'GET',
+      url: `/user?gid=${userCase.gid}`,
+      headers: auth.headers,
+    })
+    assert.equal(list.statusCode, 200)
+    assert.ok(list.result.user.some((u) => u.id === id))
+
+    const login = await server.inject({
+      method: 'POST',
+      url: '/session',
+      payload: { username: `${testCase.username}@${groupCase.name}`, password: testCase.password },
+    })
+    assert.equal(login.statusCode, 200)
+    assert.equal(login.result.user.id, id)
+
+    const headers = { Authorization: `Bearer ${login.result.session.token}` }
+    const session = await server.inject({ method: 'GET', url: '/session', headers })
+    assert.equal(session.statusCode, 200)
+    await server.inject({ method: 'DELETE', url: '/session', headers })
   })
 
   it('DELETE /session', async () => {
