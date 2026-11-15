@@ -13,7 +13,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - run: sudo /etc/init.d/mysql start
+      - run: sudo systemctl start mysql.service
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
       - run: sh sql/init-mysql.sh
