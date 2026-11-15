@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+- fix: zone record PUT checks the record when its rdata changes
+- fix(mysql): an SRV record with priority 0 reads back with its priority
+- fix: zone record checks require an address only of types that have one, and use the record's owner
 - fix: a user created without names reads back, lists and logs in on mysql
 - fix: file stores draw permission ids from one sequence, and renumber repeated ids at startup
 - fix: file store user, group and permission reads hide revoked permissions, and a regrant gets a new id
