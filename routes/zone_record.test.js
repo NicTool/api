@@ -219,6 +219,32 @@ describe('zone_record routes', () => {
     assert.equal((await ZoneRecord.get({ id: testZoneRecordId }))[0].type, 'A')
   })
 
+  it(`PUT /zone_record/${testZoneRecordId} refuses an address the type can't hold`, async () => {
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${testZoneRecordId}`,
+      headers: auth.headers,
+      payload: { address: '1.2.3' },
+    })
+
+    assert.equal(res.statusCode, 400)
+    assert.equal((await ZoneRecord.get({ id: testZoneRecordId }))[0].address, '198.51.100.99')
+  })
+
+  it(`PUT /zone_record/${testZoneRecordId} takes the record as the web UI sends it`, async () => {
+    const [stored] = await ZoneRecord.get({ id: testZoneRecordId })
+    const { zid, owner, type, address } = stored
+    const res = await server.inject({
+      method: 'PUT',
+      url: `/zone_record/${testZoneRecordId}`,
+      headers: auth.headers,
+      payload: { zid, owner, type, ttl: stored.ttl + 1, address },
+    })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal((await ZoneRecord.get({ id: testZoneRecordId }))[0].ttl, stored.ttl + 1)
+  })
+
   it(`PUT /zone_record/${testZoneRecordId} refuses a TXT with no data`, async () => {
     const res = await server.inject({
       method: 'PUT',
