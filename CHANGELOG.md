@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
-- fix: zone record checks compare packed fields as the record class reads them, so an RRSIG sent with a type number or times in seconds is taken
+- fix: zone record checks take an RRSIG with a type number or times in seconds
 - fix: zone record PUT checks the record when its rdata changes
 - fix(mysql): an SRV record with priority 0 reads back with its priority
 - fix: zone record checks require an address only of types that have one, and use the record's owner
