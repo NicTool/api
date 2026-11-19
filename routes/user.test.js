@@ -81,6 +81,23 @@ describe('user routes', () => {
     assert.ok(Number.isInteger(userId2))
   })
 
+  it('POST /user and PUT /user/{id} refuse a username the group has', async () => {
+    const payload = { ...userCase, username: `${userCase.username}2`, email: 'dup@example.com' }
+    delete payload.id
+    delete payload.deleted
+    const created = await server.inject({ method: 'POST', url: '/user', headers: auth.headers, payload })
+    assert.equal(created.statusCode, 409)
+    assert.equal(created.result.message, `username ${userCase.username}2@${groupCase.name} is not unique`)
+
+    const renamed = await server.inject({
+      method: 'PUT',
+      url: `/user/${userId2}`,
+      headers: auth.headers,
+      payload: { username: userCase.username },
+    })
+    assert.equal(renamed.statusCode, 409)
+  })
+
   it('PUT /user/{id} keeps using the route id', async () => {
     const res = await server.inject({
       method: 'PUT',
