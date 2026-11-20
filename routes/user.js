@@ -133,7 +133,18 @@ function UserRoutes(server) {
       },
       handler: async (request, h) => {
         const id = parseInt(request.params.id, 10)
-        const args = { ...request.payload, id }
+        const { current_password: currentPassword, ...payload } = request.payload ?? {}
+        const args = { ...payload, id }
+
+        if (args.password && !(await User.isAdmin(request.auth.credentials.user.id))) {
+          const refuse = (msg) => h.response({ meta: { api: meta.api, msg } }).code(400)
+          if (currentPassword === undefined) return refuse('current password is required')
+          const valid = await User.checkPassword({ id, password: currentPassword })
+          if (valid === undefined) {
+            return h.response({ meta: { api: meta.api, msg: `user not found` } }).code(404)
+          }
+          if (!valid) return refuse('current password is incorrect')
+        }
 
         // no salt passed: a password change always gets a fresh one
         if (args.password) {

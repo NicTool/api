@@ -197,3 +197,94 @@ describe('user routes', () => {
     assert.equal(res.statusCode, 200)
   })
 })
+
+describe('PUT /user/{id} password change', () => {
+  const pass = 'Wh@tA-Decent#P6ssw0rd'
+  const newPass = 'An0ther-Decent#Passw0rd'
+  const pwUser = (id, username, extra = {}) => ({
+    id,
+    gid: groupCase.id,
+    username,
+    email: `${username}@example.com`,
+    password: pass,
+    ...extra,
+  })
+  const self = pwUser(9030, 'pw-self')
+  const other = pwUser(9031, 'pw-other')
+  const admin = pwUser(9032, 'pw-admin', { is_admin: true })
+  const headers = {}
+
+  async function login(user, password) {
+    return server.inject({
+      method: 'POST',
+      url: '/session',
+      payload: { username: `${user.username}@${groupCase.name}`, password },
+    })
+  }
+
+  async function put(as, id, payload) {
+    return server.inject({ method: 'PUT', url: `/user/${id}`, headers: headers[as], payload })
+  }
+
+  before(async () => {
+    for (const u of [self, other, admin]) {
+      await User.destroy({ id: u.id })
+      await User.create(u)
+      const res = await login(u, pass)
+      headers[u.username] = { Authorization: `Bearer ${res.result.session.token}` }
+    }
+  })
+
+  after(async () => {
+    for (const u of [self, other, admin]) await User.destroy({ id: u.id })
+  })
+
+  it('wants the current password from a non-admin', async () => {
+    const res = await put('pw-self', self.id, { password: newPass })
+    assert.equal(res.statusCode, 400)
+    assert.equal(res.result.meta.msg, 'current password is required')
+  })
+
+  it('refuses a wrong current password', async () => {
+    const res = await put('pw-self', self.id, { password: newPass, current_password: 'wrong' })
+    assert.equal(res.statusCode, 400)
+    assert.equal(res.result.meta.msg, 'current password is incorrect')
+    assert.equal((await login(self, pass)).statusCode, 200)
+  })
+
+  it('changes the password with the right current one', async () => {
+    const res = await put('pw-self', self.id, { password: newPass, current_password: pass })
+    assert.equal(res.statusCode, 200)
+    assert.equal((await login(self, newPass)).statusCode, 200)
+    assert.equal((await login(self, pass)).statusCode, 401)
+  })
+
+  it("wants the target user's password when a non-admin edits another user", async () => {
+    const mine = await put('pw-self', other.id, { password: newPass, current_password: newPass })
+    assert.equal(mine.statusCode, 400)
+    assert.equal(mine.result.meta.msg, 'current password is incorrect')
+
+    const theirs = await put('pw-self', other.id, { password: newPass, current_password: pass })
+    assert.equal(theirs.statusCode, 200)
+    assert.equal((await login(other, newPass)).statusCode, 200)
+  })
+
+  it('lets an admin change a password without the current one', async () => {
+    const res = await put('pw-admin', other.id, { password: pass })
+    assert.equal(res.statusCode, 200)
+    assert.equal((await login(other, pass)).statusCode, 200)
+  })
+
+  it('answers 404 for a user that does not exist', async () => {
+    const res = await put('pw-self', 9039, { password: newPass, current_password: pass })
+    assert.equal(res.statusCode, 404)
+  })
+
+  it('does not store current_password', async () => {
+    const res = await put('pw-self', self.id, { first_name: 'Kept', current_password: 'anything' })
+    assert.equal(res.statusCode, 200)
+    const [stored] = await User.get({ id: self.id })
+    assert.equal(stored.first_name, 'Kept')
+    assert.equal(stored.current_password, undefined)
+  })
+})
