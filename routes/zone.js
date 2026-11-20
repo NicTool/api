@@ -94,8 +94,9 @@ function ZoneRoutes(server) {
       handler: async (request, h) => {
         const zone = { ...request.payload }
         // NicTool 2 offered the group's usable nameservers as a new zone's default
-        zone.nameservers ??= await usableNameservers(zone.gid)
-        const id = await Zone.create(zone)
+        const defaulted = zone.nameservers === undefined
+        if (defaulted) zone.nameservers = await usableNameservers(zone.gid)
+        const id = await Zone.create(zone, { skipDeadNameservers: defaulted })
 
         const zones = await Zone.get({ id })
 

@@ -19,6 +19,7 @@ const subGroup = { id: 4090, parent_gid: groupCase.id, name: 'sub.route.example.
 const subZone = { ...nsCase, id: 4091, gid: subGroup.id, zone: 'sub.route.example.com' }
 const nsLow = { ...nameserverCase, id: 4086, name: 'low.route.example.com.' }
 const nsHigh = { ...nameserverCase, id: 4087, name: 'high.route.example.com.', ttl: 900 }
+const nsGone = { ...nameserverCase, id: 4085, name: 'gone.route.example.com.' }
 const assignedZone = { ...nsCase, gid: subGroup.id, zone: 'assigned.route.example.com.' }
 delete assignedZone.id
 let assignedId
@@ -38,17 +39,18 @@ before(async () => {
   await Zone.create(nsCase, { ifExists: 'return' })
   await Group.create(subGroup)
   await Zone.create(subZone)
-  for (const ns of [nsLow, nsHigh]) {
+  for (const ns of [nsLow, nsHigh, nsGone]) {
     await Nameserver.destroy({ id: ns.id })
     await Nameserver.create(ns)
   }
+  await Nameserver.delete({ id: nsGone.id })
   server = await init()
 })
 
 after(async () => {
   if (case2Id) await Zone.destroy({ id: case2Id })
   if (assignedId) await Zone.destroy({ id: assignedId })
-  for (const ns of [nsLow, nsHigh]) await Nameserver.destroy({ id: ns.id })
+  for (const ns of [nsLow, nsHigh, nsGone]) await Nameserver.destroy({ id: ns.id })
   await Zone.destroy({ id: subZone.id })
   await Group.destroy({ id: subGroup.id })
   await server.stop()
@@ -222,9 +224,11 @@ describe('zone routes', () => {
 
   describe('nameservers', () => {
     const post = (payload) => server.inject({ method: 'POST', url: '/zone', headers: auth.headers, payload })
+    const put = (id, payload) =>
+      server.inject({ method: 'PUT', url: `/zone/${id}`, headers: auth.headers, payload })
 
-    it('POST /zone defaults to the group usable nameservers', async () => {
-      assert.ok(await Group.put({ id: subGroup.id, usable_ns: [nsHigh.id, nsLow.id] }))
+    it('POST /zone defaults to the group usable nameservers that are live', async () => {
+      assert.ok(await Group.put({ id: subGroup.id, usable_ns: [nsHigh.id, nsGone.id, nsLow.id] }))
       const res = await post(assignedZone)
       assert.equal(res.statusCode, 201)
       assert.deepEqual(res.result.zone[0].nameservers, [nsLow.id, nsHigh.id])
@@ -258,6 +262,35 @@ describe('zone routes', () => {
       assert.deepEqual(res.result.zone[0].nameservers, [])
       assignedId = res.result.zone[0].id
       await Group.put({ id: subGroup.id, usable_ns: [] })
+    })
+
+    it('POST /zone refuses a deleted or missing nameserver', async () => {
+      const zone = 'gone.route.example.com'
+      const res = await post({ ...assignedZone, zone, nameservers: [nsLow.id, nsGone.id, 4084] })
+      assert.equal(res.statusCode, 400)
+      assert.equal(res.result.message, `nameserver 4084, ${nsGone.id} is deleted or does not exist`)
+      assert.deepEqual(await Zone.get({ zone }), [])
+    })
+
+    it('PUT /zone/{id} refuses a deleted nameserver', async () => {
+      const res = await put(assignedId, { nameservers: [nsLow.id, nsGone.id] })
+      assert.equal(res.statusCode, 400)
+      assert.deepEqual((await Zone.get({ id: assignedId }))[0].nameservers, [])
+    })
+
+    it('PUT /zone/{id} restores a zone only onto live nameservers', async () => {
+      assert.equal((await put(assignedId, { nameservers: [nsHigh.id] })).statusCode, 200)
+      assert.ok(await Zone.delete({ id: assignedId }))
+      assert.ok(await Nameserver.delete({ id: nsHigh.id }))
+
+      const refused = await put(assignedId, { deleted: false })
+      assert.equal(refused.statusCode, 400)
+      assert.equal(refused.result.message, `nameserver ${nsHigh.id} is deleted or does not exist`)
+      assert.deepEqual(await Zone.get({ id: assignedId }), [])
+
+      const res = await put(assignedId, { deleted: false, nameservers: [nsLow.id] })
+      assert.equal(res.statusCode, 200)
+      assert.deepEqual(res.result.zone[0].nameservers, [nsLow.id])
     })
   })
 

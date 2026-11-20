@@ -5,13 +5,18 @@ import { init } from './index.js'
 import Group from '../lib/group/index.js'
 import User from '../lib/user/index.js'
 import Nameserver from '../lib/nameserver/index.js'
+import Zone from '../lib/zone/index.js'
 
 import groupCase from './test/group.json' with { type: 'json' }
 import userCase from './test/user.json' with { type: 'json' }
 import nsCase from './test/nameserver.json' with { type: 'json' }
+import zoneCase from './test/zone.json' with { type: 'json' }
 
 let server
 let case2Id
+let zoneId
+const inUseZone = { ...zoneCase, zone: 'in-use.ns.example.com' }
+delete inUseZone.id
 
 before(async () => {
   await Group.create(groupCase, { ifExists: 'return' })
@@ -21,6 +26,7 @@ before(async () => {
 })
 
 after(async () => {
+  if (zoneId) await Zone.destroy({ id: zoneId })
   if (case2Id) await Nameserver.destroy({ id: case2Id })
   await server.stop()
 })
@@ -90,6 +96,29 @@ describe('nameserver routes', () => {
     })
     assert.equal(res.statusCode, 200)
     assert.ok(res.result.nameserver[0].gid)
+  })
+
+  it('DELETE /nameserver/{id} refuses while a live zone lists it', async () => {
+    zoneId = await Zone.create({ ...inUseZone, nameservers: [case2Id] })
+
+    const res = await server.inject({
+      method: 'DELETE',
+      url: `/nameserver/${case2Id}`,
+      headers: auth.headers,
+    })
+    assert.equal(res.statusCode, 409)
+    assert.equal(res.result.message, `nameserver ${case2Id} still serves a live zone`)
+
+    const put = await server.inject({
+      method: 'PUT',
+      url: `/nameserver/${case2Id}`,
+      headers: auth.headers,
+      payload: { deleted: true },
+    })
+    assert.equal(put.statusCode, 409)
+    assert.equal((await Nameserver.get({ id: case2Id })).length, 1)
+
+    assert.ok(await Zone.delete({ id: zoneId }))
   })
 
   it('DELETE /nameserver/{id}', async () => {
