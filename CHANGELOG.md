@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+- fix: PUT /user asks a non-admin editor for the target user's current password
 - fix(json, toml): zone record create checks the record, and an unchanged PUT answers false, as on mysql
 - fix: zone record checks take an RRSIG with a type number or times in seconds
 - fix: zone record PUT checks the record when its rdata changes
