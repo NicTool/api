@@ -65,6 +65,9 @@ async function teardown() {
   await User.destroy({ id: userCaseR.id })
   await Group.destroy({ id: groupCase.id })
   await Group.destroy({ id: groupCaseR.id })
+  // older zone_record route runs left group 5094 holding groupCaseR's name
+  await User.destroy({ id: 5094 })
+  await Group.destroy({ id: 5094 })
   await User.disconnect()
   await Group.disconnect()
   process.exit(0)

@@ -15,6 +15,7 @@ let server
 const createdZoneRecordIds = []
 
 const testGroupId = 5094
+const testGroupName = 'route-zr.example.com'
 const testZoneId = 5095
 const testZoneRecordId = 5096
 const bystanderId = 5097
@@ -40,7 +41,7 @@ before(async () => {
   await ZoneRecord.destroy({ id: bystanderId })
   await Zone.destroy({ id: testZoneId })
 
-  const testGroup = { ...groupCase, id: testGroupId }
+  const testGroup = { ...groupCase, id: testGroupId, name: testGroupName }
   const testUser = {
     ...userCase,
     id: testGroupId,
@@ -49,8 +50,10 @@ before(async () => {
     username: `route-zr-delete-${testGroupId}`,
   }
 
-  await Group.create(testGroup, { ifExists: 'return' })
-  await User.create(testUser, { ifExists: 'return' })
+  await User.destroy({ id: testGroupId })
+  await Group.destroy({ id: testGroupId })
+  await Group.create(testGroup)
+  await User.create(testUser)
   await Zone.create(testZone)
   await ZoneRecord.create(testZoneRecord)
   await ZoneRecord.create({
@@ -70,6 +73,8 @@ after(async () => {
   await ZoneRecord.destroy({ id: testZoneRecordId })
   await ZoneRecord.destroy({ id: bystanderId })
   await Zone.destroy({ id: testZoneId })
+  await User.destroy({ id: testGroupId })
+  await Group.destroy({ id: testGroupId })
   // a failed before() leaves no server, and an open db connection keeps node running
   if (server) await server.stop()
   else await ZoneRecord.disconnect()
@@ -83,7 +88,7 @@ describe('zone_record routes', () => {
       method: 'POST',
       url: '/session',
       payload: {
-        username: `route-zr-delete-${testGroupId}@${groupCase.name}`,
+        username: `route-zr-delete-${testGroupId}@${testGroupName}`,
         password: userCase.password,
       },
     })
